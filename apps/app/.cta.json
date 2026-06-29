@@ -1,0 +1,23 @@
+{
+  "projectName": "app",
+  "mode": "file-router",
+  "typescript": true,
+  "packageManager": "pnpm",
+  "includeExamples": false,
+  "tailwind": true,
+  "addOnOptions": {},
+  "envVarValues": {},
+  "git": false,
+  "install": true,
+  "routerOnly": false,
+  "version": 1,
+  "framework": "react",
+  "chosenAddOns": [
+    "eslint",
+    "cloudflare",
+    "sentry",
+    "form",
+    "table",
+    "tanstack-query"
+  ]
+}

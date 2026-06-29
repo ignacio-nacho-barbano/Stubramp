@@ -1,0 +1,17 @@
+/* Ramp design system: loads Tailwind, design tokens, and scans @stubramp/ui components. */
+@import "@stubramp/ui/theme.css";
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+}
+
