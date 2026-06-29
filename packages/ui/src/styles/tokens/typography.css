@@ -1,0 +1,57 @@
+/* ============================================================
+   TYPOGRAPHY — Ramp
+   Neo-grotesque, tight tracking on display, generous on small text.
+   Tabular figures everywhere money appears.
+   ============================================================ */
+
+:root {
+  /* Families */
+  --font-sans: "Hanken Grotesk", "Lausanne", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "Spline Sans Mono", "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Weights */
+  --weight-light:    300;
+  --weight-regular:  400;
+  --weight-medium:   500;  /* buttons, labels, emphasis */
+  --weight-semibold: 600;  /* card titles, headings */
+  --weight-bold:     700;  /* display, hero */
+  --weight-black:    800;  /* big marketing numerals */
+
+  /* Type scale (1.250 major-third-ish, tuned) */
+  --text-2xs:  11px;
+  --text-xs:   12px;
+  --text-sm:   13px;
+  --text-base: 15px;   /* product body */
+  --text-md:   17px;
+  --text-lg:   20px;
+  --text-xl:   24px;
+  --text-2xl:  32px;
+  --text-3xl:  44px;
+  --text-4xl:  60px;
+  --text-5xl:  80px;   /* hero display */
+
+  /* Line heights */
+  --leading-tight:   1.05;  /* display */
+  --leading-snug:    1.2;   /* headings */
+  --leading-normal:  1.45;  /* body */
+  --leading-relaxed: 1.6;   /* long-form */
+
+  /* Letter spacing */
+  --tracking-tight:  -0.03em;  /* large display */
+  --tracking-snug:   -0.015em; /* headings */
+  --tracking-normal: 0;
+  --tracking-wide:   0.04em;   /* eyebrows / caps labels */
+
+  /* ===== SEMANTIC TYPE ROLES ===== */
+  --display:      var(--weight-bold) var(--text-5xl)/var(--leading-tight) var(--font-sans);
+  --heading-xl:   var(--weight-semibold) var(--text-3xl)/var(--leading-snug) var(--font-sans);
+  --heading-lg:   var(--weight-semibold) var(--text-2xl)/var(--leading-snug) var(--font-sans);
+  --heading-md:   var(--weight-semibold) var(--text-xl)/var(--leading-snug) var(--font-sans);
+  --heading-sm:   var(--weight-semibold) var(--text-md)/var(--leading-snug) var(--font-sans);
+  --body:         var(--weight-regular) var(--text-base)/var(--leading-normal) var(--font-sans);
+  --body-sm:      var(--weight-regular) var(--text-sm)/var(--leading-normal) var(--font-sans);
+  --label:        var(--weight-medium) var(--text-sm)/var(--leading-snug) var(--font-sans);
+  --caption:      var(--weight-regular) var(--text-xs)/var(--leading-normal) var(--font-sans);
+  --eyebrow:      var(--weight-medium) var(--text-xs)/var(--leading-snug) var(--font-sans); /* + uppercase + tracking-wide */
+  --mono:         var(--weight-regular) var(--text-sm)/var(--leading-normal) var(--font-mono);
+}

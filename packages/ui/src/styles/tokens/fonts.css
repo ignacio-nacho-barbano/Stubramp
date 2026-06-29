@@ -1,0 +1,13 @@
+/* ============================================================
+   FONTS
+   Ramp's brand typeface is "Lausanne" (Weltkern), a commercial
+   neo-grotesque — not redistributable here. We substitute
+   "Hanken Grotesk" (Google Fonts), the closest open neo-grotesque
+   match in proportion and warmth. Replace with licensed Lausanne
+   .woff2 files when available (see README → Visual Foundations).
+
+   Mono: Ramp uses a grotesque mono for figures/tabular data.
+   "Geist Mono" stand-in via "Spline Sans Mono".
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Spline+Sans+Mono:wght@400;500;600&display=swap');

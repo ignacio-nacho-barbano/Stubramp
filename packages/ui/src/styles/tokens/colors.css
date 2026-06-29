@@ -1,0 +1,78 @@
+/* ============================================================
+   COLORS — Ramp
+   Monochrome-first, warm-tinted neutrals, sharp confident accents.
+   Base scale + semantic aliases. Black UI, white surfaces, and a single
+   electric-chartreuse #E4F222 beacon over warm-paper marketing.
+   NOTE: the accent is high-luminance — always pair it with dark ink text,
+   never white. Use --text-accent (dark olive) for accent-colored text.
+   ============================================================ */
+
+:root {
+  /* --- Warm neutral scale (the backbone of the brand) --- */
+  --paper-0:    #FFFFFF;  /* pure white product surface */
+  --paper-50:   #FAF9F6;  /* warm off-white / app canvas */
+  --paper-100:  #F5F3EE;  /* cream — marketing canvas */
+  --sand-100:   #EFEDE6;  /* subtle raised fill */
+  --gray-200:   #E5E2DB;  /* hairline borders, dividers */
+  --gray-300:   #D6D2C9;  /* strong borders, disabled fill */
+  --gray-400:   #B2AEA4;  /* placeholder, faint text */
+  --gray-500:   #8C887E;  /* muted / secondary text */
+  --gray-600:   #5E5A51;  /* tertiary heading, captions */
+  --gray-700:   #3C3934;  /* body on light */
+  --ink-900:    #1A1916;  /* warm near-black — default text */
+  --black:      #000000;  /* pure black — buttons, max contrast */
+
+  /* --- Accent: signature electric chartreuse (the "beacon") --- */
+  --accent-100: #FBFDCD;  /* pale wash / soft badge fill */
+  --accent-300: #EFF873;  /* light tint */
+  --accent-500: #E4F222;  /* primary accent — needs DARK text on top */
+  --accent-600: #CFDD00;  /* hover/press accent */
+  --accent-700: #6E7700;  /* dark olive — accent text on light surfaces */
+
+  /* --- Support hue: focus / link navy --- */
+  --navy-100:   #E2E7F4;
+  --navy-500:   #2B47B5;
+  --navy-700:   #1B328D;  /* focus ring, links */
+
+  /* --- Financial semantics (muted, data-forward) --- */
+  --green-100:  #DCEEDD;
+  --green-600:  #137A3D;  /* positive / inflow / success */
+  --green-700:  #0E5C2E;
+  --red-100:    #FBE2E0;
+  --red-600:    #C8102E;  /* negative / error / outflow */
+  --red-700:    #9E0C24;
+  --amber-100:  #FBEEDA;
+  --amber-600:  #B4690E;  /* warning / pending */
+
+  /* ===== SEMANTIC ALIASES ===== */
+
+  /* Text */
+  --text-primary:    var(--ink-900);
+  --text-secondary:  var(--gray-600);
+  --text-muted:      var(--gray-500);
+  --text-disabled:   var(--gray-400);
+  --text-inverse:    var(--paper-0);
+  --text-link:       var(--navy-700);
+  --text-accent:     var(--accent-700);  /* dark olive — legible on light */
+  --text-on-accent:  var(--ink-900);     /* ink for text over accent fills */
+
+  /* Surfaces */
+  --surface-page:     var(--paper-50);
+  --surface-canvas:   var(--paper-100);
+  --surface-card:     var(--paper-0);
+  --surface-raised:   var(--sand-100);
+  --surface-inverse:  var(--ink-900);
+  --surface-accent:   var(--accent-500);
+
+  /* Borders */
+  --border-subtle:  var(--gray-200);
+  --border-default: var(--gray-300);
+  --border-strong:  var(--ink-900);
+  --border-focus:   var(--navy-700);
+
+  /* Status */
+  --status-positive: var(--green-600);
+  --status-negative: var(--red-600);
+  --status-warning:  var(--amber-600);
+  --status-info:     var(--navy-700);
+}

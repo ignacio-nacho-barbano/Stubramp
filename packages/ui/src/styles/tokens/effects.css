@@ -1,0 +1,38 @@
+/* ============================================================
+   EFFECTS — Ramp
+   SHARP corners are the signature. Buttons & cards = 0 radius.
+   Only inputs and pills get a small radius. Shadows are soft,
+   low, and double-layered (never heavy). Borders do most of the
+   structural work — Ramp leans on hairlines over shadow.
+   ============================================================ */
+
+:root {
+  /* Radii — sharp by default */
+  --radius-none: 0px;      /* buttons, cards, dialogs (brand default) */
+  --radius-xs:   2px;
+  --radius-sm:   4px;      /* inputs, form fields, small chips */
+  --radius-md:   6px;
+  --radius-pill: 999px;    /* avatars, status dots, toggles */
+
+  /* Borders */
+  --border-hairline: 1px solid var(--border-subtle);
+  --border-line:     1px solid var(--border-default);
+  --border-ink:      1px solid var(--border-strong);
+
+  /* Shadows — soft, double-layered, low-opacity */
+  --shadow-xs:  0 1px 1.5px rgba(0,0,0,0.06);
+  --shadow-sm:  0 1px 2px rgba(0,0,0,0.06), 0 1px 1px rgba(0,0,0,0.04);
+  --shadow-md:  0 3px 10px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-lg:  0 5px 20px rgba(0,0,0,0.10), 0 10px 40px rgba(0,0,0,0.04);
+  --shadow-pop: 0 3px 10.5px rgba(0,0,0,0.15), 0 1px 1.5px rgba(0,0,0,0.10); /* dialogs/popovers */
+
+  /* Focus ring */
+  --focus-ring: 0 0 0 2px var(--paper-0), 0 0 0 4px var(--border-focus);
+
+  /* Motion — quick, confident, no bounce */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out:      cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast:   120ms;
+  --dur-normal: 180ms;
+  --dur-slow:   280ms;
+}
