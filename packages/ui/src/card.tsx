@@ -1,27 +1,56 @@
-import { type JSX } from "react";
+import { type HTMLAttributes, type ReactNode } from "react";
 
+import { cn } from "./cn";
+
+export interface CardProps extends HTMLAttributes<HTMLDivElement> {
+  /** Shadow depth. Default "flat" (border-only). */
+  elevation?: "flat" | "sm" | "md";
+  /** Apply default body padding. Default true. */
+  padded?: boolean;
+  /** Optional header node (rendered with bottom divider). */
+  header?: ReactNode;
+  /** Optional footer node (rendered with top divider, raised bg). */
+  footer?: ReactNode;
+  children?: ReactNode;
+}
+
+const SHADOWS: Record<NonNullable<CardProps["elevation"]>, string> = {
+  flat: "shadow-none",
+  sm: "shadow-sm",
+  md: "shadow-md",
+};
+
+/**
+ * Ramp Card — squared surface, hairline border, optional soft shadow.
+ * Ramp leans on borders over shadow; default is border-only.
+ */
 export function Card({
-  className,
-  title,
+  elevation = "flat",
+  padded = true,
+  header = null,
+  footer = null,
   children,
-  href,
-}: {
-  className?: string;
-  title: string;
-  children: React.ReactNode;
-  href: string;
-}): JSX.Element {
+  className,
+  ...rest
+}: CardProps) {
   return (
-    <a
-      className={className}
-      href={`${href}?utm_source=create-turbo&utm_medium=basic&utm_campaign=create-turbo"`}
-      rel="noopener noreferrer"
-      target="_blank"
+    <div
+      className={cn(
+        "flex flex-col bg-surface-card border border-gray-200 rounded-none",
+        SHADOWS[elevation],
+        className,
+      )}
+      {...rest}
     >
-      <h2>
-        {title} <span>-&gt;</span>
-      </h2>
-      <p>{children}</p>
-    </a>
+      {header && (
+        <div className="px-5 py-4 border-b border-gray-200 font-sans text-md font-semibold leading-snug text-ink-900">
+          {header}
+        </div>
+      )}
+      <div className={cn("flex-1", padded ? "p-5" : "p-0")}>{children}</div>
+      {footer && (
+        <div className="px-5 py-4 border-t border-gray-200 bg-surface-page">{footer}</div>
+      )}
+    </div>
   );
 }

@@ -1,0 +1,134 @@
+/* ============================================================
+   Ramp Design System — Tailwind v4 entry point.
+   Tailwind consumers import THIS file (e.g. `@stubramp/ui/theme.css`).
+
+   It loads Tailwind, the raw Ramp design tokens (the single source of
+   truth — see ./tokens/*.css), registers this package's components as a
+   content source, and maps the tokens into Tailwind's @theme so utilities
+   like `bg-surface-card`, `text-ink-900`, `rounded-none`, `shadow-md`,
+   `font-sans`, `text-2xl` are generated.
+
+   The mappings use `@theme inline`, so utilities reference the live token
+   variables (`var(--surface-card)`, …) rather than copies — overriding a
+   token at runtime flows through to every utility, and there is no value
+   duplication between this file and tokens/*.css.
+   ============================================================ */
+
+/* Webfont first: a remote @import must precede other rules to be valid. */
+@import "./tokens/fonts.css";
+
+@import "tailwindcss";
+
+/* Ramp design tokens — the source of truth for all values. */
+@import "./tokens/colors.css";
+@import "./tokens/typography.css";
+@import "./tokens/spacing.css";
+@import "./tokens/effects.css";
+
+/* Scan this package's components so their utility classes are generated
+   when an app imports this stylesheet (path is relative to this file). */
+@source "../**/*.tsx";
+
+@theme inline {
+  /* ===== Colors — warm neutral scale ===== */
+  --color-paper-0: var(--paper-0);
+  --color-paper-50: var(--paper-50);
+  --color-paper-100: var(--paper-100);
+  --color-sand-100: var(--sand-100);
+  --color-gray-200: var(--gray-200);
+  --color-gray-300: var(--gray-300);
+  --color-gray-400: var(--gray-400);
+  --color-gray-500: var(--gray-500);
+  --color-gray-600: var(--gray-600);
+  --color-gray-700: var(--gray-700);
+  --color-ink-900: var(--ink-900);
+  --color-black: var(--black);
+
+  /* ===== Colors — accent (chartreuse beacon) ===== */
+  --color-accent-100: var(--accent-100);
+  --color-accent-300: var(--accent-300);
+  --color-accent-500: var(--accent-500);
+  --color-accent-600: var(--accent-600);
+  --color-accent-700: var(--accent-700);
+
+  /* ===== Colors — support navy ===== */
+  --color-navy-100: var(--navy-100);
+  --color-navy-500: var(--navy-500);
+  --color-navy-700: var(--navy-700);
+
+  /* ===== Colors — financial semantics ===== */
+  --color-green-100: var(--green-100);
+  --color-green-600: var(--green-600);
+  --color-green-700: var(--green-700);
+  --color-red-100: var(--red-100);
+  --color-red-600: var(--red-600);
+  --color-red-700: var(--red-700);
+  --color-amber-100: var(--amber-100);
+  --color-amber-600: var(--amber-600);
+
+  /* ===== Colors — semantic surfaces ===== */
+  --color-surface-page: var(--surface-page);
+  --color-surface-canvas: var(--surface-canvas);
+  --color-surface-card: var(--surface-card);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-inverse: var(--surface-inverse);
+  --color-surface-accent: var(--surface-accent);
+
+  /* ===== Colors — semantic text helpers (read well as utilities) ===== */
+  --color-inverse: var(--text-inverse);
+  --color-on-accent: var(--text-on-accent);
+  --color-link: var(--text-link);
+
+  /* ===== Colors — status (usable as text/bg/border) ===== */
+  --color-status-positive: var(--status-positive);
+  --color-status-negative: var(--status-negative);
+  --color-status-warning: var(--status-warning);
+  --color-status-info: var(--status-info);
+
+  /* ===== Type — families ===== */
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  /* ===== Type — sizes (override Tailwind's rem defaults) ===== */
+  --text-2xs: var(--text-2xs);
+  --text-xs: var(--text-xs);
+  --text-sm: var(--text-sm);
+  --text-base: var(--text-base);
+  --text-md: var(--text-md);
+  --text-lg: var(--text-lg);
+  --text-xl: var(--text-xl);
+  --text-2xl: var(--text-2xl);
+  --text-3xl: var(--text-3xl);
+  --text-4xl: var(--text-4xl);
+  --text-5xl: var(--text-5xl);
+
+  /* ===== Type — line height ===== */
+  --leading-tight: var(--leading-tight);
+  --leading-snug: var(--leading-snug);
+  --leading-normal: var(--leading-normal);
+  --leading-relaxed: var(--leading-relaxed);
+
+  /* ===== Type — letter spacing ===== */
+  --tracking-tight: var(--tracking-tight);
+  --tracking-snug: var(--tracking-snug);
+  --tracking-normal: var(--tracking-normal);
+  --tracking-wide: var(--tracking-wide);
+
+  /* ===== Radii (sharp by default) ===== */
+  --radius-none: var(--radius-none);
+  --radius-xs: var(--radius-xs);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-pill: var(--radius-pill);
+
+  /* ===== Shadows ===== */
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-pop: var(--shadow-pop);
+
+  /* ===== Motion easing ===== */
+  --ease-standard: var(--ease-standard);
+  --ease-out: var(--ease-out);
+}

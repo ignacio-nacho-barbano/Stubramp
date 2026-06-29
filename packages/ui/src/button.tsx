@@ -1,11 +1,6 @@
-"use client";
+import { type ButtonHTMLAttributes, type ReactNode } from "react";
 
-import {
-  type ButtonHTMLAttributes,
-  type CSSProperties,
-  type MouseEvent,
-  type ReactNode,
-} from "react";
+import { cn } from "./cn";
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   /** Visual style. Default "primary". */
@@ -21,6 +16,20 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children?: ReactNode;
 }
 
+const SIZES: Record<NonNullable<ButtonProps["size"]>, string> = {
+  sm: "min-h-8 px-3 text-sm",
+  md: "min-h-10 px-4 text-base",
+  lg: "min-h-12 px-[22px] text-md",
+};
+
+const VARIANTS: Record<NonNullable<ButtonProps["variant"]>, string> = {
+  primary: "bg-black text-inverse border border-black hover:bg-[#222]",
+  secondary: "bg-surface-card text-ink-900 border border-gray-300 hover:bg-surface-raised",
+  ghost: "bg-transparent text-ink-900 border border-transparent hover:bg-surface-raised",
+  accent: "bg-surface-accent text-on-accent border border-surface-accent hover:bg-accent-600",
+  danger: "bg-status-negative text-inverse border border-status-negative hover:bg-red-700",
+};
+
 /**
  * Ramp Button — sharp-cornered, weight-500, confident.
  * Variants: primary (black), secondary (outline), ghost, accent (chartreuse), danger.
@@ -33,81 +42,19 @@ export function Button({
   iconLeft = null,
   iconRight = null,
   children,
-  style = {},
+  className,
   ...rest
 }: ButtonProps) {
-  const sizes: Record<string, { padding: string; font: string; height: number }> = {
-    sm: { padding: "6px 12px", font: "var(--text-sm)", height: 32 },
-    md: { padding: "9px 16px", font: "var(--text-base)", height: 40 },
-    lg: { padding: "13px 22px", font: "var(--text-md)", height: 48 },
-  };
-  const s = sizes[size] || sizes.md!;
-
-  const variants: Record<string, CSSProperties> = {
-    primary: {
-      background: "var(--black)",
-      color: "var(--text-inverse)",
-      border: "1px solid var(--black)",
-    },
-    secondary: {
-      background: "var(--surface-card)",
-      color: "var(--text-primary)",
-      border: "1px solid var(--border-default)",
-    },
-    ghost: {
-      background: "transparent",
-      color: "var(--text-primary)",
-      border: "1px solid transparent",
-    },
-    accent: {
-      background: "var(--surface-accent)",
-      color: "var(--text-on-accent)",
-      border: "1px solid var(--surface-accent)",
-    },
-    danger: {
-      background: "var(--status-negative)",
-      color: "var(--text-inverse)",
-      border: "1px solid var(--status-negative)",
-    },
-  };
-  const v = variants[variant] || variants.primary!;
-
   return (
     <button
       disabled={disabled}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "var(--space-2)",
-        whiteSpace: "nowrap",
-        fontFamily: "var(--font-sans)",
-        fontSize: s.font,
-        fontWeight: "var(--weight-medium)",
-        lineHeight: 1,
-        letterSpacing: "-0.01em",
-        padding: s.padding,
-        minHeight: s.height,
-        width: fullWidth ? "100%" : "auto",
-        borderRadius: "var(--radius-none)",
-        cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.45 : 1,
-        transition:
-          "background var(--dur-fast) var(--ease-standard), border-color var(--dur-fast) var(--ease-standard), opacity var(--dur-fast)",
-        ...v,
-        ...style,
-      }}
-      onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => {
-        if (disabled) return;
-        if (variant === "primary") e.currentTarget.style.background = "#222";
-        else if (variant === "secondary") e.currentTarget.style.background = "var(--surface-raised)";
-        else if (variant === "ghost") e.currentTarget.style.background = "var(--surface-raised)";
-        else if (variant === "accent") e.currentTarget.style.background = "var(--accent-600)";
-        else if (variant === "danger") e.currentTarget.style.background = "var(--red-700)";
-      }}
-      onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => {
-        e.currentTarget.style.background = (v.background as string) ?? "";
-      }}
+      className={cn(
+        "inline-flex items-center justify-center gap-2 whitespace-nowrap font-sans font-medium leading-none tracking-[-0.01em] rounded-none cursor-pointer transition-[background-color,border-color,opacity] duration-[120ms] ease-standard disabled:opacity-45 disabled:cursor-not-allowed",
+        SIZES[size],
+        VARIANTS[variant],
+        fullWidth ? "w-full" : "w-auto",
+        className,
+      )}
       {...rest}
     >
       {iconLeft}
