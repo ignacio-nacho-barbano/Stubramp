@@ -3,7 +3,9 @@ import type { FastifyInstance } from "fastify";
 import { BillEventRepository } from "./BillEventRepository.js";
 import { BillRepository } from "./BillRepository.js";
 import { CardRepository } from "./CardRepository.js";
+import { CompanyRepository } from "./CompanyRepository.js";
 import { PaymentRepository } from "./PaymentRepository.js";
+import { RefreshTokenRepository } from "./RefreshTokenRepository.js";
 import { TransactionRepository } from "./TransactionRepository.js";
 import { UserRepository } from "./UserRepository.js";
 import { VendorRepository } from "./VendorRepository.js";
@@ -16,6 +18,8 @@ export interface Repositories {
   bills: BillRepository;
   payments: PaymentRepository;
   billEvents: BillEventRepository;
+  companies: CompanyRepository;
+  refreshTokens: RefreshTokenRepository;
 }
 
 declare module "fastify" {
@@ -41,5 +45,7 @@ export const repositoriesPlugin = fp(async (fastify: FastifyInstance) => {
     bills: new BillRepository(prisma.bill),
     payments: new PaymentRepository(prisma.payment),
     billEvents: new BillEventRepository(prisma.billEvent),
+    companies: new CompanyRepository(prisma.company),
+    refreshTokens: new RefreshTokenRepository(prisma.refreshToken),
   });
 });

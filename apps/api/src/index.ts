@@ -4,11 +4,15 @@ import {
   serializerCompiler,
   validatorCompiler,
 } from "fastify-type-provider-zod";
+import { authPlugin } from "./auth/plugin.js";
 import { prisma } from "./db.js";
 import { DomainError } from "./domain/errors.js";
 import { env } from "./env.js";
+import { authRoutes } from "./routes/auth.js";
 import { billRoutes } from "./routes/bills.js";
+import { companyRoutes } from "./routes/companies.js";
 import { paymentRoutes } from "./routes/payments.js";
+import { userRoutes } from "./routes/users.js";
 import { vendorRoutes } from "./routes/vendors.js";
 import { NotFoundError, UniqueConstraintError } from "./repositories/errors.js";
 import { repositoriesPlugin } from "./repositories/plugin.js";
@@ -85,9 +89,14 @@ fastify.get("/health", async () => {
 
 const start = async () => {
   try {
-    // Order matters: services depend on repositories; routes depend on both.
+    // Order matters: services depend on repositories; auth depends on repos +
+    // jwt; routes depend on all three (and the global auth onRequest hook).
     await fastify.register(repositoriesPlugin);
     await fastify.register(servicesPlugin);
+    await fastify.register(authPlugin);
+    await fastify.register(authRoutes);
+    await fastify.register(companyRoutes);
+    await fastify.register(userRoutes);
     await fastify.register(billRoutes);
     await fastify.register(vendorRoutes);
     await fastify.register(paymentRoutes);

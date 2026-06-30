@@ -30,3 +30,15 @@ export class GuardFailedError extends DomainError {
     super(message, 422);
   }
 }
+
+export class UnauthorizedError extends DomainError {
+  constructor(message = "Unauthorized") {
+    super(message, 401);
+  }
+}
+
+export class ForbiddenError extends DomainError {
+  constructor(message = "Forbidden") {
+    super(message, 403);
+  }
+}

@@ -21,14 +21,26 @@ export class CardRepository extends BaseRepository<CardTypes> {
     super(cards as unknown as ModelDelegate, "Card");
   }
 
-  // Uses @@index([ownerId]). Optionally filters by status.
+  // Uses @@index([ownerId]). Optionally filters by status, company-scoped.
   findByOwnerId(
     ownerId: string,
+    companyId: string | null,
     opts?: { status?: Prisma.CardWhereInput["status"] },
   ) {
     return this.cards.findMany({
-      where: { ownerId, ...(opts?.status ? { status: opts.status } : {}) },
+      where: {
+        ownerId,
+        ...(companyId ? { companyId } : {}),
+        ...(opts?.status ? { status: opts.status } : {}),
+      },
       orderBy: { createdAt: "desc" },
+    });
+  }
+
+  // Company-scoped single lookup; null companyId = no filter (superuser).
+  findByIdScoped(id: string, companyId: string | null) {
+    return this.cards.findFirst({
+      where: { id, ...(companyId ? { companyId } : {}) },
     });
   }
 

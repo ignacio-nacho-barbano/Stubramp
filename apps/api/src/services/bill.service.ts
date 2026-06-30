@@ -1,4 +1,6 @@
 import type { BillStatus, PrismaClient } from "../generated/prisma/client.js";
+import type { AuthContext } from "../auth/context.js";
+import { requireCompanyForWrite, resolveCompanyId } from "../auth/scope.js";
 import { canTransition } from "../domain/bill-state-machine.js";
 import {
   GuardFailedError,
@@ -12,6 +14,7 @@ import {
   type BillWithRelations,
 } from "../repositories/BillRepository.js";
 import type { PaymentRepository } from "../repositories/PaymentRepository.js";
+import type { VendorRepository } from "../repositories/VendorRepository.js";
 import type {
   CreateBillInput,
   TransitionInput,
@@ -27,9 +30,19 @@ export class BillService {
     private readonly bills: BillRepository,
     private readonly payments: PaymentRepository,
     private readonly billEvents: BillEventRepository,
+    private readonly vendors: VendorRepository,
   ) {}
 
-  async create(input: CreateBillInput) {
+  async create(auth: AuthContext, input: CreateBillInput) {
+    const companyId = requireCompanyForWrite(auth);
+
+    // The vendor must belong to the same company — no attaching a bill to
+    // another tenant's vendor.
+    const vendorOk = await this.vendors.exists({ id: input.vendorId, companyId });
+    if (!vendorOk) {
+      throw new NotFoundError("Vendor", input.vendorId);
+    }
+
     // Invariant: each line's splits must sum exactly to that line's amount.
     const lines = input.lines.map((line) => {
       const amountCents = line.quantity * line.unitCents;
@@ -46,6 +59,7 @@ export class BillService {
 
     return this.bills.create(
       {
+        company: { connect: { id: companyId } },
         vendor: { connect: { id: input.vendorId } },
         billNumber: input.billNumber,
         source: input.source,
@@ -69,24 +83,24 @@ export class BillService {
             },
           })),
         },
-        events: { create: { toStatus: "DRAFT", actor: input.source } },
+        events: { create: { toStatus: "DRAFT", actor: auth.userId } },
       },
       { include: BILL_INCLUDE },
     );
   }
 
-  list(status?: BillStatus) {
-    return this.bills.findByStatus(status);
+  list(auth: AuthContext, status?: BillStatus) {
+    return this.bills.findByStatus(resolveCompanyId(auth), status);
   }
 
-  async get(id: string) {
-    const bill = await this.bills.findByIdWithRelations(id);
-    if (!bill) throw new NotFoundError("Bill", id);
+  async get(auth: AuthContext, id: string) {
+    const bill = await this.bills.findByIdScoped(id, resolveCompanyId(auth));
+    if (!bill) throw new NotFoundError("Bill", id); // 404 for cross-tenant — no leak
     return bill;
   }
 
-  async transition(id: string, input: TransitionInput) {
-    const bill = await this.bills.findByIdWithRelations(id);
+  async transition(auth: AuthContext, id: string, input: TransitionInput) {
+    const bill = await this.bills.findByIdScoped(id, resolveCompanyId(auth));
     if (!bill) throw new NotFoundError("Bill", id);
 
     const from = bill.status;
@@ -102,13 +116,14 @@ export class BillService {
         bill: { connect: { id } },
         fromStatus: from,
         toStatus: to,
-        actor: input.actor,
+        actor: auth.userId,
       });
 
       // Scheduling is the one transition with a side effect: it materializes a
-      // pending payment for the bill's full amount.
+      // pending payment for the bill's full amount (stamped with the bill's company).
       if (to === "SCHEDULED") {
         await this.payments.withTx(tx).create({
+          company: { connect: { id: bill.companyId } },
           bill: { connect: { id } },
           amountCents: bill.totalCents,
           method: input.method ?? "ACH",
@@ -124,13 +139,15 @@ export class BillService {
   // Settle a scheduled payment and drive the bill to its terminal/retry state
   // through the same state machine: SUCCEEDED -> PAID, FAILED -> FAILED.
   async settlePayment(
+    auth: AuthContext,
     paymentId: string,
     input: SettlePaymentInput,
   ): Promise<BillWithRelations> {
-    const payment = await this.payments.findById(paymentId);
+    const companyId = resolveCompanyId(auth);
+    const payment = await this.payments.findByIdScoped(paymentId, companyId);
     if (!payment) throw new NotFoundError("Payment", paymentId);
 
-    const bill = await this.bills.findByIdWithRelations(payment.billId);
+    const bill = await this.bills.findByIdScoped(payment.billId, companyId);
     if (!bill) throw new NotFoundError("Bill", payment.billId);
 
     const to: BillStatus = input.outcome === "SUCCEEDED" ? "PAID" : "FAILED";
@@ -147,11 +164,11 @@ export class BillService {
         bill: { connect: { id: bill.id } },
         fromStatus: from,
         toStatus: to,
-        actor: input.actor,
+        actor: auth.userId,
       });
     });
 
-    return this.get(bill.id);
+    return this.get(auth, bill.id);
   }
 }
 

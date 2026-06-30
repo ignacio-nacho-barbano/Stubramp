@@ -33,15 +33,26 @@ export class BillRepository extends BaseRepository<BillTypes> {
     super(bills as unknown as ModelDelegate, "Bill");
   }
 
-  // Loads the full aggregate (lineItems + splits, payments, events, vendor).
-  findByIdWithRelations(id: string): Promise<BillWithRelations | null> {
-    return this.bills.findUnique({ where: { id }, include: BILL_INCLUDE });
+  // Loads the full aggregate, company-scoped. `companyId` null = no filter
+  // (superuser). findFirst (not findUnique) because { id, companyId } isn't a
+  // unique index; a cross-tenant row returns null → caller 404s (no leak).
+  findByIdScoped(
+    id: string,
+    companyId: string | null,
+  ): Promise<BillWithRelations | null> {
+    return this.bills.findFirst({
+      where: { id, ...(companyId ? { companyId } : {}) },
+      include: BILL_INCLUDE,
+    });
   }
 
-  // Uses @@index([status]) + @@index([dueDate]) for AP-aging ordering.
-  findByStatus(status?: BillStatus) {
+  // Uses @@index([companyId]) + @@index([status]) + @@index([dueDate]).
+  findByStatus(companyId: string | null, status?: BillStatus) {
     return this.bills.findMany({
-      where: status ? { status } : undefined,
+      where: {
+        ...(companyId ? { companyId } : {}),
+        ...(status ? { status } : {}),
+      },
       orderBy: { dueDate: "asc" },
     });
   }

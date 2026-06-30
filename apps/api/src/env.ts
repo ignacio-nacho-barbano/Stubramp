@@ -21,4 +21,10 @@ export const env = {
   HOST: process.env.HOST ?? "0.0.0.0",
   PORT: Number(process.env.PORT ?? 3001),
   NODE_ENV: process.env.NODE_ENV ?? "development",
+  // Signs short-lived access JWTs. Refresh tokens are opaque + stored server-side.
+  JWT_SECRET: required("JWT_SECRET"),
+  ACCESS_TOKEN_TTL: process.env.ACCESS_TOKEN_TTL ?? "15m",
+  REFRESH_TOKEN_TTL: process.env.REFRESH_TOKEN_TTL ?? "30d",
+  // Server-side secret mixed into every password hash (never stored in the DB).
+  PASSWORD_PEPPER: required("PASSWORD_PEPPER"),
 } as const;

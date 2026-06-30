@@ -1,9 +1,11 @@
 import fp from "fastify-plugin";
 import type { FastifyInstance } from "fastify";
 import { BillService } from "./bill.service.js";
+import { UserService } from "./user.service.js";
 
 export interface Services {
   bills: BillService;
+  users: UserService;
 }
 
 declare module "fastify" {
@@ -28,6 +30,8 @@ export const servicesPlugin = fp(async (fastify: FastifyInstance) => {
       repositories.bills,
       repositories.payments,
       repositories.billEvents,
+      repositories.vendors,
     ),
+    users: new UserService(repositories.users),
   });
 });

@@ -21,11 +21,18 @@ export class PaymentRepository extends BaseRepository<PaymentTypes> {
     super(payments as unknown as ModelDelegate, "Payment");
   }
 
-  // Uses @@index([billId]).
-  findByBillId(billId: string) {
+  // Uses @@index([billId]) + @@index([companyId]). null companyId = no filter.
+  findByBillId(billId: string, companyId: string | null) {
     return this.payments.findMany({
-      where: { billId },
+      where: { billId, ...(companyId ? { companyId } : {}) },
       orderBy: { createdAt: "desc" },
+    });
+  }
+
+  // Company-scoped single lookup; null companyId = no filter (superuser).
+  findByIdScoped(id: string, companyId: string | null) {
+    return this.payments.findFirst({
+      where: { id, ...(companyId ? { companyId } : {}) },
     });
   }
 

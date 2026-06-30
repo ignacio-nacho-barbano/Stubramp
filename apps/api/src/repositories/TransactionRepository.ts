@@ -23,10 +23,10 @@ export class TransactionRepository extends BaseRepository<TransactionTypes> {
     super(txns as unknown as ModelDelegate, "Transaction");
   }
 
-  // Uses @@index([cardId]).
-  findByCardId(cardId: string) {
+  // Uses @@index([cardId]) + @@index([companyId]). null companyId = no filter.
+  findByCardId(cardId: string, companyId: string | null) {
     return this.txns.findMany({
-      where: { cardId },
+      where: { cardId, ...(companyId ? { companyId } : {}) },
       orderBy: { createdAt: "desc" },
     });
   }

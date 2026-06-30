@@ -25,6 +25,13 @@ export class VendorRepository extends BaseRepository<VendorTypes> {
     return this.vendors.findFirst({ where: { email } });
   }
 
+  // Company-scoped lookup; null companyId = no filter (superuser).
+  findByIdScoped(id: string, companyId: string | null) {
+    return this.vendors.findFirst({
+      where: { id, ...(companyId ? { companyId } : {}) },
+    });
+  }
+
   withTx(tx: Prisma.TransactionClient): VendorRepository {
     return new VendorRepository(tx.vendor);
   }

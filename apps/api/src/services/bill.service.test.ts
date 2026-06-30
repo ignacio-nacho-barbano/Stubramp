@@ -1,15 +1,27 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { AuthContext } from "../auth/context.js";
 import { GuardFailedError, IllegalTransitionError } from "../domain/errors.js";
 import type { BillEventRepository } from "../repositories/BillEventRepository.js";
 import type { BillRepository } from "../repositories/BillRepository.js";
 import type { PaymentRepository } from "../repositories/PaymentRepository.js";
+import type { VendorRepository } from "../repositories/VendorRepository.js";
 import type { PrismaClient } from "../generated/prisma/client.js";
 import { BillService } from "./bill.service.js";
+
+// A company-scoped ADMIN actor used across the cases.
+const auth: AuthContext = {
+  userId: "u1",
+  role: "ADMIN",
+  companyId: "company-1",
+  isSuperuser: false,
+  requestedCompanyId: null,
+};
 
 // A bill aggregate with one balanced line (1 x 1000c, split fully to ENG).
 function makeBill(overrides: Record<string, unknown> = {}) {
   return {
     id: "bill-1",
+    companyId: "company-1",
     vendorId: "vendor-1",
     billNumber: "INV-1",
     status: "DRAFT",
@@ -79,14 +91,15 @@ describe("BillService", () => {
   let bills: {
     create: ReturnType<typeof vi.fn>;
     findByStatus: ReturnType<typeof vi.fn>;
-    findByIdWithRelations: ReturnType<typeof vi.fn>;
+    findByIdScoped: ReturnType<typeof vi.fn>;
     withTx: ReturnType<typeof vi.fn>;
   };
   let payments: {
-    findById: ReturnType<typeof vi.fn>;
+    findByIdScoped: ReturnType<typeof vi.fn>;
     withTx: ReturnType<typeof vi.fn>;
   };
   let billEvents: { withTx: ReturnType<typeof vi.fn> };
+  let vendors: { exists: ReturnType<typeof vi.fn> };
   let prisma: { $transaction: ReturnType<typeof vi.fn> };
   let service: BillService;
 
@@ -99,14 +112,15 @@ describe("BillService", () => {
     bills = {
       create: vi.fn(async (_data: any, _args?: any) => makeBill()),
       findByStatus: vi.fn(async () => [makeBill()]),
-      findByIdWithRelations: vi.fn(async () => makeBill()),
+      findByIdScoped: vi.fn(async () => makeBill()),
       withTx: vi.fn(() => ({ update: billUpdate })),
     };
     payments = {
-      findById: vi.fn(),
+      findByIdScoped: vi.fn(),
       withTx: vi.fn(() => ({ create: paymentCreate, update: paymentUpdate })),
     };
     billEvents = { withTx: vi.fn(() => ({ create: eventCreate })) };
+    vendors = { exists: vi.fn(async () => true) };
     // The tx double is opaque: every write goes through a repo's withTx, which
     // ignores it here. $transaction just runs the callback.
     prisma = { $transaction: vi.fn(async (cb: (t: unknown) => unknown) => cb({})) };
@@ -116,6 +130,7 @@ describe("BillService", () => {
       bills as unknown as BillRepository,
       payments as unknown as PaymentRepository,
       billEvents as unknown as BillEventRepository,
+      vendors as unknown as VendorRepository,
     );
   });
 
@@ -132,7 +147,7 @@ describe("BillService", () => {
           },
         ],
       });
-      await expect(service.create(input as never)).rejects.toBeInstanceOf(
+      await expect(service.create(auth, input as never)).rejects.toBeInstanceOf(
         GuardFailedError,
       );
       expect(bills.create).not.toHaveBeenCalled();
@@ -150,70 +165,61 @@ describe("BillService", () => {
           },
         ],
       });
-      await service.create(input as never);
+      await service.create(auth, input as never);
       expect(bills.create).toHaveBeenCalledTimes(1);
       const data = bills.create.mock.calls[0]![0];
       expect(data.totalCents).toBe(1000);
+      expect(data.company).toEqual({ connect: { id: "company-1" } });
     });
   });
 
   describe("transition", () => {
     it("rejects an illegal jump", async () => {
-      bills.findByIdWithRelations.mockResolvedValueOnce(
-        makeBill({ status: "DRAFT" }),
-      );
+      bills.findByIdScoped.mockResolvedValueOnce(makeBill({ status: "DRAFT" }));
       await expect(
-        service.transition("bill-1", { to: "APPROVED", actor: "alice" } as never),
+        service.transition(auth, "bill-1", { to: "APPROVED" } as never),
       ).rejects.toBeInstanceOf(IllegalTransitionError);
     });
 
     it("requires scheduledFor when scheduling", async () => {
-      bills.findByIdWithRelations.mockResolvedValueOnce(
-        makeBill({ status: "APPROVED" }),
-      );
+      bills.findByIdScoped.mockResolvedValueOnce(makeBill({ status: "APPROVED" }));
       await expect(
-        service.transition("bill-1", { to: "SCHEDULED", actor: "alice" } as never),
+        service.transition(auth, "bill-1", { to: "SCHEDULED" } as never),
       ).rejects.toBeInstanceOf(GuardFailedError);
     });
 
     it("rejects a scheduledFor in the past", async () => {
-      bills.findByIdWithRelations.mockResolvedValueOnce(
-        makeBill({ status: "APPROVED" }),
-      );
+      bills.findByIdScoped.mockResolvedValueOnce(makeBill({ status: "APPROVED" }));
       await expect(
-        service.transition("bill-1", {
+        service.transition(auth, "bill-1", {
           to: "SCHEDULED",
-          actor: "alice",
           scheduledFor: new Date("2000-01-01"),
         } as never),
       ).rejects.toBeInstanceOf(GuardFailedError);
     });
 
     it("submits a bill with valid lines and writes an event", async () => {
-      bills.findByIdWithRelations.mockResolvedValueOnce(
-        makeBill({ status: "DRAFT" }),
-      );
-      await service.transition("bill-1", {
-        to: "SUBMITTED",
-        actor: "alice",
-      } as never);
+      bills.findByIdScoped.mockResolvedValueOnce(makeBill({ status: "DRAFT" }));
+      await service.transition(auth, "bill-1", { to: "SUBMITTED" } as never);
       expect(billUpdate).toHaveBeenCalledWith("bill-1", { status: "SUBMITTED" });
       expect(eventCreate).toHaveBeenCalledTimes(1);
+      // actor is the authenticated user, not request input.
+      expect(eventCreate.mock.calls[0]![0].actor).toBe("u1");
       expect(paymentCreate).not.toHaveBeenCalled();
     });
 
     it("materializes a pending payment when scheduling", async () => {
-      bills.findByIdWithRelations.mockResolvedValueOnce(
+      bills.findByIdScoped.mockResolvedValueOnce(
         makeBill({ status: "APPROVED", totalCents: 1000 }),
       );
-      await service.transition("bill-1", {
+      await service.transition(auth, "bill-1", {
         to: "SCHEDULED",
-        actor: "alice",
         scheduledFor: new Date("2999-01-01"),
       } as never);
       expect(paymentCreate).toHaveBeenCalledTimes(1);
       const data = paymentCreate.mock.calls[0]![0];
       expect(data).toMatchObject({
+        company: { connect: { id: "company-1" } },
         bill: { connect: { id: "bill-1" } },
         amountCents: 1000,
         method: "ACH",
@@ -224,11 +230,12 @@ describe("BillService", () => {
 
   describe("settlePayment", () => {
     it("drives the bill to PAID and stamps paidAt on success", async () => {
-      payments.findById.mockResolvedValueOnce({ id: "pay-1", billId: "bill-1" });
-      bills.findByIdWithRelations.mockResolvedValue(
-        makeBill({ status: "SCHEDULED" }),
-      );
-      await service.settlePayment("pay-1", { outcome: "SUCCEEDED", actor: "bob" });
+      payments.findByIdScoped.mockResolvedValueOnce({
+        id: "pay-1",
+        billId: "bill-1",
+      });
+      bills.findByIdScoped.mockResolvedValue(makeBill({ status: "SCHEDULED" }));
+      await service.settlePayment(auth, "pay-1", { outcome: "SUCCEEDED" });
       expect(paymentUpdate).toHaveBeenCalledTimes(1);
       const [id, data] = paymentUpdate.mock.calls[0]!;
       expect(id).toBe("pay-1");
@@ -238,11 +245,12 @@ describe("BillService", () => {
     });
 
     it("drives the bill to FAILED on failure", async () => {
-      payments.findById.mockResolvedValueOnce({ id: "pay-1", billId: "bill-1" });
-      bills.findByIdWithRelations.mockResolvedValue(
-        makeBill({ status: "SCHEDULED" }),
-      );
-      await service.settlePayment("pay-1", { outcome: "FAILED", actor: "bob" });
+      payments.findByIdScoped.mockResolvedValueOnce({
+        id: "pay-1",
+        billId: "bill-1",
+      });
+      bills.findByIdScoped.mockResolvedValue(makeBill({ status: "SCHEDULED" }));
+      await service.settlePayment(auth, "pay-1", { outcome: "FAILED" });
       const data = paymentUpdate.mock.calls[0]![1];
       expect(data.status).toBe("FAILED");
       expect(data.paidAt).toBeNull();

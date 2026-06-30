@@ -29,7 +29,7 @@ export const createBillInput = z.object({
 
 export const transitionInput = z.object({
   to: z.enum(BILL_STATUSES),
-  actor: z.string().min(1),
+  // actor is derived from the authenticated user, never the request body.
   // only consulted when scheduling a payment (APPROVED -> SCHEDULED)
   scheduledFor: z.coerce.date().optional(),
   method: z.enum(["ACH", "WIRE", "CHECK", "CARD"]).optional(),

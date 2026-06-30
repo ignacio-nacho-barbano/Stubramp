@@ -12,13 +12,69 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
+// ----------------------------------------------------------------------------
+// Tenancy + identity
+//
+// A Company is the tenant root. Every business row (Vendor/Bill/Payment/Card/
+// Transaction) carries a denormalized companyId so the generic repository layer
+// can scope every query with a flat `{ id, companyId }` filter. A User belongs
+// to exactly one Company via a nullable companyId; SUPERUSERs are platform staff
+// with companyId == null and can act on any company (invariant enforced in the
+// user-create service path).
+// ----------------------------------------------------------------------------
+
+model Company {
   id        String   @id @default(uuid())
-  email     String   @unique
   name      String
+  slug      String   @unique
+  users     User[]
+  vendors   Vendor[]
+  bills     Bill[]
+  payments  Payment[]
   cards     Card[]
+  transactions Transaction[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  name          String
+  passwordHash  String
+  role          Role           @default(EMPLOYEE)
+  isActive      Boolean        @default(true)
+  company       Company?       @relation(fields: [companyId], references: [id])
+  companyId     String?
+  cards         Card[]
+  refreshTokens RefreshToken[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([companyId])
+}
+
+// Server-side refresh tokens (rotating). The opaque random token is returned to
+// the client; only its SHA-256 hash is stored, so tokens are revocable and a
+// reused (already-rotated) token is detectable.
+model RefreshToken {
+  id        String    @id @default(uuid())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+enum Role {
+  SUPERUSER
+  ADMIN
+  ACCOUNTANT
+  APPROVER
+  EMPLOYEE
 }
 
 model Card {
@@ -30,11 +86,14 @@ model Card {
   spendLimit    Decimal       @default(0) @db.Money
   owner         User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId       String
+  company       Company       @relation(fields: [companyId], references: [id])
+  companyId     String
   transactions  Transaction[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
   @@index([ownerId])
+  @@index([companyId])
 }
 
 model Transaction {
@@ -44,9 +103,12 @@ model Transaction {
   status    TransactionStatus @default(PENDING)
   card      Card              @relation(fields: [cardId], references: [id], onDelete: Cascade)
   cardId    String
+  company   Company           @relation(fields: [companyId], references: [id])
+  companyId String
   createdAt DateTime          @default(now())
 
   @@index([cardId])
+  @@index([companyId])
 }
 
 enum CardType {
@@ -77,16 +139,22 @@ enum TransactionStatus {
 
 model Vendor {
   id        String   @id @default(uuid())
+  company   Company  @relation(fields: [companyId], references: [id])
+  companyId String
   name      String
   email     String?
   bankRef   String?
   bills     Bill[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([companyId])
 }
 
 model Bill {
   id         String         @id @default(uuid())
+  company    Company        @relation(fields: [companyId], references: [id])
+  companyId  String
   vendor     Vendor         @relation(fields: [vendorId], references: [id])
   vendorId   String
   billNumber String
@@ -105,6 +173,7 @@ model Bill {
   @@index([status])
   @@index([dueDate])
   @@index([vendorId])
+  @@index([companyId])
 }
 
 model BillLineItem {
@@ -144,6 +213,8 @@ model AllocationTemplate {
 
 model Payment {
   id           String        @id @default(uuid())
+  company      Company       @relation(fields: [companyId], references: [id])
+  companyId    String
   bill         Bill          @relation(fields: [billId], references: [id], onDelete: Cascade)
   billId       String
   amountCents  Int
@@ -154,6 +225,7 @@ model Payment {
   createdAt    DateTime      @default(now())
 
   @@index([billId])
+  @@index([companyId])
 }
 
 model BillEvent {
