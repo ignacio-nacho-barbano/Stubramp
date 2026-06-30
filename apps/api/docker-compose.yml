@@ -1,0 +1,28 @@
+# Optional local Postgres for offline dev — NOT required.
+# Neon (cloud) is the default; use this only when you want a fully-local DB.
+#
+#   pnpm db:up            # start Postgres in the background
+#   USE_LOCAL_DB=1 pnpm db:migrate   # or: pnpm db:migrate:docker
+#   USE_LOCAL_DB=1 pnpm dev          # or: pnpm dev:docker
+#   pnpm db:down          # stop it (add -v to wipe data)
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: stubramp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: stubramp
+    ports:
+      - "5432:5432"
+    volumes:
+      - stubramp-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d stubramp"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  stubramp-pgdata:

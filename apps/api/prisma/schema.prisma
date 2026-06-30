@@ -1,0 +1,67 @@
+// Prisma schema for the Stubramp API.
+// Connection URLs live in prisma.config.ts (CLI) and src/db.ts (runtime),
+// not here — Prisma 7 reads the datasource url from prisma.config.ts.
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  cards     Card[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Card {
+  id            String        @id @default(uuid())
+  name          String
+  last4         String?
+  type          CardType      @default(VIRTUAL)
+  status        CardStatus    @default(ACTIVE)
+  spendLimit    Decimal       @default(0) @db.Money
+  owner         User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId       String
+  transactions  Transaction[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([ownerId])
+}
+
+model Transaction {
+  id        String            @id @default(uuid())
+  merchant  String
+  amount    Decimal           @db.Money
+  status    TransactionStatus @default(PENDING)
+  card      Card              @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  cardId    String
+  createdAt DateTime          @default(now())
+
+  @@index([cardId])
+}
+
+enum CardType {
+  PHYSICAL
+  VIRTUAL
+}
+
+enum CardStatus {
+  ACTIVE
+  FROZEN
+  CANCELLED
+}
+
+enum TransactionStatus {
+  PENDING
+  CLEARED
+  DECLINED
+}

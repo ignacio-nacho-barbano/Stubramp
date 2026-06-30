@@ -8,6 +8,10 @@ node_modules
 # Local env files
 .env
 .env.local
+.env*.local
+
+# Neon workspace link (per-developer org/project/branch pointer)
+.neon
 .env.development.local
 .env.test.local
 .env.production.local
