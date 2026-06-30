@@ -65,3 +65,141 @@ enum TransactionStatus {
   CLEARED
   DECLINED
 }
+
+// ----------------------------------------------------------------------------
+// Payables (accounts payable / bill pay)
+//
+// Money here is stored as Int cents (totalCents/unitCents/amountCents),
+// deliberately differing from Card/Transaction's `Decimal @db.Money`. The
+// splits-sum-to-line invariant (a line's splits must sum exactly to its amount)
+// relies on exact integer arithmetic, so cents-as-Int is the right primitive.
+// ----------------------------------------------------------------------------
+
+model Vendor {
+  id        String   @id @default(uuid())
+  name      String
+  email     String?
+  bankRef   String?
+  bills     Bill[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Bill {
+  id         String         @id @default(uuid())
+  vendor     Vendor         @relation(fields: [vendorId], references: [id])
+  vendorId   String
+  billNumber String
+  status     BillStatus     @default(DRAFT)
+  source     BillSource     @default(MANUAL)
+  issueDate  DateTime
+  dueDate    DateTime
+  currency   String         @default("USD")
+  totalCents Int            @default(0)
+  lineItems  BillLineItem[]
+  payments   Payment[]
+  events     BillEvent[]
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@index([status])
+  @@index([dueDate])
+  @@index([vendorId])
+}
+
+model BillLineItem {
+  id             String          @id @default(uuid())
+  bill           Bill            @relation(fields: [billId], references: [id], onDelete: Cascade)
+  billId         String
+  description    String
+  quantity       Int             @default(1)
+  unitCents      Int
+  amountCents    Int
+  classification Classification  @default(EXPENSE)
+  glAccount      String?
+  splits         LineItemSplit[]
+
+  @@index([billId])
+}
+
+model LineItemSplit {
+  id          String              @id @default(uuid())
+  lineItem    BillLineItem        @relation(fields: [lineItemId], references: [id], onDelete: Cascade)
+  lineItemId  String
+  template    AllocationTemplate? @relation(fields: [templateId], references: [id])
+  templateId  String?
+  costCenter  String
+  amountCents Int
+
+  @@index([lineItemId])
+  @@index([templateId])
+}
+
+model AllocationTemplate {
+  id     String          @id @default(uuid())
+  name   String
+  rules  Json
+  splits LineItemSplit[]
+}
+
+model Payment {
+  id           String        @id @default(uuid())
+  bill         Bill          @relation(fields: [billId], references: [id], onDelete: Cascade)
+  billId       String
+  amountCents  Int
+  method       PaymentMethod @default(ACH)
+  status       PaymentStatus @default(PENDING)
+  scheduledFor DateTime?
+  paidAt       DateTime?
+  createdAt    DateTime      @default(now())
+
+  @@index([billId])
+}
+
+model BillEvent {
+  id         String      @id @default(uuid())
+  bill       Bill        @relation(fields: [billId], references: [id], onDelete: Cascade)
+  billId     String
+  fromStatus BillStatus?
+  toStatus   BillStatus
+  actor      String
+  createdAt  DateTime    @default(now())
+
+  @@index([billId])
+}
+
+enum BillStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  SCHEDULED
+  PAID
+  REJECTED
+  FAILED
+}
+
+enum BillSource {
+  MANUAL
+  UPLOAD
+  OCR
+  EMAIL
+  CSV
+}
+
+enum Classification {
+  EXPENSE
+  ITEM
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
+
+enum PaymentMethod {
+  ACH
+  WIRE
+  CHECK
+  CARD
+}

@@ -15,14 +15,17 @@
         "db:down": "docker compose down",
         "db:reset": "docker compose down -v",
         "dev:docker": "USE_LOCAL_DB=1 tsx watch src/index.ts",
-        "db:migrate:docker": "USE_LOCAL_DB=1 prisma migrate dev"
+        "db:migrate:docker": "USE_LOCAL_DB=1 prisma migrate dev",
+        "test": "vitest run",
+        "test:watch": "vitest"
     },
     "devDependencies": {
         "@stubramp/typescript-config": "workspace:*",
         "@types/pg": "^8.20.0",
         "prisma": "^7.8.0",
         "tsx": "^4.22.4",
-        "typescript": "latest"
+        "typescript": "latest",
+        "vitest": "^4.1.9"
     },
     "dependencies": {
         "@prisma/adapter-pg": "^7.8.0",
@@ -30,6 +33,8 @@
         "dotenv": "^17.4.2",
         "fastify": "^5.9.0",
         "fastify-plugin": "^6.0.0",
-        "pg": "^8.22.0"
+        "fastify-type-provider-zod": "^7.0.0",
+        "pg": "^8.22.0",
+        "zod": "^4.3.6"
     }
 }

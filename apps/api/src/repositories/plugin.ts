@@ -1,13 +1,21 @@
 import fp from "fastify-plugin";
 import type { FastifyInstance } from "fastify";
+import { BillEventRepository } from "./BillEventRepository.js";
+import { BillRepository } from "./BillRepository.js";
 import { CardRepository } from "./CardRepository.js";
+import { PaymentRepository } from "./PaymentRepository.js";
 import { TransactionRepository } from "./TransactionRepository.js";
 import { UserRepository } from "./UserRepository.js";
+import { VendorRepository } from "./VendorRepository.js";
 
 export interface Repositories {
   users: UserRepository;
   cards: CardRepository;
   transactions: TransactionRepository;
+  vendors: VendorRepository;
+  bills: BillRepository;
+  payments: PaymentRepository;
+  billEvents: BillEventRepository;
 }
 
 declare module "fastify" {
@@ -29,5 +37,9 @@ export const repositoriesPlugin = fp(async (fastify: FastifyInstance) => {
     users: new UserRepository(prisma.user),
     cards: new CardRepository(prisma.card),
     transactions: new TransactionRepository(prisma.transaction),
+    vendors: new VendorRepository(prisma.vendor),
+    bills: new BillRepository(prisma.bill),
+    payments: new PaymentRepository(prisma.payment),
+    billEvents: new BillEventRepository(prisma.billEvent),
   });
 });
