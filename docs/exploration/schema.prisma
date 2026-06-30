@@ -1,0 +1,138 @@
+// Payables data model. Money is stored as integer cents everywhere.
+// The "splits sum to line amount" invariant is enforced in BillService and
+// can additionally be locked down with a CHECK constraint in a migration
+// (see prisma/migrations once you run `prisma migrate dev`).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BillStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  SCHEDULED
+  PAID
+  REJECTED
+  FAILED
+}
+
+enum BillSource {
+  MANUAL
+  UPLOAD
+  OCR
+  EMAIL
+  CSV
+}
+
+enum Classification {
+  EXPENSE
+  ITEM
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
+
+enum PaymentMethod {
+  ACH
+  WIRE
+  CHECK
+  CARD
+}
+
+model Vendor {
+  id        String   @id @default(uuid())
+  name      String
+  email     String?
+  bankRef   String?
+  createdAt DateTime @default(now())
+
+  bills Bill[]
+}
+
+model Bill {
+  id         String     @id @default(uuid())
+  vendorId   String
+  billNumber String
+  status     BillStatus @default(DRAFT)
+  source     BillSource @default(MANUAL)
+  issueDate  DateTime
+  dueDate    DateTime
+  currency   String     @default("USD")
+  totalCents Int        @default(0)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  vendor    Vendor         @relation(fields: [vendorId], references: [id])
+  lineItems BillLineItem[]
+  payments  Payment[]
+  events    BillEvent[]
+
+  @@index([status])
+  @@index([dueDate])
+}
+
+model BillLineItem {
+  id             String         @id @default(uuid())
+  billId         String
+  description    String
+  quantity       Int            @default(1)
+  unitCents      Int
+  amountCents    Int
+  classification Classification @default(EXPENSE)
+  glAccount      String?
+
+  bill   Bill            @relation(fields: [billId], references: [id], onDelete: Cascade)
+  splits LineItemSplit[]
+}
+
+model LineItemSplit {
+  id          String  @id @default(uuid())
+  lineItemId  String
+  templateId  String?
+  costCenter  String
+  amountCents Int
+
+  lineItem BillLineItem        @relation(fields: [lineItemId], references: [id], onDelete: Cascade)
+  template AllocationTemplate? @relation(fields: [templateId], references: [id])
+}
+
+model AllocationTemplate {
+  id    String          @id @default(uuid())
+  name  String
+  rules Json
+  splits LineItemSplit[]
+}
+
+model Payment {
+  id           String        @id @default(uuid())
+  billId       String
+  amountCents  Int
+  method       PaymentMethod @default(ACH)
+  status       PaymentStatus @default(PENDING)
+  scheduledFor DateTime?
+  paidAt       DateTime?
+
+  bill Bill @relation(fields: [billId], references: [id], onDelete: Cascade)
+}
+
+model BillEvent {
+  id         String      @id @default(uuid())
+  billId     String
+  fromStatus BillStatus?
+  toStatus   BillStatus
+  actor      String
+  createdAt  DateTime    @default(now())
+
+  bill Bill @relation(fields: [billId], references: [id], onDelete: Cascade)
+
+  @@index([billId])
+}
