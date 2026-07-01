@@ -27,6 +27,7 @@ const PUBLIC_ROUTES = new Set([
   "GET:/health",
   "POST:/auth/login",
   "POST:/auth/refresh",
+  "POST:/auth/signup",
 ]);
 
 const DURATION_UNITS: Record<string, number> = {

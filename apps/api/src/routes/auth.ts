@@ -3,10 +3,26 @@ import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { UnauthorizedError } from "../domain/errors.js";
 import { verifyPassword } from "../auth/password.js";
 import { env } from "../env.js";
-import { loginInput, refreshInput } from "../schemas/auth.schema.js";
+import {
+  loginInput,
+  refreshInput,
+  signupInput,
+} from "../schemas/auth.schema.js";
 
 export async function authRoutes(app: FastifyInstance) {
   const r = app.withTypeProvider<ZodTypeProvider>();
+
+  // Public: self-serve signup. Creates a new company + its first ADMIN user and
+  // returns a token pair so the client is logged straight in.
+  r.post("/auth/signup", { schema: { body: signupInput } }, async (req, reply) => {
+    const { user, company } = await app.services.auth.signup(req.body);
+    const tokens = await app.tokenService.issuePair({
+      id: user.id,
+      companyId: user.companyId,
+      role: user.role,
+    });
+    return reply.code(201).send({ ...tokens, user, company });
+  });
 
   // Public: exchange credentials for an access + refresh token pair.
   r.post("/auth/login", { schema: { body: loginInput } }, async (req) => {

@@ -1,11 +1,13 @@
 import fp from "fastify-plugin";
 import type { FastifyInstance } from "fastify";
+import { AuthService } from "./auth.service.js";
 import { BillService } from "./bill.service.js";
 import { UserService } from "./user.service.js";
 
 export interface Services {
   bills: BillService;
   users: UserService;
+  auth: AuthService;
 }
 
 declare module "fastify" {
@@ -33,5 +35,6 @@ export const servicesPlugin = fp(async (fastify: FastifyInstance) => {
       repositories.vendors,
     ),
     users: new UserService(repositories.users),
+    auth: new AuthService(prisma, repositories.companies, repositories.users),
   });
 });
