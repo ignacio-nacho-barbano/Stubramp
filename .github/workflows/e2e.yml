@@ -29,9 +29,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Fail fast with a clear message if config is missing, instead of a cryptic
+      # "Cannot run interactive auth in CI" from neonctl deep in the run.
+      - name: Check required secrets and variables
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+        run: |
+          missing=()
+          [ -n "$NEON_API_KEY" ] || missing+=("NEON_API_KEY (secret)")
+          [ -n "$NEON_PROJECT_ID" ] || missing+=("NEON_PROJECT_ID (repo variable)")
+          [ -n "$JWT_SECRET" ] || missing+=("JWT_SECRET (secret)")
+          [ -n "$PASSWORD_PEPPER" ] || missing+=("PASSWORD_PEPPER (secret)")
+          if [ ${#missing[@]} -ne 0 ]; then
+            echo "::error::Missing required config: ${missing[*]}. Add under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+      # No `version:` — it's read from the root package.json `packageManager`
+      # field (pnpm@9.0.0). Passing both errors with ERR_PNPM_BAD_PM_VERSION.
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - uses: actions/setup-node@v4
         with:
