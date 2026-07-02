@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
+import { z } from 'zod'
 import { Button } from '@stubramp/ui/button'
 import { Input } from '@stubramp/ui/input'
 import { Checkbox } from '@stubramp/ui/checkbox'
@@ -11,10 +12,14 @@ import {
 } from '../components/auth'
 import { loginFn, loginSchema } from '../lib/auth'
 
-export const Route = createFileRoute('/login')({ component: LoginPage })
+export const Route = createFileRoute('/login')({
+  validateSearch: z.object({ redirect: z.string().optional() }),
+  component: LoginPage,
+})
 
 function LoginPage() {
   const navigate = useNavigate()
+  const { redirect } = Route.useSearch()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [remember, setRemember] = useState(true)
@@ -36,7 +41,7 @@ function LoginPage() {
         setLoading(false)
         return
       }
-      await navigate({ to: '/' })
+      await navigate({ to: redirect ?? '/bills' })
     } catch {
       setError('Something went wrong. Please try again.')
       setLoading(false)

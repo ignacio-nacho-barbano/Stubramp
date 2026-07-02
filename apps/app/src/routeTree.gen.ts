@@ -11,7 +11,15 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppBillsRouteImport } from './routes/_app/bills'
+import { Route as AppBillsIndexRouteImport } from './routes/_app/bills/index'
+import { Route as AppBillsVendorsRouteImport } from './routes/_app/bills/vendors'
+import { Route as AppBillsRecurringRouteImport } from './routes/_app/bills/recurring'
+import { Route as AppBillsNewRouteImport } from './routes/_app/bills/new'
+import { Route as AppBillsAgingRouteImport } from './routes/_app/bills/aging'
+import { Route as AppBillsBillIdRouteImport } from './routes/_app/bills/$billId'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -23,38 +31,130 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppBillsRoute = AppBillsRouteImport.update({
+  id: '/bills',
+  path: '/bills',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppBillsIndexRoute = AppBillsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppBillsRoute,
+} as any)
+const AppBillsVendorsRoute = AppBillsVendorsRouteImport.update({
+  id: '/vendors',
+  path: '/vendors',
+  getParentRoute: () => AppBillsRoute,
+} as any)
+const AppBillsRecurringRoute = AppBillsRecurringRouteImport.update({
+  id: '/recurring',
+  path: '/recurring',
+  getParentRoute: () => AppBillsRoute,
+} as any)
+const AppBillsNewRoute = AppBillsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AppBillsRoute,
+} as any)
+const AppBillsAgingRoute = AppBillsAgingRouteImport.update({
+  id: '/aging',
+  path: '/aging',
+  getParentRoute: () => AppBillsRoute,
+} as any)
+const AppBillsBillIdRoute = AppBillsBillIdRouteImport.update({
+  id: '/$billId',
+  path: '/$billId',
+  getParentRoute: () => AppBillsRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/bills': typeof AppBillsRouteWithChildren
+  '/bills/$billId': typeof AppBillsBillIdRoute
+  '/bills/aging': typeof AppBillsAgingRoute
+  '/bills/new': typeof AppBillsNewRoute
+  '/bills/recurring': typeof AppBillsRecurringRoute
+  '/bills/vendors': typeof AppBillsVendorsRoute
+  '/bills/': typeof AppBillsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/bills/$billId': typeof AppBillsBillIdRoute
+  '/bills/aging': typeof AppBillsAgingRoute
+  '/bills/new': typeof AppBillsNewRoute
+  '/bills/recurring': typeof AppBillsRecurringRoute
+  '/bills/vendors': typeof AppBillsVendorsRoute
+  '/bills': typeof AppBillsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/_app/bills': typeof AppBillsRouteWithChildren
+  '/_app/bills/$billId': typeof AppBillsBillIdRoute
+  '/_app/bills/aging': typeof AppBillsAgingRoute
+  '/_app/bills/new': typeof AppBillsNewRoute
+  '/_app/bills/recurring': typeof AppBillsRecurringRoute
+  '/_app/bills/vendors': typeof AppBillsVendorsRoute
+  '/_app/bills/': typeof AppBillsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/signup'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/signup'
+    | '/bills'
+    | '/bills/$billId'
+    | '/bills/aging'
+    | '/bills/new'
+    | '/bills/recurring'
+    | '/bills/vendors'
+    | '/bills/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/signup'
-  id: '__root__' | '/' | '/login' | '/signup'
+  to:
+    | '/'
+    | '/login'
+    | '/signup'
+    | '/bills/$billId'
+    | '/bills/aging'
+    | '/bills/new'
+    | '/bills/recurring'
+    | '/bills/vendors'
+    | '/bills'
+  id:
+    | '__root__'
+    | '/'
+    | '/_app'
+    | '/login'
+    | '/signup'
+    | '/_app/bills'
+    | '/_app/bills/$billId'
+    | '/_app/bills/aging'
+    | '/_app/bills/new'
+    | '/_app/bills/recurring'
+    | '/_app/bills/vendors'
+    | '/_app/bills/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
 }
@@ -75,6 +175,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -82,11 +189,93 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/bills': {
+      id: '/_app/bills'
+      path: '/bills'
+      fullPath: '/bills'
+      preLoaderRoute: typeof AppBillsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/bills/': {
+      id: '/_app/bills/'
+      path: '/'
+      fullPath: '/bills/'
+      preLoaderRoute: typeof AppBillsIndexRouteImport
+      parentRoute: typeof AppBillsRoute
+    }
+    '/_app/bills/vendors': {
+      id: '/_app/bills/vendors'
+      path: '/vendors'
+      fullPath: '/bills/vendors'
+      preLoaderRoute: typeof AppBillsVendorsRouteImport
+      parentRoute: typeof AppBillsRoute
+    }
+    '/_app/bills/recurring': {
+      id: '/_app/bills/recurring'
+      path: '/recurring'
+      fullPath: '/bills/recurring'
+      preLoaderRoute: typeof AppBillsRecurringRouteImport
+      parentRoute: typeof AppBillsRoute
+    }
+    '/_app/bills/new': {
+      id: '/_app/bills/new'
+      path: '/new'
+      fullPath: '/bills/new'
+      preLoaderRoute: typeof AppBillsNewRouteImport
+      parentRoute: typeof AppBillsRoute
+    }
+    '/_app/bills/aging': {
+      id: '/_app/bills/aging'
+      path: '/aging'
+      fullPath: '/bills/aging'
+      preLoaderRoute: typeof AppBillsAgingRouteImport
+      parentRoute: typeof AppBillsRoute
+    }
+    '/_app/bills/$billId': {
+      id: '/_app/bills/$billId'
+      path: '/$billId'
+      fullPath: '/bills/$billId'
+      preLoaderRoute: typeof AppBillsBillIdRouteImport
+      parentRoute: typeof AppBillsRoute
+    }
   }
 }
 
+interface AppBillsRouteChildren {
+  AppBillsBillIdRoute: typeof AppBillsBillIdRoute
+  AppBillsAgingRoute: typeof AppBillsAgingRoute
+  AppBillsNewRoute: typeof AppBillsNewRoute
+  AppBillsRecurringRoute: typeof AppBillsRecurringRoute
+  AppBillsVendorsRoute: typeof AppBillsVendorsRoute
+  AppBillsIndexRoute: typeof AppBillsIndexRoute
+}
+
+const AppBillsRouteChildren: AppBillsRouteChildren = {
+  AppBillsBillIdRoute: AppBillsBillIdRoute,
+  AppBillsAgingRoute: AppBillsAgingRoute,
+  AppBillsNewRoute: AppBillsNewRoute,
+  AppBillsRecurringRoute: AppBillsRecurringRoute,
+  AppBillsVendorsRoute: AppBillsVendorsRoute,
+  AppBillsIndexRoute: AppBillsIndexRoute,
+}
+
+const AppBillsRouteWithChildren = AppBillsRoute._addFileChildren(
+  AppBillsRouteChildren,
+)
+
+interface AppRouteChildren {
+  AppBillsRoute: typeof AppBillsRouteWithChildren
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppBillsRoute: AppBillsRouteWithChildren,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
 }

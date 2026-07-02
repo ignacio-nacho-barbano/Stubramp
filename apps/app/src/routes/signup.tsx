@@ -97,7 +97,8 @@ function SignupPage() {
               Workspace created
             </h1>
             <div className="mb-6 text-sm leading-[1.5] text-gray-600">
-              We've set up <b className="text-ink-900">{company}</b> on StubRamp.
+              We've set up <b className="text-ink-900">{company}</b> on
+              StubRamp.
               <br />
               You're signed in as {email}.
             </div>

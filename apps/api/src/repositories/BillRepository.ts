@@ -47,12 +47,15 @@ export class BillRepository extends BaseRepository<BillTypes> {
   }
 
   // Uses @@index([companyId]) + @@index([status]) + @@index([dueDate]).
+  // Includes the vendor and a line-item count so the list view can render
+  // vendor name + "N lines" without loading the full aggregate per row.
   findByStatus(companyId: string | null, status?: BillStatus) {
     return this.bills.findMany({
       where: {
         ...(companyId ? { companyId } : {}),
         ...(status ? { status } : {}),
       },
+      include: { vendor: true, _count: { select: { lineItems: true } } },
       orderBy: { dueDate: "asc" },
     });
   }

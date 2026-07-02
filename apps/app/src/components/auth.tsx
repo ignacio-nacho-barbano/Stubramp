@@ -1,17 +1,12 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { Check, CircleAlert, Eye, EyeOff } from 'lucide-react'
+import { Logo } from './brand/Logo'
 
-/** StubRamp wordmark — chartreuse tile + ramp glyph. */
+/** StubRamp wordmark for the dark auth panel — chartreuse tile + ink glyph. */
 function Wordmark() {
   return (
-    <div className="flex items-center gap-[9px]">
-      <svg width="26" height="26" viewBox="0 0 22 22" className="block">
-        <rect width="22" height="22" fill="var(--accent-500)" />
-        <path d="M4 17 L11 5 L18 17 Z" fill="var(--ink-900)" />
-      </svg>
-      <span className="text-xl font-bold tracking-[-0.03em]">StubRamp</span>
-    </div>
+    <Logo size={26} tileColor="var(--accent-500)" glyphColor="var(--ink-900)" />
   )
 }
 
@@ -61,8 +56,8 @@ export function LoginPanel() {
         Control spend before it happens.
       </div>
       <div className="mt-4 max-w-[380px] text-[15px] leading-[1.55] text-gray-400">
-        Corporate cards, bill pay, and accounting automation — built to close the
-        books faster.
+        Corporate cards, bill pay, and accounting automation — built to close
+        the books faster.
       </div>
       <div className="mt-10 flex gap-8">
         {stats.map((s, i) => (
@@ -72,7 +67,9 @@ export function LoginPanel() {
               <div className="text-[26px] font-bold tracking-[-0.02em]">
                 {s.value}
               </div>
-              <div className="mt-0.5 text-[12.5px] text-gray-400">{s.label}</div>
+              <div className="mt-0.5 text-[12.5px] text-gray-400">
+                {s.label}
+              </div>
             </div>
           </div>
         ))}
