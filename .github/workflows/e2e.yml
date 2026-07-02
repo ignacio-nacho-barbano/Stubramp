@@ -1,0 +1,91 @@
+name: e2e
+
+on:
+  push:
+  pull_request:
+
+# One in-flight run per ref; a new push cancels the previous run (and its
+# branch is cleaned up by the always() delete step below).
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    env:
+      # Runtime wiring. The app + API run on localhost over http in CI, so ENV
+      # must NOT be "production" — otherwise api-server.ts marks the session
+      # cookies `secure` and the browser drops them over http, bouncing login.
+      API_URL: http://localhost:3001
+      APP_URL: http://localhost:3000
+      ENV: local
+      HOST: 127.0.0.1
+      PORT: 3001
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      # Must match the pepper used by the seed step, or seeded hashes won't verify.
+      PASSWORD_PEPPER: ${{ secrets.PASSWORD_PEPPER }}
+      CI: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # Runs @stubramp/api's `postinstall: prisma generate`, producing the
+      # client at apps/api/src/generated/prisma (gitignored).
+      - run: pnpm install --frozen-lockfile
+
+      # Ephemeral, copy-on-write branch of the Neon DB — the isolation a Docker
+      # Postgres would otherwise provide, created in seconds and torn down below.
+      - name: Create Neon branch
+        id: neon
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch_name: ci-${{ github.run_id }}-${{ github.run_attempt }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+      - name: Wire branch connection strings
+        run: |
+          # Pooled -> runtime (src/db.ts); direct/unpooled -> migrations (prisma.config.ts).
+          echo "DATABASE_URL=${{ steps.neon.outputs.db_url_pooled }}" >> "$GITHUB_ENV"
+          echo "DATABASE_URL_UNPOOLED=${{ steps.neon.outputs.db_url }}" >> "$GITHUB_ENV"
+
+      - name: Apply migrations
+        run: pnpm --filter @stubramp/api db:deploy
+
+      - name: Seed database
+        run: pnpm --filter @stubramp/api db:seed
+
+      - name: Install Playwright browsers
+        run: pnpm --filter @stubramp/e2e exec playwright install --with-deps chromium
+
+      # Playwright's webServer boots the API + app pointed at the branch, then
+      # runs the browser tests.
+      - name: Run e2e tests
+        run: pnpm --filter @stubramp/e2e test
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/
+          retention-days: 7
+
+      # if: always() guarantees the branch is removed even when tests fail,
+      # preventing branch pileup against the project quota.
+      - name: Delete Neon branch
+        if: always()
+        uses: neondatabase/delete-branch-action@v3
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch: ci-${{ github.run_id }}-${{ github.run_attempt }}
+          api_key: ${{ secrets.NEON_API_KEY }}
