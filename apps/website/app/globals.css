@@ -1,0 +1,26 @@
+/* Ramp design system: loads Tailwind, design tokens, and scans @stubramp/ui components.
+   theme.css also registers the UI package as a Tailwind @source, so utilities used by
+   Button/Card/StatTile are generated here. We add the website's own tree below. */
+@import "@stubramp/ui/theme.css";
+
+/* Generate utilities for classes used in this app's own components. */
+@source "./**/*.{ts,tsx}";
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper-0);
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}

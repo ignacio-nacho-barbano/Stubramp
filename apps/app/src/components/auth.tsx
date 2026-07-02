@@ -1,12 +1,17 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { Check, CircleAlert, Eye, EyeOff } from 'lucide-react'
-import { Logo } from './brand/Logo'
+import { Logo } from '@stubramp/ui/logo'
 
 /** StubRamp wordmark for the dark auth panel — chartreuse tile + ink glyph. */
 function Wordmark() {
   return (
-    <Logo size={26} tileColor="var(--accent-500)" glyphColor="var(--ink-900)" />
+    <Logo
+      size={26}
+      wordmarkSize={24}
+      tileColor="var(--accent-500)"
+      glyphColor="var(--ink-900)"
+    />
   )
 }
 

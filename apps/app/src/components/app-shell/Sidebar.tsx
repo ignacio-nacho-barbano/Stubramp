@@ -9,7 +9,7 @@ import {
   Receipt,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { Logo } from '../brand/Logo'
+import { Logo } from '@stubramp/ui/logo'
 
 interface NavItem {
   label: string
@@ -31,7 +31,7 @@ export function Sidebar() {
   return (
     <aside className="flex w-[228px] shrink-0 flex-col border-r border-gray-300 bg-sand-100 px-3 py-5">
       <div className="flex items-center justify-between px-2 pb-[22px]">
-        <Logo size={22} />
+        <Logo size={22} wordmarkSize={24} />
         <ChevronsUpDown size={15} className="text-gray-400" />
       </div>
       <nav className="flex flex-col gap-0.5">
