@@ -66,8 +66,14 @@ function LoginPage() {
         <h1 className="m-0 mb-1.5 text-3xl font-semibold tracking-[-0.02em]">
           Welcome back
         </h1>
-        <div className="mb-[26px] text-sm text-gray-600">
+        <div className="mb-4 text-sm text-gray-600">
           Log in to your finance workspace.
+        </div>
+
+        <div className="mb-[26px] border border-gray-300 bg-surface-page px-3.5 py-3 text-[12.5px] leading-[1.5] text-gray-600">
+          <span className="font-semibold text-ink-900">Technical sample.</span>{' '}
+          StubRamp isn’t a real product — it’s a demo build. Use throwaway
+          credentials only; don’t enter a real password.
         </div>
 
         {error && <ErrorBanner message={error} />}

@@ -115,8 +115,17 @@ function SignupPage() {
             <h1 className="m-0 mb-1.5 text-3xl font-semibold tracking-[-0.02em]">
               Get started with StubRamp
             </h1>
-            <div className="mb-[26px] text-sm text-gray-600">
+            <div className="mb-4 text-sm text-gray-600">
               Free to start. No credit check required.
+            </div>
+
+            <div className="mb-[26px] border border-gray-300 bg-surface-page px-3.5 py-3 text-[12.5px] leading-[1.5] text-gray-600">
+              <span className="font-semibold text-ink-900">
+                Technical sample.
+              </span>{' '}
+              StubRamp isn’t a real product — it’s a demo build. Sign up with
+              throwaway details only; don’t enter real personal or financial
+              information.
             </div>
 
             {error && <ErrorBanner message={error} />}

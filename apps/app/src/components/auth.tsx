@@ -104,8 +104,8 @@ export function SignupPanel() {
         ))}
       </div>
       <div className="mt-9 max-w-[380px] text-[13px] italic leading-[1.5] text-gray-500">
-        “Ramp paid for itself in the first month.” — trusted by 30,000+ finance
-        teams
+        Sample marketing copy — StubRamp is a technical demo, not a real
+        product.
       </div>
     </>
   )

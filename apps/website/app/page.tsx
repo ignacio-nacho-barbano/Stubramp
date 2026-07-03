@@ -49,6 +49,15 @@ const FEATURES = [
 export default function LandingPage() {
   return (
     <>
+      {/* ===== DEMO NOTICE ===== */}
+      <div className="bg-ink-900 px-8 py-2 text-center text-[12.5px] leading-[1.4] text-paper-0">
+        <span className="font-semibold text-accent-500">Technical sample</span>{' '}
+        <span className="text-gray-300">
+          — StubRamp is a fictional product built to demo a codebase, not a real
+          service. Don’t enter real personal or financial information.
+        </span>
+      </div>
+
       {/* ===== NAV ===== */}
       <header className="sticky top-0 z-30 border-b border-[var(--border-subtle)] bg-white/90 backdrop-blur-md">
         <div className="mx-auto flex h-[60px] max-w-[1120px] items-center gap-10 px-8">
@@ -194,7 +203,8 @@ export default function LandingPage() {
         <div className="mx-auto flex max-w-[1120px] flex-wrap items-center gap-4 px-8 py-9">
           <Logo size={20} wordmarkSize={16} />
           <span className="text-xs text-gray-500">
-            © 2026 StubRamp Inc. · A reference build
+            © 2026 StubRamp · A fictional product and technical sample — not a
+            real company or service.
           </span>
           <div className="ml-auto flex gap-[22px] text-sm text-gray-600">
             {['Privacy', 'Terms', 'Security', 'Contact'].map((label) => (
