@@ -1,4 +1,5 @@
 // ESM
+import fastifyCors from "@fastify/cors";
 import Fastify from "fastify";
 import {
   serializerCompiler,
@@ -89,6 +90,14 @@ fastify.get("/health", async () => {
 
 const start = async () => {
   try {
+    // Allow the browser SPA (a different subdomain → a different origin) to call
+    // the API with credentials so the httpOnly session cookies flow both ways.
+    // `credentials` forbids the `*` wildcard, hence the explicit single origin.
+    await fastify.register(fastifyCors, {
+      origin: env.APP_URL,
+      credentials: true,
+    });
+
     // Order matters: services depend on repositories; auth depends on repos +
     // jwt; routes depend on all three (and the global auth onRequest hook).
     await fastify.register(repositoriesPlugin);

@@ -1,7 +1,10 @@
+import fastifyCookie from "@fastify/cookie";
 import fastifyJwt from "@fastify/jwt";
 import type { FastifyInstance } from "fastify";
 import fp from "fastify-plugin";
 import { env } from "../env.js";
+import { ACCESS_COOKIE } from "./cookies.js";
+import { durationToMs } from "./duration.js";
 import type { AuthContext } from "./context.js";
 import { type AccessTokenPayload, TokenService } from "./tokens.js";
 
@@ -28,32 +31,26 @@ const PUBLIC_ROUTES = new Set([
   "POST:/auth/login",
   "POST:/auth/refresh",
   "POST:/auth/signup",
+  // Logout authenticates via the refresh cookie + just clears cookies, so it
+  // must work even once the access token has expired.
+  "POST:/auth/logout",
 ]);
 
-const DURATION_UNITS: Record<string, number> = {
-  s: 1_000,
-  m: 60_000,
-  h: 3_600_000,
-  d: 86_400_000,
-};
-
-function durationToMs(value: string): number {
-  const match = /^(\d+)([smhd])$/.exec(value);
-  const unit = match ? DURATION_UNITS[match[2]!] : undefined;
-  if (!match || unit === undefined) {
-    throw new Error(`Invalid duration: ${value}`);
-  }
-  return Number(match[1]) * unit;
-}
-
 /**
- * Registers @fastify/jwt, builds the TokenService (needs the jwt signer + the
- * refresh-token/user repos), and verifies the access token on every non-public
- * request, populating `request.auth`. Register AFTER repositoriesPlugin (needs
- * fastify.repositories) and BEFORE the route plugins.
+ * Registers @fastify/cookie + @fastify/jwt, builds the TokenService (needs the
+ * jwt signer + the refresh-token/user repos), and verifies the access token on
+ * every non-public request, populating `request.auth`. The access token is read
+ * from the `Authorization: Bearer` header OR the `sr_access` httpOnly cookie (so
+ * the browser SPA authenticates purely by cookie). Register AFTER
+ * repositoriesPlugin (needs fastify.repositories) and BEFORE the route plugins.
  */
 export const authPlugin = fp(async (fastify: FastifyInstance) => {
-  await fastify.register(fastifyJwt, { secret: env.JWT_SECRET });
+  // Cookie plugin must precede jwt so jwt's cookie extraction can read it.
+  await fastify.register(fastifyCookie);
+  await fastify.register(fastifyJwt, {
+    secret: env.JWT_SECRET,
+    cookie: { cookieName: ACCESS_COOKIE, signed: false },
+  });
 
   const { repositories } = fastify;
   fastify.decorate(

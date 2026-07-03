@@ -30,6 +30,12 @@ primary_region = "iad"
   HOST = "0.0.0.0"
   PORT = "3001"
   NODE_ENV = "production"
+  # The browser SPA origin — the sole allowed CORS origin (credentials mode
+  # disallows the `*` wildcard).
+  APP_URL = "https://app.stubramp.barbano.uy"
+  # Parent domain the httpOnly session cookies are scoped to, so they're shared
+  # across the app + api subdomains.
+  COOKIE_DOMAIN = ".stubramp.barbano.uy"
 
 # Cost-minimal setup: a single machine that stops when idle and starts on the
 # first request, scaling all the way to zero (you pay ~nothing while idle).

@@ -27,4 +27,11 @@ export const env = {
   REFRESH_TOKEN_TTL: process.env.REFRESH_TOKEN_TTL ?? "30d",
   // Server-side secret mixed into every password hash (never stored in the DB).
   PASSWORD_PEPPER: required("PASSWORD_PEPPER"),
+  // The browser SPA origin — the single allowed CORS origin (credentials mode
+  // forbids the `*` wildcard). e.g. https://app.stubramp.barbano.uy
+  APP_URL: process.env.APP_URL ?? "http://localhost:3000",
+  // Parent domain the session cookies are scoped to, so they're shared across
+  // the app + api subdomains (e.g. `.stubramp.barbano.uy`). Left unset locally
+  // (localhost), where the browser scopes cookies to the exact host.
+  COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
 } as const;
