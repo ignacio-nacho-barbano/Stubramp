@@ -7,7 +7,7 @@
     "./theme.css": "./src/styles/theme.css",
     "./styles.css": "./src/styles/styles.css",
     "./styles/*": "./src/styles/*",
-    "./vite": "./src/vite.ts",
+    "./vite": "./src/vite.mjs",
     "./*": "./src/*.tsx"
   },
   "scripts": {

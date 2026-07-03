@@ -2,3 +2,15 @@ packages:
   - "apps/*"
   - "packages/*"
   - "e2e"
+
+# Dependencies allowed to run install/postinstall build scripts.
+# pnpm >=10 blocks these by default; the app build needs their native binaries.
+allowBuilds:
+  "@parcel/watcher": true
+  "@prisma/engines": true
+  "@sentry/cli": true
+  esbuild: true
+  prisma: true
+  sharp: true
+  unrs-resolver: true
+  workerd: true
