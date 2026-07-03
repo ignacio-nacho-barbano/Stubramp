@@ -27,6 +27,12 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         content: 'width=device-width, initial-scale=1',
       },
       {
+        // Technical test only — keep out of search engines and AI crawlers.
+        name: 'robots',
+        content:
+          'noindex, nofollow, noarchive, nosnippet, noimageindex, noai, noimageai',
+      },
+      {
         title: 'TanStack Start Starter',
       },
     ],

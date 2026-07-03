@@ -1,0 +1,4 @@
+# Technical test only — mirror the X-Robots-Tag from next.config.ts on every
+# Cloudflare Pages response (static export drops the Next headers() config).
+/*
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet, noimageindex, noai, noimageai
