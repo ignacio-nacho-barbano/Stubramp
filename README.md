@@ -16,8 +16,6 @@ This Turborepo includes the following packages/apps:
 
 ### Apps and Packages
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
 - `@stubramp/ui`: a stub React component library shared by both `web` and `docs` applications
 - `@stubramp/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
 - `@stubramp/typescript-config`: `tsconfig.json`s used throughout the monorepo

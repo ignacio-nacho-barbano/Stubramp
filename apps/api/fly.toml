@@ -1,0 +1,55 @@
+# Fly.io config for the Stubramp API.
+#
+# This config + the Dockerfile live in apps/api, but the app is a pnpm workspace
+# package, so the Docker BUILD CONTEXT must be the monorepo ROOT (the build needs
+# pnpm-workspace.yaml, pnpm-lock.yaml and packages/*). Fly's build context is the
+# positional WORKING_DIRECTORY, so deploy from the repo root, pointing the
+# Docker paths back at apps/api. The root package.json wraps this as a script:
+#   pnpm deploy:api
+# which expands to:
+#   fly deploy . -c apps/api/fly.toml \
+#     --dockerfile apps/api/Dockerfile \
+#     --ignorefile apps/api/Dockerfile.dockerignore --ha=false
+
+# iad = Ashburn, Virginia.
+app = "stubramp-api"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+# Runs once before each deploy is released, in a throwaway machine using the
+# freshly built image. Applies pending migrations; a failure aborts the deploy.
+# Prisma reads the datasource URL from prisma.config.ts, which prefers
+# DATABASE_URL_UNPOOLED (a direct, non-PgBouncer connection) — set that secret,
+# as migrations can't run reliably over the pooled endpoint.
+[deploy]
+  release_command = "npx prisma migrate deploy"
+
+[env]
+  HOST = "0.0.0.0"
+  PORT = "3001"
+  NODE_ENV = "production"
+
+# Cost-minimal setup: a single machine that stops when idle and starts on the
+# first request, scaling all the way to zero (you pay ~nothing while idle).
+# Deploy with a single machine (no HA standby): `fly deploy --ha=false`.
+[http_service]
+  internal_port = 3001
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "10s"
+    method = "GET"
+    path = "/health"
+
+# Smallest/cheapest VM. Bump memory to 512mb if the app OOMs under load.
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

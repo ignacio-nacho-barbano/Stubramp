@@ -1,0 +1,22 @@
+# Everything the image should not carry. Keeps the build context small and
+# ensures deps are resolved fresh from the lockfile inside the image.
+**/node_modules
+**/dist
+**/build
+**/.turbo
+.turbo
+**/.next
+**/coverage
+
+# Never bake env files / secrets into the image (Fly injects env + secrets).
+**/.env
+**/.env.*
+
+.git
+.gitignore
+**/*.log
+.planning
+.agents
+**/.DS_Store
+Dockerfile
+.dockerignore
