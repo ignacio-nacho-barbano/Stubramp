@@ -1,24 +1,14 @@
-import { createServerFn } from '@tanstack/react-start'
-import { getCookie } from '@tanstack/react-start/server'
 import { z } from 'zod'
-import {
-  REFRESH_COOKIE,
-  apiFetch,
-  apiRequest,
-  clearSession,
-  mapApiError,
-  persistSession,
-} from './api-server'
-import type { TokenPair } from './api-server'
+import { apiFetch, apiRequest, mapApiError } from './api'
 
 // ---------------------------------------------------------------------------
 // Auth integration layer.
 //
-// The browser never talks to the API directly (the API has no CORS and the
-// base URL is a server secret). Instead these `createServerFn` handlers run on
-// the server, proxy to the Fastify API, and stash the returned token pair in
-// httpOnly cookies. The client only ever sees `{ ok }` / the safe user shape.
-// Shared cookie + refresh handling lives in ./api-server (server-only).
+// These call the Fastify API directly from the browser. The API validates
+// credentials and sets the session as httpOnly cookies (which the browser can't
+// read), so the client only ever sees `{ ok }` / the safe user shape. Cookie +
+// refresh handling lives server-side; ./api just attaches the cookies via
+// `credentials: 'include'`.
 // ---------------------------------------------------------------------------
 
 export type Role =
@@ -60,51 +50,45 @@ function authError(status: number, json: any): string {
   return mapApiError(status, json)
 }
 
-export const loginFn = createServerFn({ method: 'POST' })
-  .validator((data: unknown) => loginSchema.parse(data))
-  .handler(async ({ data }): Promise<AuthResult> => {
-    const { status, json } = await apiRequest('/auth/login', {
-      method: 'POST',
-      body: data,
-    })
-    if (status >= 400) return { ok: false, error: authError(status, json) }
-    persistSession(json as TokenPair)
-    return { ok: true }
+export async function loginFn({
+  data,
+}: {
+  data: LoginValues
+}): Promise<AuthResult> {
+  const parsed = loginSchema.parse(data)
+  const { status, json } = await apiRequest('/auth/login', {
+    method: 'POST',
+    body: parsed,
   })
+  if (status >= 400) return { ok: false, error: authError(status, json) }
+  return { ok: true }
+}
 
-export const signupFn = createServerFn({ method: 'POST' })
-  .validator((data: unknown) => signupSchema.parse(data))
-  .handler(async ({ data }): Promise<AuthResult> => {
-    const { status, json } = await apiRequest('/auth/signup', {
-      method: 'POST',
-      body: data,
-    })
-    if (status >= 400) return { ok: false, error: authError(status, json) }
-    persistSession(json as TokenPair)
-    return { ok: true }
+export async function signupFn({
+  data,
+}: {
+  data: SignupValues
+}): Promise<AuthResult> {
+  const parsed = signupSchema.parse(data)
+  const { status, json } = await apiRequest('/auth/signup', {
+    method: 'POST',
+    body: parsed,
   })
+  if (status >= 400) return { ok: false, error: authError(status, json) }
+  return { ok: true }
+}
 
 // Resolve the current user from the access cookie, transparently refreshing the
 // token pair when the access token has expired. Returns null when unauthenticated.
-export const meFn = createServerFn({ method: 'GET' }).handler(
-  async (): Promise<AuthUser | null> => {
-    const { status, json } = await apiFetch('/auth/me')
-    if (status >= 400) return null
-    return json as AuthUser
-  },
-)
+export async function meFn(): Promise<AuthUser | null> {
+  const { status, json } = await apiFetch('/auth/me')
+  if (status >= 400) return null
+  return json as AuthUser
+}
 
-export const logoutFn = createServerFn({ method: 'POST' }).handler(
-  async (): Promise<{ ok: true }> => {
-    const refresh = getCookie(REFRESH_COOKIE)
-    if (refresh) {
-      // Best-effort revoke; clearing the cookies below is what logs the user out.
-      await apiRequest('/auth/logout', {
-        method: 'POST',
-        body: { refreshToken: refresh },
-      }).catch(() => undefined)
-    }
-    clearSession()
-    return { ok: true }
-  },
-)
+export async function logoutFn(): Promise<{ ok: true }> {
+  // The refresh cookie is sent automatically; the API revokes it and clears the
+  // session cookies. Best-effort — a failure still lands the user logged out.
+  await apiRequest('/auth/logout', { method: 'POST' }).catch(() => undefined)
+  return { ok: true }
+}

@@ -1,12 +1,10 @@
-import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
-import { apiFetch, mapApiError } from './api-server'
+import { apiFetch, mapApiError } from './api'
 
 // ---------------------------------------------------------------------------
 // Payables domain: shared types, the Zod contract mirroring the API, and the
-// server functions that proxy to the Fastify API through the session cookie.
-// Types + schemas here are client-safe; only the server-fn handler bodies touch
-// ./api-server (server-only).
+// data functions that call the Fastify API from the browser (cookies attached
+// via ./api). Types + schemas here mirror apps/api's schemas.
 // ---------------------------------------------------------------------------
 
 export type BillStatus =
@@ -188,86 +186,100 @@ export const settlePaymentInput = z.object({
 export type MutationResult<T> =
   { ok: true; data: T } | { ok: false; error: string }
 
-// ---- Server functions ----
+// ---- Data functions (call the API from the browser) ----
 
-export const listBillsFn = createServerFn({ method: 'GET' })
-  .validator((data: { status?: BillStatus } | undefined) => data ?? {})
-  .handler(async ({ data }): Promise<BillListItem[]> => {
-    const { status, json } = await apiFetch('/bills', {
-      searchParams: { status: data.status },
-    })
-    if (status >= 400) return []
-    return json as BillListItem[]
+export async function listBillsFn({
+  data,
+}: {
+  data?: { status?: BillStatus }
+} = {}): Promise<BillListItem[]> {
+  const { status, json } = await apiFetch('/bills', {
+    searchParams: { status: data?.status },
   })
+  if (status >= 400) return []
+  return json as BillListItem[]
+}
 
-export const getBillFn = createServerFn({ method: 'GET' })
-  .validator((data: { id: string }) =>
-    z.object({ id: z.string().uuid() }).parse(data),
+export async function getBillFn({
+  data,
+}: {
+  data: { id: string }
+}): Promise<BillWithRelations | null> {
+  const { id } = z.object({ id: z.string().uuid() }).parse(data)
+  const { status, json } = await apiFetch(`/bills/${id}`)
+  if (status >= 400) return null
+  return json as BillWithRelations
+}
+
+export async function createBillFn({
+  data,
+}: {
+  data: CreateBillInput
+}): Promise<MutationResult<BillWithRelations>> {
+  const parsed = createBillInput.parse(data)
+  const { status, json } = await apiFetch('/bills', {
+    method: 'POST',
+    body: parsed,
+  })
+  if (status >= 400) return { ok: false, error: mapApiError(status, json) }
+  return { ok: true, data: json as BillWithRelations }
+}
+
+export async function transitionBillFn({
+  data,
+}: {
+  data: z.infer<typeof transitionInput>
+}): Promise<MutationResult<BillWithRelations>> {
+  const { id, ...body } = transitionInput.parse(data)
+  const { status, json } = await apiFetch(`/bills/${id}/transitions`, {
+    method: 'POST',
+    body,
+  })
+  if (status >= 400) return { ok: false, error: mapApiError(status, json) }
+  return { ok: true, data: json as BillWithRelations }
+}
+
+export async function listVendorsFn({
+  data,
+}: {
+  data?: { page?: number; pageSize?: number }
+} = {}): Promise<Paginated<Vendor>> {
+  const { status, json } = await apiFetch('/vendors', {
+    searchParams: { page: data?.page, pageSize: data?.pageSize ?? 100 },
+  })
+  if (status >= 400)
+    return { data: [], total: 0, page: 1, pageSize: 100, totalPages: 0 }
+  return json as Paginated<Vendor>
+}
+
+export async function createVendorFn({
+  data,
+}: {
+  data: z.infer<typeof createVendorInput>
+}): Promise<MutationResult<Vendor>> {
+  const parsed = createVendorInput.parse(data)
+  const body = { ...parsed, email: parsed.email || undefined }
+  const { status, json } = await apiFetch('/vendors', {
+    method: 'POST',
+    body,
+  })
+  if (status >= 400) return { ok: false, error: mapApiError(status, json) }
+  return { ok: true, data: json as Vendor }
+}
+
+export async function settlePaymentFn({
+  data,
+}: {
+  data: z.infer<typeof settlePaymentInput>
+}): Promise<MutationResult<BillWithRelations>> {
+  const parsed = settlePaymentInput.parse(data)
+  const { status, json } = await apiFetch(
+    `/payments/${parsed.paymentId}/settle`,
+    {
+      method: 'POST',
+      body: { outcome: parsed.outcome },
+    },
   )
-  .handler(async ({ data }): Promise<BillWithRelations | null> => {
-    const { status, json } = await apiFetch(`/bills/${data.id}`)
-    if (status >= 400) return null
-    return json as BillWithRelations
-  })
-
-export const createBillFn = createServerFn({ method: 'POST' })
-  .validator((data: unknown) => createBillInput.parse(data))
-  .handler(async ({ data }): Promise<MutationResult<BillWithRelations>> => {
-    const { status, json } = await apiFetch('/bills', {
-      method: 'POST',
-      body: data,
-    })
-    if (status >= 400) return { ok: false, error: mapApiError(status, json) }
-    return { ok: true, data: json as BillWithRelations }
-  })
-
-export const transitionBillFn = createServerFn({ method: 'POST' })
-  .validator((data: unknown) => transitionInput.parse(data))
-  .handler(async ({ data }): Promise<MutationResult<BillWithRelations>> => {
-    const { id, ...body } = data
-    const { status, json } = await apiFetch(`/bills/${id}/transitions`, {
-      method: 'POST',
-      body,
-    })
-    if (status >= 400) return { ok: false, error: mapApiError(status, json) }
-    return { ok: true, data: json as BillWithRelations }
-  })
-
-export const listVendorsFn = createServerFn({ method: 'GET' })
-  .validator(
-    (data: { page?: number; pageSize?: number } | undefined) => data ?? {},
-  )
-  .handler(async ({ data }): Promise<Paginated<Vendor>> => {
-    const { status, json } = await apiFetch('/vendors', {
-      searchParams: { page: data.page, pageSize: data.pageSize ?? 100 },
-    })
-    if (status >= 400)
-      return { data: [], total: 0, page: 1, pageSize: 100, totalPages: 0 }
-    return json as Paginated<Vendor>
-  })
-
-export const createVendorFn = createServerFn({ method: 'POST' })
-  .validator((data: unknown) => createVendorInput.parse(data))
-  .handler(async ({ data }): Promise<MutationResult<Vendor>> => {
-    const body = { ...data, email: data.email || undefined }
-    const { status, json } = await apiFetch('/vendors', {
-      method: 'POST',
-      body,
-    })
-    if (status >= 400) return { ok: false, error: mapApiError(status, json) }
-    return { ok: true, data: json as Vendor }
-  })
-
-export const settlePaymentFn = createServerFn({ method: 'POST' })
-  .validator((data: unknown) => settlePaymentInput.parse(data))
-  .handler(async ({ data }): Promise<MutationResult<BillWithRelations>> => {
-    const { status, json } = await apiFetch(
-      `/payments/${data.paymentId}/settle`,
-      {
-        method: 'POST',
-        body: { outcome: data.outcome },
-      },
-    )
-    if (status >= 400) return { ok: false, error: mapApiError(status, json) }
-    return { ok: true, data: json as BillWithRelations }
-  })
+  if (status >= 400) return { ok: false, error: mapApiError(status, json) }
+  return { ok: true, data: json as BillWithRelations }
+}

@@ -1,19 +1,16 @@
 import { defineConfig } from 'vite'
 import { devtools } from '@tanstack/devtools-vite'
-
-import { tanstackStart } from '@tanstack/react-start/plugin/vite'
-
+import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import viteReact from '@vitejs/plugin-react'
 import tailwindcss from '@stubramp/ui/vite'
-import { cloudflare } from '@cloudflare/vite-plugin'
 
 const config = defineConfig({
-  resolve: { tsconfigPaths: true },
   plugins: [
     devtools(),
-    cloudflare({ viteEnvironment: { name: 'ssr' } }),
     tailwindcss(),
-    tanstackStart(),
+    // Generates routeTree.gen.ts from src/routes and enables route code-splitting.
+    // Must run before the React plugin.
+    tanstackRouter({ target: 'react', autoCodeSplitting: true }),
     viteReact(),
   ],
 })
