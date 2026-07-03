@@ -23,8 +23,14 @@ primary_region = "iad"
 # Prisma reads the datasource URL from prisma.config.ts, which prefers
 # DATABASE_URL_UNPOOLED (a direct, non-PgBouncer connection) — set that secret,
 # as migrations can't run reliably over the pooled endpoint.
+#
+# The Neon branch compute autosuspends (scale-to-zero), so the release machine's
+# first connection has to wake it. A cold start can exceed Prisma's connect
+# timeout and fail with P1001 ("can't reach database server") — which would
+# abort the whole deploy even when there are no pending migrations. Retry a few
+# times: the first attempt wakes the compute, later attempts hit a warm one.
 [deploy]
-  release_command = "npx prisma migrate deploy"
+  release_command = "sh -c 'n=0; until npx prisma migrate deploy; do n=$((n+1)); if [ $n -ge 5 ]; then exit 1; fi; echo \"migrate attempt $n failed (likely Neon cold start), retrying in 5s...\"; sleep 5; done'"
 
 [env]
   HOST = "0.0.0.0"
