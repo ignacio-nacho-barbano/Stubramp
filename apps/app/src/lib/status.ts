@@ -1,37 +1,8 @@
 import type { BillStatus } from './bills'
 
-type Tone = 'neutral' | 'positive' | 'negative' | 'warning' | 'info' | 'accent'
-
-export const STATUS_LABEL: Record<BillStatus, string> = {
-  DRAFT: 'Draft',
-  SUBMITTED: 'Submitted',
-  APPROVED: 'Approved',
-  SCHEDULED: 'Scheduled',
-  PAID: 'Paid',
-  REJECTED: 'Rejected',
-  FAILED: 'Failed',
-}
-
-export const STATUS_TONE: Record<BillStatus, Tone> = {
-  DRAFT: 'neutral',
-  SUBMITTED: 'info',
-  APPROVED: 'positive',
-  SCHEDULED: 'warning',
-  PAID: 'positive',
-  REJECTED: 'negative',
-  FAILED: 'negative',
-}
-
-// Which statuses render with a leading badge dot (in-flight states).
-export const STATUS_DOT: Record<BillStatus, boolean> = {
-  DRAFT: false,
-  SUBMITTED: true,
-  APPROVED: true,
-  SCHEDULED: true,
-  PAID: false,
-  REJECTED: true,
-  FAILED: true,
-}
+// Status label/tone/dot mappings now live in @stubramp/ui (bill-status), shared
+// across apps. This module keeps the detail-view timeline logic, which is
+// specific to this app.
 
 export interface TimelineStep {
   key: string

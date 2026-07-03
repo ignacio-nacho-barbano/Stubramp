@@ -2,8 +2,7 @@ import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
-import { Card } from '@stubramp/ui/card'
-import { useToast } from '@stubramp/ui/toast'
+import { Card, formatDate, Money, STATUS_LABEL, useToast, VendorAvatar } from '@stubramp/ui'
 import { settlePaymentFn, transitionBillFn } from '../../../lib/bills'
 import type {
   BillStatus,
@@ -12,8 +11,6 @@ import type {
   BillWithRelations,
 } from '../../../lib/bills'
 import { billDetailQueryOptions, billKeys } from '../../../lib/bills-queries'
-import { formatDate } from '../../../lib/format'
-import { STATUS_LABEL } from '../../../lib/status'
 import { BillActions } from '../../../components/bill-pay/BillActions'
 import { BillDetailsCard } from '../../../components/bill-pay/BillDetailsCard'
 import { BillTimeline } from '../../../components/bill-pay/BillTimeline'
@@ -22,8 +19,6 @@ import {
   buildInvoiceDoc,
 } from '../../../components/bill-pay/InvoiceDoc'
 import { LineItemsCard } from '../../../components/bill-pay/LineItemsCard'
-import { Money } from '../../../components/bill-pay/Money'
-import { VendorAvatar } from '../../../components/bill-pay/VendorAvatar'
 
 export const Route = createFileRoute('/_app/bills/$billId')({
   loader: async ({ context, params }) => {

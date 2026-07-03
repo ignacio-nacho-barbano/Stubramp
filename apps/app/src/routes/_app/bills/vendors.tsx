@@ -1,13 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { Card } from '@stubramp/ui/card'
+import { Card, Money, VendorAvatar } from '@stubramp/ui'
 import {
   billsQueryOptions,
   vendorsQueryOptions,
 } from '../../../lib/bills-queries'
 import { vendorRollups } from '../../../lib/aging'
-import { Money } from '../../../components/bill-pay/Money'
-import { VendorAvatar } from '../../../components/bill-pay/VendorAvatar'
 
 export const Route = createFileRoute('/_app/bills/vendors')({
   loader: async ({ context }) => {

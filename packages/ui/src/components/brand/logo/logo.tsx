@@ -1,6 +1,6 @@
 import { type HTMLAttributes } from "react";
 
-import { cn } from "./cn";
+import { cn } from "../../../lib/cn";
 
 export interface LogoProps extends HTMLAttributes<HTMLSpanElement> {
   /** Tile/glyph size in px. Default 22. */

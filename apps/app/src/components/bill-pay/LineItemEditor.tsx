@@ -1,9 +1,8 @@
 'use client'
 
 import { Plus, Split, X } from 'lucide-react'
-import { Card } from '@stubramp/ui/card'
+import { Card, SegmentedToggle } from '@stubramp/ui'
 import type { Classification } from '../../lib/bills'
-import { SegmentedToggle } from './SegmentedToggle'
 import type { SplitValue } from './SplitsModal'
 
 export interface DraftLine {

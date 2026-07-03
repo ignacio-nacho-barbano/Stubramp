@@ -4,7 +4,7 @@ import {
   useNavigate,
   useRouterState,
 } from '@tanstack/react-router'
-import { Tabs } from '@stubramp/ui/tabs'
+import { Tabs } from '@stubramp/ui'
 import { NewBillMenu } from '../../components/bill-pay/NewBillMenu'
 
 export const Route = createFileRoute('/_app/bills')({ component: BillsLayout })

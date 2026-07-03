@@ -1,13 +1,8 @@
 'use client'
 
 import { ChevronRight } from 'lucide-react'
-import { Card } from '@stubramp/ui/card'
-import { Checkbox } from '@stubramp/ui/checkbox'
+import { Card, Checkbox, formatDate, Money, StatusBadge, VendorAvatar } from '@stubramp/ui'
 import type { BillListItem } from '../../lib/bills'
-import { formatDate } from '../../lib/format'
-import { Money } from './Money'
-import { StatusBadge } from './StatusBadge'
-import { VendorAvatar } from './VendorAvatar'
 
 const GRID =
   'grid grid-cols-[34px_1.6fr_1fr_0.9fr_0.8fr_1fr_1.1fr_24px] items-center gap-2'

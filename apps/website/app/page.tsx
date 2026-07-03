@@ -6,10 +6,7 @@ import {
   Repeat,
   Split,
 } from 'lucide-react'
-import { Button } from '@stubramp/ui/button'
-import { Card } from '@stubramp/ui/card'
-import { StatTile } from '@stubramp/ui/stat-tile'
-import { Logo } from '@stubramp/ui/logo'
+import { Button, Card, Logo, StatTile } from '@stubramp/ui'
 import { loginHref, signupHref } from './lib/links'
 
 const NAV_LINKS = ['Product', 'Bill Pay', 'Pricing', 'Customers']

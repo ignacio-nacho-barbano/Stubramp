@@ -1,8 +1,5 @@
-import { Card } from '@stubramp/ui/card'
+import { Card, formatDate, Money, StatusBadge } from '@stubramp/ui'
 import type { BillWithRelations } from '../../lib/bills'
-import { formatDate } from '../../lib/format'
-import { Money } from './Money'
-import { StatusBadge } from './StatusBadge'
 
 function Row({
   label,

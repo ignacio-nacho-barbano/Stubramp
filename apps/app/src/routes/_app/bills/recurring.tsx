@@ -1,10 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Badge } from '@stubramp/ui/badge'
-import { Card } from '@stubramp/ui/card'
-import { Switch } from '@stubramp/ui/switch'
+import { Badge, Card, Money, Switch, VendorAvatar } from '@stubramp/ui'
 import { RECURRING_RULES } from '../../../lib/stubs'
-import { Money } from '../../../components/bill-pay/Money'
-import { VendorAvatar } from '../../../components/bill-pay/VendorAvatar'
 
 export const Route = createFileRoute('/_app/bills/recurring')({
   component: RecurringPage,

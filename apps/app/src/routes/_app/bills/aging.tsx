@@ -1,13 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { Card } from '@stubramp/ui/card'
-import { StatTile } from '@stubramp/ui/stat-tile'
+import { Card, formatCents, formatDate, Money, StatTile, VendorAvatar } from '@stubramp/ui'
 import { AGING_TILES, computeAging } from '../../../lib/aging'
 import { billsQueryOptions } from '../../../lib/bills-queries'
-import { formatCents } from '../../../lib/money'
-import { formatDate } from '../../../lib/format'
-import { Money } from '../../../components/bill-pay/Money'
-import { VendorAvatar } from '../../../components/bill-pay/VendorAvatar'
 
 export const Route = createFileRoute('/_app/bills/aging')({
   loader: async ({ context }) => {

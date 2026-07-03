@@ -2,7 +2,7 @@
 
 import { type ChangeEvent, type InputHTMLAttributes, type ReactNode, useState } from "react";
 
-import { cn } from "./cn";
+import { cn } from "../../../lib/cn";
 
 export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "onChange"> {
   label?: ReactNode;

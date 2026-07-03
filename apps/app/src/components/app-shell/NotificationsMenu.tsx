@@ -1,8 +1,7 @@
 'use client'
 
 import { Bell } from 'lucide-react'
-import { Menu } from '@stubramp/ui/menu'
-import { Badge } from '@stubramp/ui/badge'
+import { Badge, Menu } from '@stubramp/ui'
 import { NOTIFICATIONS } from '../../lib/stubs'
 
 /** Notifications bell + dropdown panel. Fed by a local fixture (no backend). */

@@ -2,10 +2,7 @@
 
 import { useState } from 'react'
 import { Loader2, Sparkles, UploadCloud } from 'lucide-react'
-import { Badge } from '@stubramp/ui/badge'
-import { Button } from '@stubramp/ui/button'
-import { Card } from '@stubramp/ui/card'
-import { Input } from '@stubramp/ui/input'
+import { Badge, Button, Card, Input } from '@stubramp/ui'
 import { fakeParseInvoice } from '../../lib/stubs'
 import type { ParsedInvoice } from '../../lib/stubs'
 

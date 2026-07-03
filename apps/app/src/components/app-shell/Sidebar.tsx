@@ -9,7 +9,7 @@ import {
   Receipt,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { Logo } from '@stubramp/ui/logo'
+import { Logo } from '@stubramp/ui'
 
 interface NavItem {
   label: string

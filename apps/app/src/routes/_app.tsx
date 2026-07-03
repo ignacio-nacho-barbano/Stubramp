@@ -1,5 +1,5 @@
 import { Outlet, createFileRoute, redirect } from '@tanstack/react-router'
-import { ToastProvider } from '@stubramp/ui/toast'
+import { ToastProvider } from '@stubramp/ui'
 import { meFn } from '../lib/auth'
 import { AppShell } from '../components/app-shell/AppShell'
 

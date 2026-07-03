@@ -1,4 +1,4 @@
-import { Button } from '@stubramp/ui/button'
+import { Button } from '@stubramp/ui'
 
 /** Sticky dark action bar shown when bills are selected in the list. */
 export function BulkActionBar({

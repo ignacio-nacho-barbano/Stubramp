@@ -1,8 +1,6 @@
 'use client'
 
-import { Card } from '@stubramp/ui/card'
-import { Input } from '@stubramp/ui/input'
-import { Select } from '@stubramp/ui/select'
+import { Card, Input, Select } from '@stubramp/ui'
 import type { Vendor } from '../../lib/bills'
 
 export interface DraftMeta {

@@ -1,5 +1,4 @@
-import { avatarColor, formatDate, initials } from '../../lib/format'
-import { formatCents } from '../../lib/money'
+import { avatarColor, formatCents, formatDate, initials } from '@stubramp/ui'
 
 export interface InvoiceDocLine {
   idx: string

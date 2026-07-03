@@ -1,9 +1,6 @@
 'use client'
 
-import { Badge } from '@stubramp/ui/badge'
-import { Button } from '@stubramp/ui/button'
-import { Card } from '@stubramp/ui/card'
-import { Money } from './Money'
+import { Badge, Button, Card, Money } from '@stubramp/ui'
 
 export function BillSummaryCard({
   vendorLabel,

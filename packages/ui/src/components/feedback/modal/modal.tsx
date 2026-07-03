@@ -3,7 +3,7 @@
 import { type ReactNode, useEffect } from "react";
 import { createPortal } from "react-dom";
 
-import { cn } from "./cn";
+import { cn } from "../../../lib/cn";
 
 export interface ModalProps {
   /** Whether the dialog is shown. */

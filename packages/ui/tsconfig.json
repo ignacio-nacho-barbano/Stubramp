@@ -2,7 +2,12 @@
   "extends": "@stubramp/typescript-config/react-library.json",
   "compilerOptions": {
     "outDir": "dist",
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    // This package ships TypeScript source directly (no build step) and is only
+    // ever consumed by bundlers (Vite, Next, Storybook), so relative imports are
+    // extensionless. Override the base NodeNext resolution with bundler mode.
+    "module": "ESNext",
+    "moduleResolution": "Bundler"
   },
   "include": [
     "src"

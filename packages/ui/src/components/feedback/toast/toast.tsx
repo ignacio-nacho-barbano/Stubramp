@@ -12,7 +12,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 
-import { cn } from "./cn";
+import { cn } from "../../../lib/cn";
 
 export type ToastTone = "neutral" | "positive" | "negative";
 

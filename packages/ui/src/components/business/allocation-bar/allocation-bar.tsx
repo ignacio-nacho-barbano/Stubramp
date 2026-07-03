@@ -1,7 +1,7 @@
 export interface AllocationSegment {
-  label: string
-  pct: number
-  color: string
+  label: string;
+  pct: number;
+  color: string;
 }
 
 /** Colored proportional bar + legend for a line item's cost-center splits. */
@@ -28,5 +28,5 @@ export function AllocationBar({ segments }: { segments: AllocationSegment[] }) {
         ))}
       </div>
     </div>
-  )
+  );
 }

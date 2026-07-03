@@ -1,6 +1,6 @@
 import { type HTMLAttributes, type ReactNode } from "react";
 
-import { cn } from "./cn";
+import { cn } from "../../../lib/cn";
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   /** Shadow depth. Default "flat" (border-only). */

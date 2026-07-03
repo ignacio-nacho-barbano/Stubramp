@@ -1,10 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Check } from 'lucide-react'
-import { Button } from '@stubramp/ui/button'
-import { Input } from '@stubramp/ui/input'
-import { Select } from '@stubramp/ui/select'
-import { Checkbox } from '@stubramp/ui/checkbox'
+import { Button, Checkbox, Input, Select } from '@stubramp/ui'
 import {
   AuthLayout,
   ErrorBanner,

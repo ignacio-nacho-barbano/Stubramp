@@ -1,5 +1,5 @@
-// Presentational helpers shared across the Bill Pay UI: deterministic date
-// formatting (SSR-safe), initials, and a stable name→color hash for avatars and
+// Presentational helpers shared across apps: deterministic date formatting
+// (SSR-safe), initials, and a stable name→color hash for avatars and
 // split-allocation segments. All pure and client-safe.
 
 const DATE_FMT = new Intl.DateTimeFormat('en-US', {
@@ -54,7 +54,7 @@ function hash(s: string): number {
 
 /** Stable background color for a vendor/person avatar, derived from the name. */
 export function avatarColor(name: string): string {
-  return AVATAR_PALETTE[hash(name) % AVATAR_PALETTE.length]
+  return AVATAR_PALETTE[hash(name) % AVATAR_PALETTE.length] ?? 'var(--gray-600)'
 }
 
 // Categorical palette for split-allocation bars and legends.
@@ -69,5 +69,5 @@ export const ALLOCATION_PALETTE = [
 ]
 
 export function allocationColor(index: number): string {
-  return ALLOCATION_PALETTE[index % ALLOCATION_PALETTE.length]
+  return ALLOCATION_PALETTE[index % ALLOCATION_PALETTE.length] ?? 'var(--gray-500)'
 }

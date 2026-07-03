@@ -1,11 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@stubramp/ui/button'
-import { Card } from '@stubramp/ui/card'
-import { Modal } from '@stubramp/ui/modal'
-import { Input } from '@stubramp/ui/input'
-import { Select } from '@stubramp/ui/select'
+import { Button, Card, Input, Modal, Select } from '@stubramp/ui'
 import type { Role } from '../../lib/auth'
 import type {
   BillStatus,

@@ -1,9 +1,5 @@
-import { Badge } from '@stubramp/ui/badge'
-import { Card } from '@stubramp/ui/card'
+import { AllocationBar, allocationColor, Badge, Card, Money } from '@stubramp/ui'
 import type { BillLineItem } from '../../lib/bills'
-import { allocationColor } from '../../lib/format'
-import { AllocationBar } from './AllocationBar'
-import { Money } from './Money'
 
 const KIND: Record<
   BillLineItem['classification'],

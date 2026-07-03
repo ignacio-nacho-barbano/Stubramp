@@ -38,12 +38,10 @@ Your app needs Tailwind v4 wired into its build (`@tailwindcss/postcss`,
 globs are needed for `@stubramp/ui` — but add `@source` lines for your own app
 files as usual.
 
-**2. Import components** (one module per component, kebab-case file names):
+**2. Import components** from the single `@stubramp/ui` entrypoint:
 
 ```tsx
-import { Button } from "@stubramp/ui/button";
-import { StatTile } from "@stubramp/ui/stat-tile";
-import { Badge } from "@stubramp/ui/badge";
+import { Button, StatTile, Badge } from "@stubramp/ui";
 
 export function Example() {
   return (
@@ -79,22 +77,65 @@ individually via `@stubramp/ui/styles/tokens/<name>.css`):
 
 Prefer the **semantic aliases** over raw scale values when composing new UI.
 
+## Package structure
+
+Components live under `src/components/`, grouped by category, one folder per
+component co-locating its implementation, its story, and an `index.ts` barrel.
+The root `src/index.ts` re-exports everything as the single public entrypoint,
+so consumers never import by path — just `import { X } from "@stubramp/ui"`.
+
+```
+src/
+  index.ts                     # single public barrel
+  lib/cn.ts                    # internal class-name helper
+  components/
+    forms/          button, input, select, checkbox, switch
+    data-display/   card, stat-tile, avatar, badge
+    feedback/       modal, toast
+    navigation/     tabs, menu
+    brand/          logo
+    business/       money, vendor-avatar, status-badge,
+                    segmented-toggle, allocation-bar
+  styles/                      # tokens + theme.css (shipped separately)
+```
+
+The `business/` category holds domain-aware components shared across apps (Bill
+Pay and beyond). They build on the primitives above plus the pure helpers in
+`lib/` (`money`, `format`, `bill-status`), all re-exported from the barrel — so
+apps can also import the helpers directly: `import { formatCents, avatarColor }
+from "@stubramp/ui"`.
+
+To add a component: create `components/<category>/<name>/{<name>.tsx,
+<name>.stories.tsx, index.ts}` and add one `export *` line to `src/index.ts`.
+
 ## Components
 
-| Module        | Export      | Notes                                                       |
-| ------------- | ----------- | ----------------------------------------------------------- |
-| `button`      | `Button`    | `primary` / `secondary` / `ghost` / `accent` / `danger`, 3 sizes |
-| `badge`       | `Badge`     | Status pill — 6 tones, `soft`/`solid`, optional dot         |
-| `card`        | `Card`      | Squared surface, hairline border, optional header/footer/shadow |
-| `input`       | `Input`     | Label, hint, error, prefix/suffix slots                     |
-| `select`      | `Select`    | Native select styled to match `Input`                       |
-| `checkbox`    | `Checkbox`  | Squared, ink fill — controlled or uncontrolled              |
-| `switch`      | `Switch`    | Pill toggle — `onChange(next: boolean)`                     |
-| `avatar`      | `Avatar`    | Circular, initials fallback                                 |
-| `stat-tile`   | `StatTile`  | KPI block — big tabular numeral, label, directional delta   |
-| `tabs`        | `Tabs`      | Underline tab bar — controlled or uncontrolled              |
+All exports come from the `@stubramp/ui` barrel.
 
-Stateful components (`Checkbox`, `Switch`, `Tabs`) carry the `"use client"`
-directive for React Server Component compatibility. `Button`, `Input`, and the
-rest are server-safe — `Input`'s focus ring uses the `focus-within:` variant
-rather than React state.
+| Category       | Export        | Notes                                                       |
+| -------------- | ------------- | ----------------------------------------------------------- |
+| forms          | `Button`      | `primary` / `secondary` / `ghost` / `accent` / `danger`, 3 sizes |
+| forms          | `Input`       | Label, hint, error, prefix/suffix slots                     |
+| forms          | `Select`      | Native select styled to match `Input`                       |
+| forms          | `Checkbox`    | Squared, ink fill — controlled or uncontrolled              |
+| forms          | `Switch`      | Pill toggle — `onChange(next: boolean)`                     |
+| data-display   | `Card`        | Squared surface, hairline border, optional header/footer/shadow |
+| data-display   | `StatTile`    | KPI block — big tabular numeral, label, directional delta   |
+| data-display   | `Avatar`      | Circular, initials fallback                                 |
+| data-display   | `Badge`       | Status pill — 6 tones, `soft`/`solid`, optional dot         |
+| feedback       | `Modal`       | Squared dialog — hairline border, pop shadow                |
+| feedback       | `ToastProvider`, `useToast` | Toast context + hook — `toast({ message, tone })` |
+| navigation     | `Tabs`        | Underline tab bar — controlled or uncontrolled              |
+| navigation     | `Menu`        | Dropdown/popover — item list or arbitrary panel content     |
+| brand          | `Logo`        | Wordmark / icon lockup                                       |
+| business       | `Money`       | Currency-formatted cents with tabular figures               |
+| business       | `VendorAvatar`| Avatar with deterministic name→color background             |
+| business       | `StatusBadge` | Bill lifecycle status → tone-mapped `Badge`                 |
+| business       | `SegmentedToggle` | Compact segmented control (generic over option value)   |
+| business       | `AllocationBar`   | Proportional split bar + legend                         |
+
+Stateful and portal components (`Checkbox`, `Switch`, `Tabs`, `Modal`, `Menu`,
+`Toast`) carry the `"use client"` directive for React Server Component
+compatibility; re-exporting them through the barrel preserves that boundary.
+`Button`, `Input`, and the rest are server-safe — `Input`'s focus ring uses the
+`focus-within:` variant rather than React state.

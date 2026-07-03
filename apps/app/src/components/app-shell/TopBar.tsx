@@ -1,6 +1,5 @@
 import { Search, Settings } from 'lucide-react'
-import { Avatar } from '@stubramp/ui/avatar'
-import { avatarColor } from '../../lib/format'
+import { Avatar, avatarColor } from '@stubramp/ui'
 import { NotificationsMenu } from './NotificationsMenu'
 
 /** App top bar — search affordance, notifications, settings, and user avatar. */

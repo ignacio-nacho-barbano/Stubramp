@@ -2,9 +2,7 @@
 
 import { useNavigate } from '@tanstack/react-router'
 import { FileSpreadsheet, Inbox, PenLine, UploadCloud } from 'lucide-react'
-import { Menu } from '@stubramp/ui/menu'
-import { Button } from '@stubramp/ui/button'
-import { useToast } from '@stubramp/ui/toast'
+import { Button, Menu, useToast } from '@stubramp/ui'
 
 /** The "+ New bill" dropdown. Manual + Upload are wired; CSV/AP-inbox are stubs. */
 export function NewBillMenu() {

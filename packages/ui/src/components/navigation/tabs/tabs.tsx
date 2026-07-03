@@ -2,7 +2,7 @@
 
 import { type HTMLAttributes, type ReactNode, useState } from "react";
 
-import { cn } from "./cn";
+import { cn } from "../../../lib/cn";
 
 export interface TabItem {
   id: string;

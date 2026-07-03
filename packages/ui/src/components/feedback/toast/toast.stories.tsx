@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import { Button } from './button';
+import { Button } from '../../forms/button';
 import { ToastProvider, useToast } from './toast';
 
 const meta = {
@@ -34,6 +34,7 @@ function Demo() {
 }
 
 export const Default: Story = {
+  args: { children: null },
   render: () => (
     <ToastProvider>
       <Demo />

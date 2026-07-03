@@ -1,6 +1,6 @@
 import { type CSSProperties, type HTMLAttributes } from "react";
 
-import { cn } from "./cn";
+import { cn } from "../../../lib/cn";
 
 export interface AvatarProps extends HTMLAttributes<HTMLSpanElement> {
   /** Image URL; falls back to initials when absent. */

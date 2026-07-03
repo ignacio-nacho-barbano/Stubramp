@@ -1,9 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { z } from 'zod'
-import { Button } from '@stubramp/ui/button'
-import { Input } from '@stubramp/ui/input'
-import { Checkbox } from '@stubramp/ui/checkbox'
+import { Button, Checkbox, Input } from '@stubramp/ui'
 import {
   AuthLayout,
   ErrorBanner,

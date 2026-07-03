@@ -1,6 +1,6 @@
 import { type HTMLAttributes, type ReactNode } from "react";
 
-import { cn } from "./cn";
+import { cn } from "../../../lib/cn";
 
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   /** Semantic tone. Default "neutral". */
