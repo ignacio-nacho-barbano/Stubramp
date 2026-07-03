@@ -1,0 +1,10 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "stubramp-web",
+  "compatibility_date": "2026-07-03",
+  // Static export from `next build` (output: 'export') lands in ./out.
+  // Assets-only Worker — no server runtime, no OpenNext needed.
+  "assets": {
+    "directory": "./out"
+  }
+}
