@@ -8,7 +8,8 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "deploy:api": "fly deploy . -c apps/api/fly.toml --dockerfile apps/api/Dockerfile --ignorefile apps/api/Dockerfile.dockerignore --ha=false"
+    "deploy:api": "fly deploy . -c apps/api/fly.toml --dockerfile apps/api/Dockerfile --ignorefile apps/api/Dockerfile.dockerignore --ha=false",
+    "db:migrate": "pnpm --filter @stubramp/api db:migrate"
   },
   "devDependencies": {
     "prettier": "^3.7.4",
