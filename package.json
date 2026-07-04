@@ -4,6 +4,8 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "dev:app": "turbo run dev --filter @stubramp/app --filter @stubramp/api",
+    "dev:local": "pnpm --filter @stubramp/api db:up && USE_LOCAL_DB=1 turbo run dev",
     "start": "turbo run start",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",

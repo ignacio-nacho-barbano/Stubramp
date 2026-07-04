@@ -27,7 +27,10 @@
     },
     "dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "passThroughEnv": [
+        "USE_LOCAL_DB"
+      ]
     },
     "start": {
       "dependsOn": [
