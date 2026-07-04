@@ -109,8 +109,12 @@ export class BillService {
     if (!canTransition(from, to)) throw new IllegalTransitionError(from, to);
     runGuard(from, to, bill, input);
 
-    return this.prisma.$transaction(async (tx) => {
-      const updated = await this.bills.withTx(tx).update(id, { status: to });
+    await this.prisma.$transaction(async (tx) => {
+      // Compare-and-swap on the status is the atomic gate: if a concurrent
+      // request already moved the bill out of `from`, this changes 0 rows and we
+      // abort — so two racing transitions can't both apply (no double payment).
+      const changed = await this.bills.withTx(tx).casStatus(id, from, to);
+      if (changed === 0) throw new IllegalTransitionError(from, to);
 
       await this.billEvents.withTx(tx).create({
         bill: { connect: { id } },
@@ -131,9 +135,10 @@ export class BillService {
           scheduledFor: input.scheduledFor,
         });
       }
-
-      return updated;
     });
+
+    // Return the fresh aggregate (with relations), matching settlePayment.
+    return this.get(auth, id);
   }
 
   // Settle a scheduled payment and drive the bill to its terminal/retry state
@@ -155,11 +160,21 @@ export class BillService {
     if (!canTransition(from, to)) throw new IllegalTransitionError(from, to);
 
     await this.prisma.$transaction(async (tx) => {
-      await this.payments.withTx(tx).update(paymentId, {
+      // CAS the payment out of PENDING first: 0 rows means it was already
+      // settled by a concurrent/duplicate request, so we abort before touching
+      // the bill.
+      const settled = await this.payments.withTx(tx).casSettle(paymentId, {
         status: input.outcome,
         paidAt: input.outcome === "SUCCEEDED" ? new Date() : null,
       });
-      await this.bills.withTx(tx).update(bill.id, { status: to });
+      if (settled === 0) {
+        throw new GuardFailedError("Payment is not pending (already settled)");
+      }
+
+      // CAS the bill status too, so a racing transition can't double-apply.
+      const changed = await this.bills.withTx(tx).casStatus(bill.id, from, to);
+      if (changed === 0) throw new IllegalTransitionError(from, to);
+
       await this.billEvents.withTx(tx).create({
         bill: { connect: { id: bill.id } },
         fromStatus: from,

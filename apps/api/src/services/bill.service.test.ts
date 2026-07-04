@@ -83,9 +83,11 @@ function makeBillInput(overrides: Record<string, unknown> = {}) {
 
 describe("BillService", () => {
   // Repo write mocks (the methods reached via withTx inside transactions).
-  let billUpdate: ReturnType<typeof vi.fn>;
+  // Status changes go through compare-and-swap (casStatus/casSettle), which
+  // return the number of rows changed — 1 = applied, 0 = lost the race.
+  let billCas: ReturnType<typeof vi.fn>;
+  let paymentCas: ReturnType<typeof vi.fn>;
   let paymentCreate: ReturnType<typeof vi.fn>;
-  let paymentUpdate: ReturnType<typeof vi.fn>;
   let eventCreate: ReturnType<typeof vi.fn>;
 
   let bills: {
@@ -104,20 +106,20 @@ describe("BillService", () => {
   let service: BillService;
 
   beforeEach(() => {
-    billUpdate = vi.fn(async (_id: string, _data: any) => makeBill());
+    billCas = vi.fn(async (_id: string, _from: any, _to: any) => 1);
+    paymentCas = vi.fn(async (_id: string, _data: any) => 1);
     paymentCreate = vi.fn(async (_data: any) => ({}));
-    paymentUpdate = vi.fn(async (_id: string, _data: any) => ({}));
     eventCreate = vi.fn(async (_data: any) => ({}));
 
     bills = {
       create: vi.fn(async (_data: any, _args?: any) => makeBill()),
       findByStatus: vi.fn(async () => [makeBill()]),
       findByIdScoped: vi.fn(async () => makeBill()),
-      withTx: vi.fn(() => ({ update: billUpdate })),
+      withTx: vi.fn(() => ({ casStatus: billCas })),
     };
     payments = {
       findByIdScoped: vi.fn(),
-      withTx: vi.fn(() => ({ create: paymentCreate, update: paymentUpdate })),
+      withTx: vi.fn(() => ({ create: paymentCreate, casSettle: paymentCas })),
     };
     billEvents = { withTx: vi.fn(() => ({ create: eventCreate })) };
     vendors = { exists: vi.fn(async () => true) };
@@ -201,10 +203,21 @@ describe("BillService", () => {
     it("submits a bill with valid lines and writes an event", async () => {
       bills.findByIdScoped.mockResolvedValueOnce(makeBill({ status: "DRAFT" }));
       await service.transition(auth, "bill-1", { to: "SUBMITTED" } as never);
-      expect(billUpdate).toHaveBeenCalledWith("bill-1", { status: "SUBMITTED" });
+      expect(billCas).toHaveBeenCalledWith("bill-1", "DRAFT", "SUBMITTED");
       expect(eventCreate).toHaveBeenCalledTimes(1);
       // actor is the authenticated user, not request input.
       expect(eventCreate.mock.calls[0]![0].actor).toBe("u1");
+      expect(paymentCreate).not.toHaveBeenCalled();
+    });
+
+    it("aborts (no event, no payment) when a concurrent transition won the race", async () => {
+      bills.findByIdScoped.mockResolvedValueOnce(makeBill({ status: "DRAFT" }));
+      // CAS changes 0 rows: another request already moved the bill out of DRAFT.
+      billCas.mockResolvedValueOnce(0);
+      await expect(
+        service.transition(auth, "bill-1", { to: "SUBMITTED" } as never),
+      ).rejects.toBeInstanceOf(IllegalTransitionError);
+      expect(eventCreate).not.toHaveBeenCalled();
       expect(paymentCreate).not.toHaveBeenCalled();
     });
 
@@ -236,12 +249,12 @@ describe("BillService", () => {
       });
       bills.findByIdScoped.mockResolvedValue(makeBill({ status: "SCHEDULED" }));
       await service.settlePayment(auth, "pay-1", { outcome: "SUCCEEDED" });
-      expect(paymentUpdate).toHaveBeenCalledTimes(1);
-      const [id, data] = paymentUpdate.mock.calls[0]!;
+      expect(paymentCas).toHaveBeenCalledTimes(1);
+      const [id, data] = paymentCas.mock.calls[0]!;
       expect(id).toBe("pay-1");
       expect(data.status).toBe("SUCCEEDED");
       expect(data.paidAt).toBeInstanceOf(Date);
-      expect(billUpdate).toHaveBeenCalledWith("bill-1", { status: "PAID" });
+      expect(billCas).toHaveBeenCalledWith("bill-1", "SCHEDULED", "PAID");
     });
 
     it("drives the bill to FAILED on failure", async () => {
@@ -251,10 +264,24 @@ describe("BillService", () => {
       });
       bills.findByIdScoped.mockResolvedValue(makeBill({ status: "SCHEDULED" }));
       await service.settlePayment(auth, "pay-1", { outcome: "FAILED" });
-      const data = paymentUpdate.mock.calls[0]![1];
+      const data = paymentCas.mock.calls[0]![1];
       expect(data.status).toBe("FAILED");
       expect(data.paidAt).toBeNull();
-      expect(billUpdate).toHaveBeenCalledWith("bill-1", { status: "FAILED" });
+      expect(billCas).toHaveBeenCalledWith("bill-1", "SCHEDULED", "FAILED");
+    });
+
+    it("rejects settling a payment that is no longer pending", async () => {
+      payments.findByIdScoped.mockResolvedValueOnce({
+        id: "pay-1",
+        billId: "bill-1",
+      });
+      bills.findByIdScoped.mockResolvedValue(makeBill({ status: "SCHEDULED" }));
+      // CAS changes 0 rows: the payment was already settled concurrently.
+      paymentCas.mockResolvedValueOnce(0);
+      await expect(
+        service.settlePayment(auth, "pay-1", { outcome: "SUCCEEDED" }),
+      ).rejects.toBeInstanceOf(GuardFailedError);
+      expect(billCas).not.toHaveBeenCalled();
     });
   });
 });

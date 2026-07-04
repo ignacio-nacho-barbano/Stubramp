@@ -1,5 +1,7 @@
 // ESM
 import fastifyCors from "@fastify/cors";
+import fastifyHelmet from "@fastify/helmet";
+import fastifyRateLimit from "@fastify/rate-limit";
 import Fastify from "fastify";
 import {
   serializerCompiler,
@@ -96,6 +98,18 @@ const start = async () => {
     await fastify.register(fastifyCors, {
       origin: env.APP_URL,
       credentials: true,
+    });
+
+    // Security response headers (sensible defaults for a JSON API).
+    await fastify.register(fastifyHelmet);
+
+    // Global rate limit as a baseline abuse guard. Auth routes tighten this
+    // per-route (see routes/auth.ts) to blunt credential brute-forcing. The
+    // default in-memory store is correct for the single-instance Fly deploy
+    // (--ha=false); a multi-instance rollout would need a shared Redis store.
+    await fastify.register(fastifyRateLimit, {
+      max: 100,
+      timeWindow: "1 minute",
     });
 
     // Order matters: services depend on repositories; auth depends on repos +

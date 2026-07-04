@@ -9,16 +9,23 @@ describe("TokenService", () => {
   let create: ReturnType<typeof vi.fn>;
   let update: ReturnType<typeof vi.fn>;
   let findByTokenHash: ReturnType<typeof vi.fn>;
+  let revokeAllForUser: ReturnType<typeof vi.fn>;
   let loadUser: ReturnType<typeof vi.fn>;
-  let refreshTokens: { create: typeof create; update: typeof update; findByTokenHash: typeof findByTokenHash };
+  let refreshTokens: {
+    create: typeof create;
+    update: typeof update;
+    findByTokenHash: typeof findByTokenHash;
+    revokeAllForUser: typeof revokeAllForUser;
+  };
   let service: TokenService;
 
   beforeEach(() => {
     create = vi.fn(async (_data: any) => ({}));
     update = vi.fn(async (_id: string, _data: any) => ({}));
     findByTokenHash = vi.fn();
+    revokeAllForUser = vi.fn(async (_userId: string) => 1);
     loadUser = vi.fn(async (id: string) => ({ id, companyId: "c1", role: "ADMIN" }));
-    refreshTokens = { create, update, findByTokenHash };
+    refreshTokens = { create, update, findByTokenHash, revokeAllForUser };
     service = new TokenService(
       () => "access-token",
       refreshTokens as unknown as RefreshTokenRepository,
@@ -58,7 +65,7 @@ describe("TokenService", () => {
     expect(update).not.toHaveBeenCalled();
   });
 
-  it("rejects a revoked refresh token", async () => {
+  it("rejects a revoked refresh token and revokes the whole family (reuse detection)", async () => {
     findByTokenHash.mockResolvedValueOnce({
       id: "rt1",
       userId: "u1",
@@ -66,6 +73,9 @@ describe("TokenService", () => {
       expiresAt: new Date(Date.now() + TTL_MS),
     });
     await expect(service.rotate("x")).rejects.toBeInstanceOf(UnauthorizedError);
+    // Presenting an already-rotated token = likely theft: nuke the family.
+    expect(revokeAllForUser).toHaveBeenCalledWith("u1");
+    expect(create).not.toHaveBeenCalled(); // no new pair issued
   });
 
   it("rejects an expired refresh token", async () => {

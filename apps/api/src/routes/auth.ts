@@ -13,9 +13,18 @@ import { loginInput, signupInput } from "../schemas/auth.schema.js";
 export async function authRoutes(app: FastifyInstance) {
   const r = app.withTypeProvider<ZodTypeProvider>();
 
+  // Tight limit for the unauthenticated credential endpoints — blunts brute
+  // forcing / signup abuse. Keyed by IP (the plugin default).
+  const authRateLimit = {
+    rateLimit: { max: 5, timeWindow: "1 minute" },
+  };
+
   // Public: self-serve signup. Creates a new company + its first ADMIN user and
   // sets the session cookies so the client is logged straight in.
-  r.post("/auth/signup", { schema: { body: signupInput } }, async (req, reply) => {
+  r.post(
+    "/auth/signup",
+    { schema: { body: signupInput }, config: authRateLimit },
+    async (req, reply) => {
     const { user, company } = await app.services.auth.signup(req.body);
     const tokens = await app.tokenService.issuePair({
       id: user.id,
@@ -27,7 +36,10 @@ export async function authRoutes(app: FastifyInstance) {
   });
 
   // Public: exchange credentials for a session (set as httpOnly cookies).
-  r.post("/auth/login", { schema: { body: loginInput } }, async (req, reply) => {
+  r.post(
+    "/auth/login",
+    { schema: { body: loginInput }, config: authRateLimit },
+    async (req, reply) => {
     const user = await app.repositories.users.findByEmail(req.body.email);
     if (!user || !user.isActive) {
       throw new UnauthorizedError("Invalid credentials");
@@ -49,7 +61,7 @@ export async function authRoutes(app: FastifyInstance) {
   });
 
   // Public: rotate the refresh-token cookie for a fresh session.
-  r.post("/auth/refresh", async (req, reply) => {
+  r.post("/auth/refresh", { config: authRateLimit }, async (req, reply) => {
     const presented = req.cookies[REFRESH_COOKIE];
     if (!presented) throw new UnauthorizedError("Missing refresh token");
     const tokens = await app.tokenService.rotate(presented);

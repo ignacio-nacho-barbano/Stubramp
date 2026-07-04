@@ -57,9 +57,21 @@ export class TokenService {
   // pair. Reusing a rotated/expired/unknown token is rejected.
   async rotate(presented: string): Promise<TokenPair> {
     const record = await this.refreshTokens.findByTokenHash(sha256(presented));
-    if (!record || record.revokedAt || record.expiresAt.getTime() < Date.now()) {
+    if (!record) throw new UnauthorizedError("Invalid refresh token");
+
+    // Reuse detection: a token that was already rotated (revoked) is being
+    // presented again — a strong signal it was stolen (both the legitimate
+    // client and the attacker hold a copy). Revoke the user's entire live token
+    // family so the compromised chain can't be used, and force re-login.
+    if (record.revokedAt) {
+      await this.refreshTokens.revokeAllForUser(record.userId);
       throw new UnauthorizedError("Invalid refresh token");
     }
+
+    if (record.expiresAt.getTime() < Date.now()) {
+      throw new UnauthorizedError("Invalid refresh token");
+    }
+
     const user = await this.loadUser(record.userId);
     if (!user) throw new UnauthorizedError("Invalid refresh token");
 

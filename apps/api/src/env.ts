@@ -2,36 +2,43 @@
 // Default: Neon writes DATABASE_URL / DATABASE_URL_UNPOOLED into .env.local.
 // USE_LOCAL_DB=1: use the local Docker Postgres (.env.docker) instead.
 import { config as loadEnv } from "dotenv";
+import { z } from "zod";
 
 const dbEnvFile = process.env.USE_LOCAL_DB === "1" ? ".env.docker" : ".env.local";
 loadEnv({ path: [dbEnvFile, ".env"] });
 
-function required(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${name}`);
-  }
-  return value;
-}
-
-export const env = {
+// Fail-fast schema: a missing/malformed var stops the process at boot with a
+// readable message instead of surfacing as a confusing runtime error later.
+// Secret floor is 16 (matches the provisioned dev secrets); use 32+ in prod.
+const envSchema = z.object({
   // Pooled connection (PgBouncer) — correct for the long-running app runtime.
-  DATABASE_URL: required("DATABASE_URL"),
+  DATABASE_URL: z.string().min(1),
   // Fly.io requires binding to 0.0.0.0 so the proxy can reach the app.
-  HOST: process.env.HOST ?? "0.0.0.0",
-  PORT: Number(process.env.PORT ?? 3001),
-  NODE_ENV: process.env.NODE_ENV ?? "development",
+  HOST: z.string().default("0.0.0.0"),
+  PORT: z.coerce.number().int().positive().default(3001),
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   // Signs short-lived access JWTs. Refresh tokens are opaque + stored server-side.
-  JWT_SECRET: required("JWT_SECRET"),
-  ACCESS_TOKEN_TTL: process.env.ACCESS_TOKEN_TTL ?? "15m",
-  REFRESH_TOKEN_TTL: process.env.REFRESH_TOKEN_TTL ?? "30d",
+  JWT_SECRET: z.string().min(16),
+  ACCESS_TOKEN_TTL: z.string().default("15m"),
+  REFRESH_TOKEN_TTL: z.string().default("30d"),
   // Server-side secret mixed into every password hash (never stored in the DB).
-  PASSWORD_PEPPER: required("PASSWORD_PEPPER"),
+  PASSWORD_PEPPER: z.string().min(16),
   // The browser SPA origin — the single allowed CORS origin (credentials mode
   // forbids the `*` wildcard). e.g. https://app.stubramp.barbano.uy
-  APP_URL: process.env.APP_URL ?? "http://localhost:3000",
+  APP_URL: z.string().url().default("http://localhost:3000"),
   // Parent domain the session cookies are scoped to, so they're shared across
   // the app + api subdomains (e.g. `.stubramp.barbano.uy`). Left unset locally
   // (localhost), where the browser scopes cookies to the exact host.
-  COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
-} as const;
+  COOKIE_DOMAIN: z.string().optional(),
+});
+
+const parsed = envSchema.safeParse(process.env);
+if (!parsed.success) {
+  const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+  console.error(
+    `❌ Invalid environment configuration:\n${JSON.stringify(fieldErrors, null, 2)}`,
+  );
+  process.exit(1);
+}
+
+export const env = parsed.data;

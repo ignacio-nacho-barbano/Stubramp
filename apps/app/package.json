@@ -20,6 +20,7 @@
   "dependencies": {
     "@faker-js/faker": "^10.3.0",
     "@sentry/react": "^10.63.0",
+    "@stubramp/contracts": "workspace:*",
     "@stubramp/ui": "workspace:*",
     "@tanstack/match-sorter-utils": "latest",
     "@tanstack/react-devtools": "latest",

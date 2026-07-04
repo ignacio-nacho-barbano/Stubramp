@@ -1,0 +1,34 @@
+{
+    "name": "@stubramp/contracts",
+    "type": "module",
+    "scripts": {
+        "dev": "tsc --watch",
+        "build": "tsc",
+        "check-types": "tsc --noEmit"
+    },
+    "exports": {
+        "./enums": {
+            "types": "./src/enums.ts",
+            "default": "./dist/enums.js"
+        },
+        "./bill-state-machine": {
+            "types": "./src/bill-state-machine.ts",
+            "default": "./dist/bill-state-machine.js"
+        },
+        "./permissions": {
+            "types": "./src/permissions.ts",
+            "default": "./dist/permissions.js"
+        },
+        "./schemas": {
+            "types": "./src/schemas.ts",
+            "default": "./dist/schemas.js"
+        }
+    },
+    "dependencies": {
+        "zod": "^4.3.6"
+    },
+    "devDependencies": {
+        "@stubramp/typescript-config": "workspace:*",
+        "typescript": "latest"
+    }
+}

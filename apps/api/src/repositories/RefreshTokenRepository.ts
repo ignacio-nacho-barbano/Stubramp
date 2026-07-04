@@ -26,6 +26,17 @@ export class RefreshTokenRepository extends BaseRepository<RefreshTokenTypes> {
     return this.tokens.findUnique({ where: { tokenHash } });
   }
 
+  // Revoke every still-live refresh token for a user. Used as the theft response
+  // when a rotated (already-revoked) token is presented again, and for logout-all.
+  // Returns the number of tokens revoked.
+  async revokeAllForUser(userId: string): Promise<number> {
+    const { count } = await this.tokens.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+    return count;
+  }
+
   withTx(tx: Prisma.TransactionClient): RefreshTokenRepository {
     return new RefreshTokenRepository(tx.refreshToken);
   }

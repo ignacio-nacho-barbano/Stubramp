@@ -1,4 +1,8 @@
-import type { Payment, Prisma } from "../generated/prisma/client.js";
+import type {
+  Payment,
+  PaymentStatus,
+  Prisma,
+} from "../generated/prisma/client.js";
 import {
   BaseRepository,
   type ModelDelegate,
@@ -34,6 +38,20 @@ export class PaymentRepository extends BaseRepository<PaymentTypes> {
     return this.payments.findFirst({
       where: { id, ...(companyId ? { companyId } : {}) },
     });
+  }
+
+  // Compare-and-swap settle: transitions the payment out of PENDING only if it's
+  // still PENDING. Returns rows changed — 0 means it was already settled (a
+  // concurrent/duplicate settle). Call inside a transaction via `withTx(tx)`.
+  async casSettle(
+    id: string,
+    data: { status: PaymentStatus; paidAt: Date | null },
+  ): Promise<number> {
+    const { count } = await this.payments.updateMany({
+      where: { id, status: "PENDING" },
+      data,
+    });
+    return count;
   }
 
   withTx(tx: Prisma.TransactionClient): PaymentRepository {

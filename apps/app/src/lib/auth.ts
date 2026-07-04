@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { Role } from '@stubramp/contracts/enums'
 import { apiFetch, apiRequest, mapApiError } from './api'
 
 // ---------------------------------------------------------------------------
@@ -11,8 +12,10 @@ import { apiFetch, apiRequest, mapApiError } from './api'
 // `credentials: 'include'`.
 // ---------------------------------------------------------------------------
 
-export type Role =
-  'SUPERUSER' | 'ADMIN' | 'ACCOUNTANT' | 'APPROVER' | 'EMPLOYEE'
+// Role union is shared with the API via @stubramp/contracts (imported above and
+// re-exported here). The login/signup Zod schemas below stay local: they carry
+// app-specific, user-facing form copy.
+export type { Role }
 
 export interface AuthUser {
   id: string

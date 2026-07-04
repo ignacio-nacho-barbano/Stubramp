@@ -68,6 +68,24 @@ export class BillRepository extends BaseRepository<BillTypes> {
     });
   }
 
+  // Compare-and-swap the status: flips `id` from `from` to `to` only if the row
+  // is *still* in `from`. Returns the number of rows changed — 0 means another
+  // request already moved it (lost the race), so the caller must not proceed.
+  // This is the atomic gate that prevents two concurrent transitions from both
+  // applying (e.g. double-scheduling a payment). Call inside a transaction via
+  // `withTx(tx)`.
+  async casStatus(
+    id: string,
+    from: BillStatus,
+    to: BillStatus,
+  ): Promise<number> {
+    const { count } = await this.bills.updateMany({
+      where: { id, status: from },
+      data: { status: to },
+    });
+    return count;
+  }
+
   withTx(tx: Prisma.TransactionClient): BillRepository {
     return new BillRepository(tx.bill);
   }

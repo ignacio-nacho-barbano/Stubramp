@@ -3,7 +3,9 @@
  * (apps/app) serves /login and /signup; in dev it runs on port 3000. Override
  * with NEXT_PUBLIC_APP_URL to point at a deployed app.
  */
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+import { env } from './env'
+
+const APP_URL = env.NEXT_PUBLIC_APP_URL
 
 export const loginHref = `${APP_URL}/login`
 export const signupHref = `${APP_URL}/signup`

@@ -10,11 +10,12 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@stubramp/ui": "workspace:*",
     "lucide-react": "^0.545.0",
     "next": "^16.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "@stubramp/ui": "workspace:*"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@stubramp/eslint-config": "workspace:*",

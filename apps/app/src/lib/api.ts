@@ -8,7 +8,9 @@
 // retries once. The base URL is public (the SPA must know it).
 // ---------------------------------------------------------------------------
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001'
+import { env } from './env'
+
+const API_URL = env.VITE_API_URL
 
 export interface ApiResponse {
   status: number

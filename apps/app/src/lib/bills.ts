@@ -1,35 +1,50 @@
 import { z } from 'zod'
+import {
+  createBillInput,
+  createVendorInput,
+  settlePaymentInput,
+  transitionInput,
+} from '@stubramp/contracts/schemas'
+import type {
+  CreateBillInput,
+  CreateVendorInput,
+  SettlePaymentInput,
+  TransitionInput,
+} from '@stubramp/contracts/schemas'
+import type {
+  BillSource,
+  BillStatus,
+  Classification,
+  PaymentMethod,
+  PaymentStatus,
+} from '@stubramp/contracts/enums'
 import { apiFetch, mapApiError } from './api'
 
 // ---------------------------------------------------------------------------
-// Payables domain: shared types, the Zod contract mirroring the API, and the
-// data functions that call the Fastify API from the browser (cookies attached
-// via ./api). Types + schemas here mirror apps/api's schemas.
+// Payables domain (client side). The domain enums + Zod wire contract now live
+// in @stubramp/contracts and are re-exported here so this module stays the app's
+// one import site for them. Response shapes (DTOs returned by the API) and the
+// browser data functions that call the Fastify API live here.
 // ---------------------------------------------------------------------------
 
-export type BillStatus =
-  | 'DRAFT'
-  | 'SUBMITTED'
-  | 'APPROVED'
-  | 'SCHEDULED'
-  | 'PAID'
-  | 'REJECTED'
-  | 'FAILED'
+// Enums / unions + Zod wire contract — single source of truth in @stubramp/contracts.
+export { BILL_STATUSES } from '@stubramp/contracts/enums'
+export type {
+  BillStatus,
+  Classification,
+  PaymentMethod,
+  PaymentStatus,
+  BillSource,
+} from '@stubramp/contracts/enums'
+export {
+  createBillInput,
+  transitionInput,
+  createVendorInput,
+  settlePaymentInput,
+}
+export type { CreateBillInput, TransitionInput, SettlePaymentInput }
 
-export type Classification = 'EXPENSE' | 'ITEM'
-export type PaymentMethod = 'ACH' | 'WIRE' | 'CHECK' | 'CARD'
-export type PaymentStatus = 'PENDING' | 'SUCCEEDED' | 'FAILED'
-export type BillSource = 'MANUAL' | 'UPLOAD' | 'OCR' | 'EMAIL' | 'CSV'
-
-export const BILL_STATUSES: BillStatus[] = [
-  'DRAFT',
-  'SUBMITTED',
-  'APPROVED',
-  'SCHEDULED',
-  'PAID',
-  'REJECTED',
-  'FAILED',
-]
+// ---- Response shapes (DTOs returned by the API) ----
 
 export interface Vendor {
   id: string
@@ -119,72 +134,9 @@ export interface Paginated<T> {
   totalPages: number
 }
 
-// ---- Zod contract (mirrors apps/api/src/schemas/bill.schema.ts) ----
-
-export const splitInput = z.object({
-  costCenter: z.string().min(1),
-  amountCents: z.number().int().nonnegative(),
-})
-
-export const lineItemInput = z
-  .object({
-    description: z.string().min(1, 'Add a description.'),
-    quantity: z.number().int().positive().default(1),
-    unitCents: z.number().int().nonnegative(),
-    classification: z.enum(['EXPENSE', 'ITEM']).default('EXPENSE'),
-    glAccount: z.string().optional(),
-    splits: z.array(splitInput).min(1, 'Add at least one allocation.'),
-  })
-  .refine(
-    (l) =>
-      l.splits.reduce((s, sp) => s + sp.amountCents, 0) ===
-      l.quantity * l.unitCents,
-    {
-      message: 'Split allocations must sum to the line total.',
-      path: ['splits'],
-    },
-  )
-
-export const createBillInput = z.object({
-  vendorId: z.string().uuid('Select a vendor.'),
-  billNumber: z.string().min(1, 'Enter an invoice number.'),
-  source: z.enum(['MANUAL', 'UPLOAD', 'OCR', 'EMAIL', 'CSV']).default('MANUAL'),
-  issueDate: z.string().min(1, 'Choose an issue date.'),
-  dueDate: z.string().min(1, 'Choose a due date.'),
-  currency: z.string().length(3).default('USD'),
-  lines: z.array(lineItemInput).min(1, 'Add at least one line item.'),
-})
-
-export type CreateBillInput = z.infer<typeof createBillInput>
-
-export const transitionInput = z.object({
-  id: z.string().uuid(),
-  to: z.enum([
-    'DRAFT',
-    'SUBMITTED',
-    'APPROVED',
-    'SCHEDULED',
-    'PAID',
-    'REJECTED',
-    'FAILED',
-  ]),
-  scheduledFor: z.string().optional(),
-  method: z.enum(['ACH', 'WIRE', 'CHECK', 'CARD']).optional(),
-})
-
-export const createVendorInput = z.object({
-  name: z.string().min(1),
-  email: z.string().email().optional().or(z.literal('')),
-  bankRef: z.string().optional(),
-})
-
-export const settlePaymentInput = z.object({
-  paymentId: z.string().uuid(),
-  outcome: z.enum(['SUCCEEDED', 'FAILED']),
-})
-
 export type MutationResult<T> =
-  { ok: true; data: T } | { ok: false; error: string }
+  | { ok: true; data: T }
+  | { ok: false; error: string }
 
 // ---- Data functions (call the API from the browser) ----
 
@@ -228,9 +180,12 @@ export async function createBillFn({
 export async function transitionBillFn({
   data,
 }: {
-  data: z.infer<typeof transitionInput>
+  // Parse *input* type: callers pass `scheduledFor` as a date string, which the
+  // shared contract's z.coerce.date() coerces on parse.
+  data: z.input<typeof transitionInput> & { id: string }
 }): Promise<MutationResult<BillWithRelations>> {
-  const { id, ...body } = transitionInput.parse(data)
+  const id = z.string().uuid().parse(data.id)
+  const body = transitionInput.parse(data)
   const { status, json } = await apiFetch(`/bills/${id}/transitions`, {
     method: 'POST',
     body,
@@ -255,7 +210,7 @@ export async function listVendorsFn({
 export async function createVendorFn({
   data,
 }: {
-  data: z.infer<typeof createVendorInput>
+  data: CreateVendorInput
 }): Promise<MutationResult<Vendor>> {
   const parsed = createVendorInput.parse(data)
   const body = { ...parsed, email: parsed.email || undefined }
@@ -270,16 +225,14 @@ export async function createVendorFn({
 export async function settlePaymentFn({
   data,
 }: {
-  data: z.infer<typeof settlePaymentInput>
+  data: SettlePaymentInput & { paymentId: string }
 }): Promise<MutationResult<BillWithRelations>> {
-  const parsed = settlePaymentInput.parse(data)
-  const { status, json } = await apiFetch(
-    `/payments/${parsed.paymentId}/settle`,
-    {
-      method: 'POST',
-      body: { outcome: parsed.outcome },
-    },
-  )
+  const paymentId = z.string().uuid().parse(data.paymentId)
+  const { outcome } = settlePaymentInput.parse(data)
+  const { status, json } = await apiFetch(`/payments/${paymentId}/settle`, {
+    method: 'POST',
+    body: { outcome },
+  })
   if (status >= 400) return { ok: false, error: mapApiError(status, json) }
   return { ok: true, data: json as BillWithRelations }
 }

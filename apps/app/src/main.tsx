@@ -5,9 +5,10 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import * as Sentry from '@sentry/react'
 
 import { getRouter } from './router'
+import { env } from './lib/env'
 import './styles.css'
 
-const sentryDsn = import.meta.env.VITE_SENTRY_DSN
+const sentryDsn = env.VITE_SENTRY_DSN
 if (sentryDsn) {
   Sentry.init({
     dsn: sentryDsn,

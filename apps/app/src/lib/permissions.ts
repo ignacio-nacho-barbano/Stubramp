@@ -1,52 +1,18 @@
-import type { Role } from './auth'
+import type { Action } from '@stubramp/contracts/permissions'
 import type { BillStatus } from './bills'
 
-// Mirrors the API's permission matrix (apps/api/src/auth/permissions.ts +
-// bill-permissions.ts). This is UX-only gating — the API stays the source of
-// truth and returns 403 regardless. We hide/disable actions the role can't do.
-
-export type BillPermission =
-  | 'bill:create'
-  | 'bill:read'
-  | 'bill:submit'
-  | 'bill:approve'
-  | 'bill:schedule'
-  | 'bill:pay'
-  | 'vendor:manage'
-
-const ALL: BillPermission[] = [
-  'bill:create',
-  'bill:read',
-  'bill:submit',
-  'bill:approve',
-  'bill:schedule',
-  'bill:pay',
-  'vendor:manage',
-]
-
-const MATRIX: Record<Role, BillPermission[]> = {
-  SUPERUSER: ALL,
-  ADMIN: ALL,
-  ACCOUNTANT: [
-    'bill:create',
-    'bill:read',
-    'bill:submit',
-    'bill:schedule',
-    'bill:pay',
-    'vendor:manage',
-  ],
-  APPROVER: ['bill:read', 'bill:approve'],
-  EMPLOYEE: ['bill:create', 'bill:read'],
-}
-
-export function can(role: Role, permission: BillPermission): boolean {
-  return MATRIX[role].includes(permission)
-}
+// RBAC (Action, MATRIX, can) is shared with the API via @stubramp/contracts —
+// this is UX-only gating; the API stays the source of truth and returns 403
+// regardless. We hide/disable actions the role can't do. `billActions` below is
+// app-specific: it maps a bill's status to the contextual actions the detail
+// view renders.
+export { can, MATRIX } from '@stubramp/contracts/permissions'
+export type { Action } from '@stubramp/contracts/permissions'
 
 export interface BillActionDef {
   key: string
   label: string
-  permission: BillPermission
+  permission: Action
   /** How the action is dispatched. */
   kind: 'transition' | 'schedule' | 'settle-succeed' | 'settle-fail'
   /** Target status for plain transitions. */
