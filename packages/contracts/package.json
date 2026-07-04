@@ -9,18 +9,22 @@
     "exports": {
         "./enums": {
             "types": "./src/enums.ts",
+            "browser": "./src/enums.ts",
             "default": "./dist/enums.js"
         },
         "./bill-state-machine": {
             "types": "./src/bill-state-machine.ts",
+            "browser": "./src/bill-state-machine.ts",
             "default": "./dist/bill-state-machine.js"
         },
         "./permissions": {
             "types": "./src/permissions.ts",
+            "browser": "./src/permissions.ts",
             "default": "./dist/permissions.js"
         },
         "./schemas": {
             "types": "./src/schemas.ts",
+            "browser": "./src/schemas.ts",
             "default": "./dist/schemas.js"
         }
     },
