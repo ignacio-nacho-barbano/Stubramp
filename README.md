@@ -1,157 +1,174 @@
-# Turborepo starter
+# Stubramp
 
-This Turborepo starter is maintained by the Turborepo core team.
+A Ramp-style bill-pay / payables demo built as a technical test. It's a **Turborepo + pnpm monorepo** containing a Fastify API, a React SPA dashboard, a Next.js marketing site, and shared UI + contract packages.
 
-## Using this example
+> ⚠️ Technical test only — not a real product.
 
-Run the following command:
+---
 
-```sh
-npx create-turbo@latest
-```
+## Monorepo layout
 
-## What's inside?
+| Path | Package | What it is |
+| --- | --- | --- |
+| `apps/api` | `@stubramp/api` | Fastify REST API — auth, multi-tenancy/RBAC, bill-pay domain. Prisma + Postgres (Neon). |
+| `apps/app` | `@stubramp/app` | React 19 SPA dashboard (Vite + TanStack Router/Query/Table/Form). The main product UI. |
+| `apps/website` | `@stubramp/website` | Next.js 16 static marketing site. |
+| `packages/contracts` | `@stubramp/contracts` | Zod schemas, enums, permissions, and the bill state machine shared by API + app. |
+| `packages/ui` | `@stubramp/ui` | Shared React component library (Ramp-style design system, Tailwind v4, Storybook). |
+| `packages/typescript-config` | `@stubramp/typescript-config` | Shared `tsconfig` bases. |
+| `packages/eslint-config` | `@stubramp/eslint-config` | Shared ESLint config. |
+| `e2e` | — | Playwright end-to-end tests. |
 
-This Turborepo includes the following packages/apps:
+---
 
-### Apps and Packages
+## Tech stack
 
-- `@stubramp/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@stubramp/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@stubramp/typescript-config`: `tsconfig.json`s used throughout the monorepo
+**Language & tooling**
+- TypeScript everywhere · **pnpm 11** workspaces · **Turborepo** task runner
+- Node **22.23+** (see `.node-version`)
+- ESLint + Prettier · Vitest (unit) · Playwright (e2e)
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+**API (`apps/api`)**
+- **Fastify 5** with `fastify-type-provider-zod` (Zod 4 request/response validation)
+- **Prisma 7** ORM over **Postgres**, using the `@prisma/adapter-pg` driver adapter
+- Auth: `@fastify/jwt` (short-lived access JWT) + opaque server-side refresh tokens, delivered as **httpOnly cookies** set by the API
+- Hardening: `@fastify/helmet`, `@fastify/cors`, `@fastify/rate-limit`, salt + server-side pepper password hashing
+- Fail-fast env validation with Zod (`src/env.ts`)
 
-### Utilities
+**App (`apps/app`)**
+- **React 19** SPA on **Vite 8**
+- **TanStack** Router / Query / Table / Form
+- Sentry error monitoring · Zod-validated env
+- Talks to the API as a pure client (cookie-based sessions)
 
-This Turborepo has some additional tools already setup for you:
+**Website (`apps/website`)**
+- **Next.js 16** with `output: 'export'` (fully static)
+- **Tailwind CSS v4**
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+**UI (`packages/ui`)**
+- React component library, **Tailwind v4**, **Storybook 10**, ships raw `.tsx` source consumed by both apps
 
-### Build
+**Infrastructure**
+- **API** → deployed to **Fly.io** (`stubramp-api`, region `iad`) via Docker; scale-to-zero single machine; migrations run as a Fly `release_command`
+- **Database** → **Neon** serverless Postgres (pooled `DATABASE_URL` for the runtime, direct `DATABASE_URL_UNPOOLED` for migrations); local **Docker Postgres** available as an offline alternative
+- **App** → **Cloudflare** (static SPA assets via Wrangler)
+- **Website** → static export for **Cloudflare Pages**
 
-To build all apps and packages, run the following command:
+---
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+## Prerequisites
 
-```sh
-cd my-turborepo
-turbo build
-```
+- **Node 22.23+** and **pnpm 11** (`corepack enable` will pick up the pinned version)
+- **Docker** (only if you use the local Postgres option below)
 
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo build
-pnpm dlx turbo build
-pnpm exec turbo build
-```
-
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo build --filter=docs
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+Install all dependencies from the repo root:
 
 ```sh
-cd my-turborepo
-turbo dev
+pnpm install
 ```
 
-Without global `turbo`, use your package manager:
+---
+
+## Run everything locally
+
+There are two ways to get a database. **Local Docker Postgres is the simplest for a fresh clone** (no accounts, no cloud). The default cloud path uses Neon.
+
+### 1. Database + API
+
+**Option A — Local Docker Postgres (recommended for local dev)**
 
 ```sh
-cd my-turborepo
-npx turbo dev
-pnpm exec turbo dev
-pnpm exec turbo dev
+cd apps/api
+
+# secrets for local dev already live in .env.docker (committed, throwaway).
+pnpm db:up               # start Postgres 17 in Docker (waits until healthy)
+pnpm db:migrate:docker   # apply migrations to the local DB
+pnpm db:seed             # seed demo company + users + sample bills
+pnpm dev:docker          # start the API against local Postgres  → http://localhost:3001
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+Stop it with `pnpm db:down` (add `-v` / `pnpm db:reset` to wipe the data volume).
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+**Option B — Neon cloud Postgres (default)**
 
 ```sh
-turbo dev --filter=web
+cd apps/api
+cp .env.example .env.local        # then fill in DATABASE_URL, DATABASE_URL_UNPOOLED,
+                                  # JWT_SECRET, PASSWORD_PEPPER
+                                  # (or `neonctl env pull` to populate the DB URLs)
+pnpm db:migrate                   # apply migrations
+pnpm db:seed                      # seed demo data
+pnpm dev                          # start the API  → http://localhost:3001
 ```
 
-Without global `turbo`:
+`USE_LOCAL_DB=1` selects `.env.docker`; otherwise `.env.local` + `.env` are loaded (see `apps/api/src/env.ts`).
+
+### 2. React app (SPA dashboard)
 
 ```sh
-npx turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+cd apps/app
+pnpm dev                 # → http://localhost:3000  (defaults to VITE_API_URL=http://localhost:3001)
 ```
 
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+### 3. Next.js marketing website
 
 ```sh
-cd my-turborepo
-turbo login
+cd apps/website
+pnpm dev                 # → http://localhost:3001
 ```
 
-Without global `turbo`, use your package manager:
+> **Port note:** the API and the website both default to port **3001**. If you want both running at once, start the website on another port: `pnpm --filter @stubramp/website dev -- --port 3002` (or edit its `dev` script).
+
+### Run tasks across the whole monorepo
+
+From the repo root, Turborepo fans tasks out to every workspace:
 
 ```sh
-cd my-turborepo
-npx turbo login
-pnpm exec turbo login
-pnpm exec turbo login
+pnpm dev            # run all dev servers
+pnpm build          # build everything
+pnpm lint           # lint everything
+pnpm check-types    # typecheck everything
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+---
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+## Seeded demo credentials
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+`pnpm db:seed` creates a `Demo Co` company. All seeded users share the password **`demo-password`**:
+
+| Email | Role |
+| --- | --- |
+| `root@stubramp.test` | SUPERUSER (platform staff, no company) |
+| `admin@demo.test` | ADMIN |
+| `accountant@demo.test` | ACCOUNTANT |
+| `approver@demo.test` | APPROVER |
+| `employee@demo.test` | EMPLOYEE |
+
+---
+
+## Testing
 
 ```sh
-turbo link
+pnpm --filter @stubramp/api test     # API unit tests (Vitest)
+pnpm --filter @stubramp/app test     # app unit tests (Vitest)
+cd e2e && pnpm test                  # end-to-end (Playwright)
 ```
 
-Without global `turbo`:
+---
 
-```sh
-npx turbo link
-pnpm exec turbo link
-pnpm exec turbo link
-```
+## Useful API scripts (`apps/api`)
 
-## Useful Links
+| Script | Purpose |
+| --- | --- |
+| `pnpm dev` / `pnpm dev:docker` | Run the API (Neon / local Docker) with hot reload |
+| `pnpm db:migrate` / `db:migrate:docker` | Create + apply a migration |
+| `pnpm db:deploy` | Apply pending migrations (production) |
+| `pnpm db:seed` | Seed demo data |
+| `pnpm db:studio` | Open Prisma Studio |
+| `pnpm db:up` / `db:down` / `db:reset` | Start / stop / wipe local Docker Postgres |
 
-Learn more about the power of Turborepo:
+## Deployment
 
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+- API → `pnpm deploy:api` (from repo root) deploys to Fly.io; migrations run automatically as the release command.
+- App → `pnpm --filter @stubramp/app deploy` builds and `wrangler deploy`s the static SPA.
+- Website → `pnpm --filter @stubramp/website build` produces a static export for Cloudflare Pages.
