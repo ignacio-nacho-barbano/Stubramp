@@ -29,7 +29,7 @@ const NAV: NavItem[] = [
 
 export function Sidebar() {
   return (
-    <aside className="flex w-[228px] shrink-0 flex-col border-r border-gray-300 bg-sand-100 px-3 py-5">
+    <aside className="flex w-[228px] shrink-0 flex-col border-r border-gray-300 bg-surface-page px-3 py-5">
       <div className="flex items-center justify-between px-2 pb-[22px]">
         <Logo size={22} wordmarkSize={24} />
         <ChevronsUpDown size={15} className="text-gray-400" />
