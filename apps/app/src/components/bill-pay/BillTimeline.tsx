@@ -18,13 +18,13 @@ export function BillTimeline({ status }: { status: BillStatus }) {
             : s.done
               ? 'bg-ink-900'
               : 'bg-gray-300'
-        const dotSize = s.current || s.failed ? 'h-3.5 w-3.5' : 'h-2.5 w-2.5'
+        const dotSize = s.current || s.failed ? 'size-3.5' : 'size-2.5'
         return (
           <div
             key={s.key}
             className="relative flex flex-1 flex-col items-center"
           >
-            <div className="flex w-full items-center">
+            <div className="flex w-full h-3.5 items-center">
               <span
                 className={`h-0.5 flex-1 ${leftFilled ? 'bg-ink-900' : 'bg-gray-300'}`}
               />
