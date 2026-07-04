@@ -2,7 +2,10 @@ import { type HTMLAttributes, type ReactNode } from "react";
 
 import { cn } from "../../../lib/cn";
 
-export interface StatTileProps extends Omit<HTMLAttributes<HTMLDivElement>, "prefix"> {
+export interface StatTileProps extends Omit<
+  HTMLAttributes<HTMLDivElement>,
+  "prefix"
+> {
   /** Eyebrow label (rendered uppercase). */
   label: string;
   /** Main value (string or number). */
@@ -46,7 +49,9 @@ export function StatTile({
       <span className="flex items-baseline gap-0.5 font-sans text-2xl font-semibold tracking-snug text-ink-900 tabular-nums">
         {prefix && <span className="text-lg text-gray-600">{prefix}</span>}
         {value}
-        {suffix && <span className="text-md font-normal text-gray-500">{suffix}</span>}
+        {suffix && (
+          <span className="text-md font-normal text-gray-500">{suffix}</span>
+        )}
       </span>
       {delta != null && (
         <span

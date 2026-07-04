@@ -69,31 +69,31 @@ Setting `USE_LOCAL_DB=1` makes both loaders read the committed `.env.docker`
 
 ## Scripts
 
-| Script                | Purpose                                          |
-| --------------------- | ------------------------------------------------ |
-| `dev`                 | Watch-mode server against Neon                   |
-| `build`               | `prisma generate && tsc` → `dist/`               |
-| `start`               | Run the built server (`node dist/index.js`)      |
-| `db:generate`         | Regenerate the Prisma client                     |
-| `db:migrate`          | Create + apply a migration (dev)                 |
-| `db:deploy`           | Apply migrations without prompts (CI/production) |
-| `db:studio`           | Open Prisma Studio                               |
-| `db:up` / `db:down`   | Start / stop local Docker Postgres               |
-| `db:reset`            | Stop local Postgres **and wipe its data**        |
-| `dev:docker`          | `dev` against local Docker Postgres              |
-| `db:migrate:docker`   | `db:migrate` against local Docker Postgres       |
+| Script              | Purpose                                          |
+| ------------------- | ------------------------------------------------ |
+| `dev`               | Watch-mode server against Neon                   |
+| `build`             | `prisma generate && tsc` → `dist/`               |
+| `start`             | Run the built server (`node dist/index.js`)      |
+| `db:generate`       | Regenerate the Prisma client                     |
+| `db:migrate`        | Create + apply a migration (dev)                 |
+| `db:deploy`         | Apply migrations without prompts (CI/production) |
+| `db:studio`         | Open Prisma Studio                               |
+| `db:up` / `db:down` | Start / stop local Docker Postgres               |
+| `db:reset`          | Stop local Postgres **and wipe its data**        |
+| `dev:docker`        | `dev` against local Docker Postgres              |
+| `db:migrate:docker` | `db:migrate` against local Docker Postgres       |
 
 ## Environment variables
 
 See [`.env.example`](./.env.example). Secrets live in `.env.local` (git-ignored,
 Neon-managed); local Docker creds live in the committed `.env.docker`.
 
-| Variable                | Used by              | Notes                                        |
-| ----------------------- | -------------------- | -------------------------------------------- |
-| `DATABASE_URL`          | app runtime          | Pooled (PgBouncer) connection                |
-| `DATABASE_URL_UNPOOLED` | Prisma migrations    | Direct connection                            |
-| `USE_LOCAL_DB`          | env loaders          | `1` → use `.env.docker` instead of `.env.local` |
-| `HOST` / `PORT`         | server               | Defaults `0.0.0.0` / `3001`                  |
+| Variable                | Used by           | Notes                                           |
+| ----------------------- | ----------------- | ----------------------------------------------- |
+| `DATABASE_URL`          | app runtime       | Pooled (PgBouncer) connection                   |
+| `DATABASE_URL_UNPOOLED` | Prisma migrations | Direct connection                               |
+| `USE_LOCAL_DB`          | env loaders       | `1` → use `.env.docker` instead of `.env.local` |
+| `HOST` / `PORT`         | server            | Defaults `0.0.0.0` / `3001`                     |
 
 ## Deploying to Fly.io
 

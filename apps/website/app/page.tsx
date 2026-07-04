@@ -5,53 +5,53 @@ import {
   FileText,
   Repeat,
   Split,
-} from 'lucide-react'
-import { Button, Card, Logo, StatTile } from '@stubramp/ui'
-import { loginHref, signupHref } from './lib/links'
+} from "lucide-react";
+import { Button, Card, Logo, StatTile } from "@stubramp/ui";
+import { loginHref, signupHref } from "./lib/links";
 
-const NAV_LINKS = ['Product', 'Bill Pay', 'Pricing', 'Customers']
+const NAV_LINKS = ["Product", "Bill Pay", "Pricing", "Customers"];
 
-const LOGOS = ['Northwind', 'Globex', 'Initech', 'Soylent', 'Hooli']
+const LOGOS = ["Northwind", "Globex", "Initech", "Soylent", "Hooli"];
 
 const FEATURES = [
   {
     Icon: FileText,
-    title: 'Bill Pay',
-    body: 'Capture invoices by email, upload, or OCR — then approve and schedule payment in one flow.',
+    title: "Bill Pay",
+    body: "Capture invoices by email, upload, or OCR — then approve and schedule payment in one flow.",
   },
   {
     Icon: Split,
-    title: 'Line-item splits',
-    body: 'Carve a single invoice line across departments and cost centers with reusable allocation templates.',
+    title: "Line-item splits",
+    body: "Carve a single invoice line across departments and cost centers with reusable allocation templates.",
   },
   {
     Icon: CreditCard,
-    title: 'Corporate cards',
-    body: 'Issue unlimited virtual and physical cards with controls set before money is spent.',
+    title: "Corporate cards",
+    body: "Issue unlimited virtual and physical cards with controls set before money is spent.",
   },
   {
     Icon: BookOpen,
-    title: 'Accounting sync',
-    body: 'Tag expenses and items, map to your GL, and push clean entries to your ledger automatically.',
+    title: "Accounting sync",
+    body: "Tag expenses and items, map to your GL, and push clean entries to your ledger automatically.",
   },
   {
     Icon: BarChart3,
-    title: 'AP aging',
-    body: 'See what you owe by current, 1–30, 31–60, and 60+ days — always up to date.',
+    title: "AP aging",
+    body: "See what you owe by current, 1–30, 31–60, and 60+ days — always up to date.",
   },
   {
     Icon: Repeat,
-    title: 'Recurring bills',
-    body: 'Auto-generate draft bills on a cadence and notify the owner to review before they are due.',
+    title: "Recurring bills",
+    body: "Auto-generate draft bills on a cadence and notify the owner to review before they are due.",
   },
-]
+];
 
 export default function LandingPage() {
   return (
     <>
       {/* ===== DEMO NOTICE ===== */}
       <div className="bg-ink-900 px-8 py-2 text-center text-[12.5px] leading-[1.4] text-paper-0">
-        <span className="font-semibold text-accent-500">Technical sample</span>{' '}
+        <span className="font-semibold text-accent-500">Technical sample</span>{" "}
         <span className="text-gray-300">
           — StubRamp is a fictional product built to demo a codebase, not a real
           service. Don’t enter real personal or financial information.
@@ -161,7 +161,10 @@ export default function LandingPage() {
         <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map(({ Icon, title, body }) => (
             <Card key={title}>
-              <Icon className="mb-4 h-[26px] w-[26px] text-ink-900" strokeWidth={2} />
+              <Icon
+                className="mb-4 h-[26px] w-[26px] text-ink-900"
+                strokeWidth={2}
+              />
               <div className="mb-[7px] text-[16.5px] font-semibold tracking-[-0.01em]">
                 {title}
               </div>
@@ -207,7 +210,7 @@ export default function LandingPage() {
             real company or service.
           </span>
           <div className="ml-auto flex gap-[22px] text-sm text-gray-600">
-            {['Privacy', 'Terms', 'Security', 'Contact'].map((label) => (
+            {["Privacy", "Terms", "Security", "Contact"].map((label) => (
               <span key={label} className="cursor-pointer hover:text-ink-900">
                 {label}
               </span>
@@ -216,7 +219,7 @@ export default function LandingPage() {
         </div>
       </footer>
     </>
-  )
+  );
 }
 
 function Stat({
@@ -224,18 +227,18 @@ function Stat({
   label,
   accent = false,
 }: {
-  value: string
-  label: string
-  accent?: boolean
+  value: string;
+  label: string;
+  accent?: boolean;
 }) {
   return (
     <div>
       <div
-        className={`text-[44px] font-bold tracking-[-0.03em] ${accent ? 'text-accent-500' : ''}`}
+        className={`text-[44px] font-bold tracking-[-0.03em] ${accent ? "text-accent-500" : ""}`}
       >
         {value}
       </div>
       <div className="mt-1 text-sm text-gray-400">{label}</div>
     </div>
-  )
+  );
 }

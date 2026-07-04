@@ -14,6 +14,8 @@ export async function requireTransitionPermission(
 ) {
   const action = TRANSITION_PERMISSION[req.body.to];
   if (!action || !can(req.auth.role, action)) {
-    throw new ForbiddenError(`Missing permission for transition to ${req.body.to}`);
+    throw new ForbiddenError(
+      `Missing permission for transition to ${req.body.to}`,
+    );
   }
 }

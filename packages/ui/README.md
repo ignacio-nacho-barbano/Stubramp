@@ -13,7 +13,7 @@ numerals for money.
 
 ## Usage
 
-This is a *Just-in-Time* package: it ships TypeScript source directly (no build
+This is a _Just-in-Time_ package: it ships TypeScript source directly (no build
 step) via the `exports` map, and the consuming app transpiles it. That keeps it
 zero-config inside Turborepo — `turbo run check-types lint` type-checks and
 lints it in place.
@@ -46,8 +46,16 @@ import { Button, StatTile, Badge } from "@stubramp/ui";
 export function Example() {
   return (
     <div>
-      <StatTile label="Total spend" prefix="$" value="48,250.00" delta="12.4%" deltaDir="up" />
-      <Badge tone="positive" dot>Cleared</Badge>
+      <StatTile
+        label="Total spend"
+        prefix="$"
+        value="48,250.00"
+        delta="12.4%"
+        deltaDir="up"
+      />
+      <Badge tone="positive" dot>
+        Cleared
+      </Badge>
       <Button variant="accent">Issue card</Button>
     </div>
   );
@@ -67,13 +75,13 @@ can't be static utilities (e.g. `Avatar`'s pixel `size`) stay as inline styles.
 Linking `@stubramp/ui/styles.css` pulls in all token layers (also importable
 individually via `@stubramp/ui/styles/tokens/<name>.css`):
 
-| File              | Provides                                                        |
-| ----------------- | --------------------------------------------------------------- |
-| `tokens/fonts.css`      | Hanken Grotesk + Spline Sans Mono webfonts (Google Fonts) |
+| File                    | Provides                                                                                                                                   |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `tokens/fonts.css`      | Hanken Grotesk + Spline Sans Mono webfonts (Google Fonts)                                                                                  |
 | `tokens/colors.css`     | Warm neutral scale, chartreuse accent, financial semantics + semantic aliases (`--text-primary`, `--surface-card`, `--status-positive`, …) |
-| `tokens/typography.css` | Families, weights, type scale, semantic roles (`--heading-md`, `--body`, `--eyebrow`, …) |
-| `tokens/spacing.css`    | 4px-grid spacing scale, containers, gutters               |
-| `tokens/effects.css`    | Radii (sharp by default), borders, soft shadows, focus ring, motion |
+| `tokens/typography.css` | Families, weights, type scale, semantic roles (`--heading-md`, `--body`, `--eyebrow`, …)                                                   |
+| `tokens/spacing.css`    | 4px-grid spacing scale, containers, gutters                                                                                                |
+| `tokens/effects.css`    | Radii (sharp by default), borders, soft shadows, focus ring, motion                                                                        |
 
 Prefer the **semantic aliases** over raw scale values when composing new UI.
 
@@ -112,27 +120,27 @@ To add a component: create `components/<category>/<name>/{<name>.tsx,
 
 All exports come from the `@stubramp/ui` barrel.
 
-| Category       | Export        | Notes                                                       |
-| -------------- | ------------- | ----------------------------------------------------------- |
-| forms          | `Button`      | `primary` / `secondary` / `ghost` / `accent` / `danger`, 3 sizes |
-| forms          | `Input`       | Label, hint, error, prefix/suffix slots                     |
-| forms          | `Select`      | Native select styled to match `Input`                       |
-| forms          | `Checkbox`    | Squared, ink fill — controlled or uncontrolled              |
-| forms          | `Switch`      | Pill toggle — `onChange(next: boolean)`                     |
-| data-display   | `Card`        | Squared surface, hairline border, optional header/footer/shadow |
-| data-display   | `StatTile`    | KPI block — big tabular numeral, label, directional delta   |
-| data-display   | `Avatar`      | Circular, initials fallback                                 |
-| data-display   | `Badge`       | Status pill — 6 tones, `soft`/`solid`, optional dot         |
-| feedback       | `Modal`       | Squared dialog — hairline border, pop shadow                |
-| feedback       | `ToastProvider`, `useToast` | Toast context + hook — `toast({ message, tone })` |
-| navigation     | `Tabs`        | Underline tab bar — controlled or uncontrolled              |
-| navigation     | `Menu`        | Dropdown/popover — item list or arbitrary panel content     |
-| brand          | `Logo`        | Wordmark / icon lockup                                       |
-| business       | `Money`       | Currency-formatted cents with tabular figures               |
-| business       | `VendorAvatar`| Avatar with deterministic name→color background             |
-| business       | `StatusBadge` | Bill lifecycle status → tone-mapped `Badge`                 |
-| business       | `SegmentedToggle` | Compact segmented control (generic over option value)   |
-| business       | `AllocationBar`   | Proportional split bar + legend                         |
+| Category     | Export                      | Notes                                                            |
+| ------------ | --------------------------- | ---------------------------------------------------------------- |
+| forms        | `Button`                    | `primary` / `secondary` / `ghost` / `accent` / `danger`, 3 sizes |
+| forms        | `Input`                     | Label, hint, error, prefix/suffix slots                          |
+| forms        | `Select`                    | Native select styled to match `Input`                            |
+| forms        | `Checkbox`                  | Squared, ink fill — controlled or uncontrolled                   |
+| forms        | `Switch`                    | Pill toggle — `onChange(next: boolean)`                          |
+| data-display | `Card`                      | Squared surface, hairline border, optional header/footer/shadow  |
+| data-display | `StatTile`                  | KPI block — big tabular numeral, label, directional delta        |
+| data-display | `Avatar`                    | Circular, initials fallback                                      |
+| data-display | `Badge`                     | Status pill — 6 tones, `soft`/`solid`, optional dot              |
+| feedback     | `Modal`                     | Squared dialog — hairline border, pop shadow                     |
+| feedback     | `ToastProvider`, `useToast` | Toast context + hook — `toast({ message, tone })`                |
+| navigation   | `Tabs`                      | Underline tab bar — controlled or uncontrolled                   |
+| navigation   | `Menu`                      | Dropdown/popover — item list or arbitrary panel content          |
+| brand        | `Logo`                      | Wordmark / icon lockup                                           |
+| business     | `Money`                     | Currency-formatted cents with tabular figures                    |
+| business     | `VendorAvatar`              | Avatar with deterministic name→color background                  |
+| business     | `StatusBadge`               | Bill lifecycle status → tone-mapped `Badge`                      |
+| business     | `SegmentedToggle`           | Compact segmented control (generic over option value)            |
+| business     | `AllocationBar`             | Proportional split bar + legend                                  |
 
 Stateful and portal components (`Checkbox`, `Switch`, `Tabs`, `Modal`, `Menu`,
 `Toast`) carry the `"use client"` directive for React Server Component

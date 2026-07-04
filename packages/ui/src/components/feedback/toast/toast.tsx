@@ -79,7 +79,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   );
 }
 
-function ToastPill({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string) => void }) {
+function ToastPill({
+  toast,
+  onDismiss,
+}: {
+  toast: Toast;
+  onDismiss: (id: string) => void;
+}) {
   useEffect(() => {
     const ms = toast.duration ?? 4000;
     const timer = setTimeout(() => onDismiss(toast.id), ms);

@@ -22,11 +22,36 @@ interface SeedUser {
 }
 
 const USERS: SeedUser[] = [
-  { email: "root@stubramp.test", name: "Platform Root", role: "SUPERUSER", companyId: null },
-  { email: "admin@demo.test", name: "Demo Admin", role: "ADMIN", companyId: DEMO_COMPANY_ID },
-  { email: "accountant@demo.test", name: "Demo Accountant", role: "ACCOUNTANT", companyId: DEMO_COMPANY_ID },
-  { email: "approver@demo.test", name: "Demo Approver", role: "APPROVER", companyId: DEMO_COMPANY_ID },
-  { email: "employee@demo.test", name: "Demo Employee", role: "EMPLOYEE", companyId: DEMO_COMPANY_ID },
+  {
+    email: "root@stubramp.test",
+    name: "Platform Root",
+    role: "SUPERUSER",
+    companyId: null,
+  },
+  {
+    email: "admin@demo.test",
+    name: "Demo Admin",
+    role: "ADMIN",
+    companyId: DEMO_COMPANY_ID,
+  },
+  {
+    email: "accountant@demo.test",
+    name: "Demo Accountant",
+    role: "ACCOUNTANT",
+    companyId: DEMO_COMPANY_ID,
+  },
+  {
+    email: "approver@demo.test",
+    name: "Demo Approver",
+    role: "APPROVER",
+    companyId: DEMO_COMPANY_ID,
+  },
+  {
+    email: "employee@demo.test",
+    name: "Demo Employee",
+    role: "EMPLOYEE",
+    companyId: DEMO_COMPANY_ID,
+  },
 ];
 
 async function main() {
@@ -65,7 +90,9 @@ async function main() {
   });
 
   // Sample DRAFT bill (1 line, 2 x 500c = 1000c, split fully to ENG) + its event.
-  const existingBill = await prisma.bill.findUnique({ where: { id: DEMO_BILL_ID } });
+  const existingBill = await prisma.bill.findUnique({
+    where: { id: DEMO_BILL_ID },
+  });
   if (!existingBill) {
     await prisma.bill.create({
       data: {
@@ -91,7 +118,9 @@ async function main() {
   }
 
   console.log(`Seeded company ${company.slug} (${company.id})`);
-  console.log(`Users: ${USERS.map((u) => `${u.email} [${u.role}]`).join(", ")}`);
+  console.log(
+    `Users: ${USERS.map((u) => `${u.email} [${u.role}]`).join(", ")}`,
+  );
   console.log(`Dev password for all seeded users: "${DEV_PASSWORD}"`);
 }
 

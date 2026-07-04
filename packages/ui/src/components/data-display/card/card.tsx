@@ -49,7 +49,9 @@ export function Card({
       )}
       <div className={cn("flex-1", padded ? "p-5" : "p-0")}>{children}</div>
       {footer && (
-        <div className="px-5 py-4 border-t border-gray-200 bg-surface-page">{footer}</div>
+        <div className="px-5 py-4 border-t border-gray-200 bg-surface-page">
+          {footer}
+        </div>
       )}
     </div>
   );

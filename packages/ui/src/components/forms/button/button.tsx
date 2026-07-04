@@ -24,10 +24,14 @@ const SIZES: Record<NonNullable<ButtonProps["size"]>, string> = {
 
 const VARIANTS: Record<NonNullable<ButtonProps["variant"]>, string> = {
   primary: "bg-black text-inverse border border-black hover:bg-[#222]",
-  secondary: "bg-surface-card text-ink-900 border border-gray-300 hover:bg-surface-raised",
-  ghost: "bg-transparent text-ink-900 border border-transparent hover:bg-surface-raised",
-  accent: "bg-surface-accent text-on-accent border border-surface-accent hover:bg-accent-600",
-  danger: "bg-status-negative text-inverse border border-status-negative hover:bg-red-700",
+  secondary:
+    "bg-surface-card text-ink-900 border border-gray-300 hover:bg-surface-raised",
+  ghost:
+    "bg-transparent text-ink-900 border border-transparent hover:bg-surface-raised",
+  accent:
+    "bg-surface-accent text-on-accent border border-surface-accent hover:bg-accent-600",
+  danger:
+    "bg-status-negative text-inverse border border-status-negative hover:bg-red-700",
 };
 
 /**

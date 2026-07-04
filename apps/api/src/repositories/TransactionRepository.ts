@@ -17,9 +17,7 @@ interface TransactionTypes extends ModelTypes {
 }
 
 export class TransactionRepository extends BaseRepository<TransactionTypes> {
-  constructor(
-    private readonly txns: Prisma.TransactionClient["transaction"],
-  ) {
+  constructor(private readonly txns: Prisma.TransactionClient["transaction"]) {
     super(txns as unknown as ModelDelegate, "Transaction");
   }
 

@@ -13,6 +13,7 @@
 > "With Ramp, you control spend before it happens. Issue cards with custom rules by merchant, category, amount, and more."
 
 The demo opens on Ramp's home dashboard for a demo user (David Wallace). Key metrics visible:
+
 - Current card balance: **$405K**
 - Total spending (90d): **$1.9M**
 - Pending approvals: 8 bills ($642K total), 4 reimbursements
@@ -38,15 +39,15 @@ The tooltip highlights the **Issue** button and card panel on the right side of 
 
 The Issue drawer opens showing pre-built card templates:
 
-| Template | Description |
-|---|---|
-| General Expenses | Spend using physical card in-person and online |
-| Virtual Card | Unique virtual card number, ideal for online payments |
+| Template           | Description                                                               |
+| ------------------ | ------------------------------------------------------------------------- |
+| General Expenses   | Spend using physical card in-person and online                            |
+| Virtual Card       | Unique virtual card number, ideal for online payments                     |
 | Product or Service | Secure virtual card locked to a single vendor (e.g. Heroku, Facebook Ads) |
-| Physical Card | Spend funds with a physical card |
-| Bill Payment | Upload an invoice to be processed and paid by finance |
-| Client Visits | Funds for client visit expenses |
-| Wellness Benefit | Funds for wellness benefit expenses |
+| Physical Card      | Spend funds with a physical card                                          |
+| Bill Payment       | Upload an invoice to be processed and paid by finance                     |
+| Client Visits      | Funds for client visit expenses                                           |
+| Wellness Benefit   | Funds for wellness benefit expenses                                       |
 
 ---
 
@@ -57,6 +58,7 @@ The Issue drawer opens showing pre-built card templates:
 > "Enter basic card details and configure approval rules, submission steps, and accounting codes to streamline approvals, submissions, and bookkeeping."
 
 Example card being configured:
+
 - **Card name:** Marketing Travel
 - **Purpose:** Funds for client-facing Marketing travel
 - **Amount:** $35,000.00 USD quarterly
@@ -88,6 +90,7 @@ The Policy & controls section lets admins set fine-grained rules:
 > "Once issued, fund activity can be tracked in real time. From card details, requirements, and transaction information across how your team is using it. Easy to update and make changes as needed."
 
 Live card status for the Marketing Travel card:
+
 - **Spent:** $34,004.61 USD (97% of limit)
 - **Remaining:** $995.39 USD
 - **Limit:** $35,000.00 USD quarterly — resets in 5 days
@@ -103,6 +106,7 @@ Live card status for the Marketing Travel card:
 > "Ramp automates expense reports by collecting receipts and auto-populating details. It reviews transactions in real time against policy to speed approvals and can auto-approve in-policy charges."
 
 Example in-policy transaction auto-approved by AI:
+
 - **Amount:** $712.65 at Uluh
 - **Submitted by:** Angela Martin · Mar 21, 2026
 - **AI verdict:** ✅ Approval recommended
@@ -118,6 +122,7 @@ Example in-policy transaction auto-approved by AI:
 > "Ramp flags out-of-policy spend and explains why, so teams can act quickly. It automates 85% of reviews and surfaces the 15% needing attention — approvers handle only exceptions."
 
 Example out-of-policy transaction flagged by AI:
+
 - **Amount:** $1,048.25 at Delta Airlines
 - **Submitted by:** Paola Noun · Mar 23, 2026
 - **AI verdict:** ❌ Rejection recommended
@@ -137,17 +142,20 @@ Example out-of-policy transaction flagged by AI:
 Employees and approvers can view the full company travel policy inline. Example policy content:
 
 **Air Travel Standards**
+
 - Economy for flights under 6 hours
 - Premium Economy for 6–9 hours; Business for flights over 9 hours or red-eye with next-day client meeting
 - First class/business class is never allowed for employees
 - Book at least 14 days ahead unless a customer dictates otherwise
-- *Hidden note (exception):* C-suite may select business class on any flight over 4 hours
+- _Hidden note (exception):_ C-suite may select business class on any flight over 4 hours
 
 **Rail Standards**
+
 - Business-class rail (e.g., Amtrak Acela) permitted
 - First-class rail requires VP or medical approval
 
 **Lodging Standards**
+
 - New York City (2025): $400 per night or less
 - Standard room at a preferred hotel or ≤ 20% above GSA rate
 - Airbnb (stays ≥ 3 nights) allowed if ≥ 10% cheaper and a waiver is signed
@@ -162,6 +170,7 @@ Employees and approvers can view the full company travel policy inline. Example 
 > "On average, Ramp customers save 5% on their annual spending."
 
 The tour concludes with two CTAs:
+
 - **Accounting Automation** — explore the next product area
 - **Get Started** — begin the sign-up process
 

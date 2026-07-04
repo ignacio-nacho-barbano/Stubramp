@@ -15,7 +15,14 @@ export interface SwitchProps {
 }
 
 /** Ramp Switch — pill toggle, ink "on". One of the few rounded elements. */
-export function Switch({ label, checked, defaultChecked, onChange, disabled, className }: SwitchProps) {
+export function Switch({
+  label,
+  checked,
+  defaultChecked,
+  onChange,
+  disabled,
+  className,
+}: SwitchProps) {
   const [internal, setInternal] = useState(defaultChecked || false);
   const isControlled = checked !== undefined;
   const on = isControlled ? checked : internal;

@@ -4,7 +4,8 @@
 import { config as loadEnv } from "dotenv";
 import { z } from "zod";
 
-const dbEnvFile = process.env.USE_LOCAL_DB === "1" ? ".env.docker" : ".env.local";
+const dbEnvFile =
+  process.env.USE_LOCAL_DB === "1" ? ".env.docker" : ".env.local";
 loadEnv({ path: [dbEnvFile, ".env"] });
 
 // Fail-fast schema: a missing/malformed var stops the process at boot with a
@@ -16,7 +17,9 @@ const envSchema = z.object({
   // Fly.io requires binding to 0.0.0.0 so the proxy can reach the app.
   HOST: z.string().default("0.0.0.0"),
   PORT: z.coerce.number().int().positive().default(3001),
-  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  NODE_ENV: z
+    .enum(["development", "test", "production"])
+    .default("development"),
   // Signs short-lived access JWTs. Refresh tokens are opaque + stored server-side.
   JWT_SECRET: z.string().min(16),
   ACCESS_TOKEN_TTL: z.string().default("15m"),

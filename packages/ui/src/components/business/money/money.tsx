@@ -9,5 +9,7 @@ export function Money({
   cents: number;
   className?: string;
 }) {
-  return <span className={cn("tabular-nums", className)}>{formatCents(cents)}</span>;
+  return (
+    <span className={cn("tabular-nums", className)}>{formatCents(cents)}</span>
+  );
 }

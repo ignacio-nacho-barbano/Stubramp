@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { Plus, X } from 'lucide-react'
-import { allocationColor, Button, formatCents, Modal, SegmentedToggle, toCents } from '@stubramp/ui'
+import {
+  allocationColor,
+  Button,
+  formatCents,
+  Modal,
+  SegmentedToggle,
+  toCents,
+} from '@stubramp/ui'
 
 export const DEPARTMENTS = [
   'Engineering',

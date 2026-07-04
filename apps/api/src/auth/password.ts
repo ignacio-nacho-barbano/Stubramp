@@ -1,9 +1,4 @@
-import {
-  createHmac,
-  randomBytes,
-  scrypt,
-  timingSafeEqual,
-} from "node:crypto";
+import { createHmac, randomBytes, scrypt, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
 
 // Password hashing with BOTH a salt and a pepper:
@@ -27,7 +22,11 @@ export async function hashPassword(
   pepper: string,
 ): Promise<string> {
   const salt = randomBytes(16);
-  const dk = (await scryptAsync(peppered(plain, pepper), salt, KEY_LEN)) as Buffer;
+  const dk = (await scryptAsync(
+    peppered(plain, pepper),
+    salt,
+    KEY_LEN,
+  )) as Buffer;
   return `${salt.toString("hex")}:${dk.toString("hex")}`;
 }
 

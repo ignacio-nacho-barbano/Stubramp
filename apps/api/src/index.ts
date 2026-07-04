@@ -48,7 +48,11 @@ fastify.setErrorHandler((error, _request, reply) => {
   if (error instanceof NotFoundError) {
     return reply
       .status(404)
-      .send({ error: "Not Found", model: error.model, criteria: error.criteria });
+      .send({
+        error: "Not Found",
+        model: error.model,
+        criteria: error.criteria,
+      });
   }
   if (error instanceof UniqueConstraintError) {
     return reply

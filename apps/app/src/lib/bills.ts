@@ -149,7 +149,8 @@ export interface Paginated<T> {
 }
 
 export type MutationResult<T> =
-  { ok: true; data: T } | { ok: false; error: string }
+  | { ok: true; data: T }
+  | { ok: false; error: string }
 
 // ---- Data functions (call the API from the browser) ----
 

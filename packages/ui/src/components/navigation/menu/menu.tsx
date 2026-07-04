@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  type ReactNode,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { cn } from "../../../lib/cn";
 
@@ -52,7 +47,8 @@ export function Menu({
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
@@ -67,7 +63,10 @@ export function Menu({
 
   return (
     <div ref={ref} className={cn("relative inline-flex", className)}>
-      <span onClick={() => setOpen((o) => !o)} className="inline-flex cursor-pointer">
+      <span
+        onClick={() => setOpen((o) => !o)}
+        className="inline-flex cursor-pointer"
+      >
         {trigger}
       </span>
       {open && (
@@ -100,11 +99,17 @@ export function Menu({
                     item.danger ? "text-status-negative" : "text-ink-900",
                   )}
                 >
-                  {item.icon && <span className="mt-px shrink-0">{item.icon}</span>}
+                  {item.icon && (
+                    <span className="mt-px shrink-0">{item.icon}</span>
+                  )}
                   <span className="min-w-0">
-                    <span className="block text-sm font-medium leading-snug">{item.label}</span>
+                    <span className="block text-sm font-medium leading-snug">
+                      {item.label}
+                    </span>
                     {item.description && (
-                      <span className="block text-xs text-gray-500">{item.description}</span>
+                      <span className="block text-xs text-gray-500">
+                        {item.description}
+                      </span>
                     )}
                   </span>
                 </button>

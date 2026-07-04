@@ -93,7 +93,9 @@ export abstract class BaseRepository<T extends ModelTypes> {
   }
 
   /** Offset-paginated listing returning data plus pagination metadata. */
-  async getAll(options: FindAllOptions<T> = {}): Promise<Paginated<T["Model"]>> {
+  async getAll(
+    options: FindAllOptions<T> = {},
+  ): Promise<Paginated<T["Model"]>> {
     const page = Math.max(1, options.page ?? 1);
     const pageSize = Math.min(
       MAX_PAGE_SIZE,

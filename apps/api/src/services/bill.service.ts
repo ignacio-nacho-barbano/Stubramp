@@ -38,7 +38,10 @@ export class BillService {
 
     // The vendor must belong to the same company — no attaching a bill to
     // another tenant's vendor.
-    const vendorOk = await this.vendors.exists({ id: input.vendorId, companyId });
+    const vendorOk = await this.vendors.exists({
+      id: input.vendorId,
+      companyId,
+    });
     if (!vendorOk) {
       throw new NotFoundError("Vendor", input.vendorId);
     }
@@ -210,7 +213,9 @@ function runGuard(
 
   if (from === "APPROVED" && to === "SCHEDULED") {
     if (!input.scheduledFor) {
-      throw new GuardFailedError("scheduledFor is required to schedule a payment");
+      throw new GuardFailedError(
+        "scheduledFor is required to schedule a payment",
+      );
     }
     const today = new Date();
     today.setHours(0, 0, 0, 0);

@@ -22,7 +22,10 @@ export class UserService {
 
   async create(auth: AuthContext, input: CreateUserInput): Promise<SafeUser> {
     const { companyId, role } = this.resolvePlacement(auth, input);
-    const passwordHash = await hashPassword(input.password, env.PASSWORD_PEPPER);
+    const passwordHash = await hashPassword(
+      input.password,
+      env.PASSWORD_PEPPER,
+    );
 
     const user = await this.users.create({
       email: input.email,
@@ -54,7 +57,9 @@ export class UserService {
     if (auth.isSuperuser) {
       if (input.role === "SUPERUSER") {
         if (input.companyId) {
-          throw new GuardFailedError("A SUPERUSER must not belong to a company");
+          throw new GuardFailedError(
+            "A SUPERUSER must not belong to a company",
+          );
         }
         return { companyId: null, role: "SUPERUSER" };
       }

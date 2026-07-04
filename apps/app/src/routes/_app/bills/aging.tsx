@@ -1,6 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { Card, formatCents, formatDate, Money, StatTile, VendorAvatar } from '@stubramp/ui'
+import {
+  Card,
+  formatCents,
+  formatDate,
+  Money,
+  StatTile,
+  VendorAvatar,
+} from '@stubramp/ui'
 import { AGING_TILES, computeAging } from '../../../lib/aging'
 import { billsQueryOptions } from '../../../lib/bills-queries'
 

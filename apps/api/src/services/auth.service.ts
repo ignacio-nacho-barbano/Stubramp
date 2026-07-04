@@ -40,7 +40,10 @@ export class AuthService {
   async signup(
     input: SignupInput,
   ): Promise<{ user: SafeUser; company: Company }> {
-    const passwordHash = await hashPassword(input.password, env.PASSWORD_PEPPER);
+    const passwordHash = await hashPassword(
+      input.password,
+      env.PASSWORD_PEPPER,
+    );
     const name = `${input.firstName} ${input.lastName}`.trim();
 
     // The whole thing is atomic: a duplicate email (mapped to a 409 by the repo)

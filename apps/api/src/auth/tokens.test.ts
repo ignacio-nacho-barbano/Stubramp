@@ -24,7 +24,11 @@ describe("TokenService", () => {
     update = vi.fn(async (_id: string, _data: any) => ({}));
     findByTokenHash = vi.fn();
     revokeAllForUser = vi.fn(async (_userId: string) => 1);
-    loadUser = vi.fn(async (id: string) => ({ id, companyId: "c1", role: "ADMIN" }));
+    loadUser = vi.fn(async (id: string) => ({
+      id,
+      companyId: "c1",
+      role: "ADMIN",
+    }));
     refreshTokens = { create, update, findByTokenHash, revokeAllForUser };
     service = new TokenService(
       () => "access-token",
@@ -35,7 +39,11 @@ describe("TokenService", () => {
   });
 
   it("issues a pair and persists the refresh token hash", async () => {
-    const pair = await service.issuePair({ id: "u1", companyId: "c1", role: "ADMIN" });
+    const pair = await service.issuePair({
+      id: "u1",
+      companyId: "c1",
+      role: "ADMIN",
+    });
     expect(pair.accessToken).toBe("access-token");
     expect(pair.refreshToken).toMatch(/^[0-9a-f]{64}$/);
     expect(create).toHaveBeenCalledTimes(1);

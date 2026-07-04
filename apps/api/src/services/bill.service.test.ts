@@ -125,7 +125,9 @@ describe("BillService", () => {
     vendors = { exists: vi.fn(async () => true) };
     // The tx double is opaque: every write goes through a repo's withTx, which
     // ignores it here. $transaction just runs the callback.
-    prisma = { $transaction: vi.fn(async (cb: (t: unknown) => unknown) => cb({})) };
+    prisma = {
+      $transaction: vi.fn(async (cb: (t: unknown) => unknown) => cb({})),
+    };
 
     service = new BillService(
       prisma as unknown as PrismaClient,
@@ -184,14 +186,18 @@ describe("BillService", () => {
     });
 
     it("requires scheduledFor when scheduling", async () => {
-      bills.findByIdScoped.mockResolvedValueOnce(makeBill({ status: "APPROVED" }));
+      bills.findByIdScoped.mockResolvedValueOnce(
+        makeBill({ status: "APPROVED" }),
+      );
       await expect(
         service.transition(auth, "bill-1", { to: "SCHEDULED" } as never),
       ).rejects.toBeInstanceOf(GuardFailedError);
     });
 
     it("rejects a scheduledFor in the past", async () => {
-      bills.findByIdScoped.mockResolvedValueOnce(makeBill({ status: "APPROVED" }));
+      bills.findByIdScoped.mockResolvedValueOnce(
+        makeBill({ status: "APPROVED" }),
+      );
       await expect(
         service.transition(auth, "bill-1", {
           to: "SCHEDULED",

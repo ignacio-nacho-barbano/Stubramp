@@ -1,14 +1,17 @@
-import { prisma } from '../lib/prisma.js';
+import { prisma } from "../lib/prisma.js";
 import {
   type BillStatus,
   canTransition,
-} from '../domain/bill-state-machine.js';
+} from "../domain/bill-state-machine.js";
 import {
   GuardFailedError,
   IllegalTransitionError,
   NotFoundError,
-} from '../domain/errors.js';
-import type { CreateBillInput, TransitionInput } from '../schemas/bill.schema.js';
+} from "../domain/errors.js";
+import type {
+  CreateBillInput,
+  TransitionInput,
+} from "../schemas/bill.schema.js";
 
 // A bill loaded with the relations the guards need to reason about.
 type BillWithLines = Awaited<ReturnType<typeof loadBill>>;
@@ -61,7 +64,7 @@ export const billService = {
             },
           })),
         },
-        events: { create: { toStatus: 'DRAFT', actor: input.source } },
+        events: { create: { toStatus: "DRAFT", actor: input.source } },
       },
       include: { lineItems: { include: { splits: true } } },
     });
@@ -70,20 +73,20 @@ export const billService = {
   list(status?: BillStatus) {
     return prisma.bill.findMany({
       where: status ? { status } : undefined,
-      orderBy: { dueDate: 'asc' },
+      orderBy: { dueDate: "asc" },
     });
   },
 
   async get(id: string) {
     const bill = await loadBill(id);
-    if (!bill) throw new NotFoundError('Bill', id);
+    if (!bill) throw new NotFoundError("Bill", id);
     return bill;
   },
 
   // The one place a bill's status ever changes.
   async transition(id: string, input: TransitionInput) {
     const bill = await loadBill(id);
-    if (!bill) throw new NotFoundError('Bill', id);
+    if (!bill) throw new NotFoundError("Bill", id);
 
     const from = bill.status;
     const to = input.to;
@@ -98,17 +101,22 @@ export const billService = {
       });
 
       await tx.billEvent.create({
-        data: { billId: id, fromStatus: from, toStatus: to, actor: input.actor },
+        data: {
+          billId: id,
+          fromStatus: from,
+          toStatus: to,
+          actor: input.actor,
+        },
       });
 
       // Scheduling a payment is the one transition with a side effect.
-      if (to === 'SCHEDULED') {
+      if (to === "SCHEDULED") {
         await tx.payment.create({
           data: {
             billId: id,
             amountCents: bill.totalCents,
-            method: input.method ?? 'ACH',
-            status: 'PENDING',
+            method: input.method ?? "ACH",
+            status: "PENDING",
             scheduledFor: input.scheduledFor,
           },
         });
@@ -126,9 +134,9 @@ function runGuard(
   bill: NonNullable<BillWithLines>,
   input: TransitionInput,
 ): void {
-  if (from === 'DRAFT' && to === 'SUBMITTED') {
+  if (from === "DRAFT" && to === "SUBMITTED") {
     if (bill.lineItems.length === 0) {
-      throw new GuardFailedError('Cannot submit a bill with no line items');
+      throw new GuardFailedError("Cannot submit a bill with no line items");
     }
     for (const line of bill.lineItems) {
       const splitTotal = line.splits.reduce((s, sp) => s + sp.amountCents, 0);
@@ -140,14 +148,16 @@ function runGuard(
     }
   }
 
-  if (from === 'APPROVED' && to === 'SCHEDULED') {
+  if (from === "APPROVED" && to === "SCHEDULED") {
     if (!input.scheduledFor) {
-      throw new GuardFailedError('scheduledFor is required to schedule a payment');
+      throw new GuardFailedError(
+        "scheduledFor is required to schedule a payment",
+      );
     }
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     if (input.scheduledFor < today) {
-      throw new GuardFailedError('scheduledFor cannot be in the past');
+      throw new GuardFailedError("scheduledFor cannot be in the past");
     }
   }
 }

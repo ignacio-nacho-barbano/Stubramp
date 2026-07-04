@@ -19,12 +19,36 @@ interface ToneSpec {
 }
 
 const TONES: Record<NonNullable<BadgeProps["tone"]>, ToneSpec> = {
-  neutral: { soft: "bg-sand-100 text-gray-700", solid: "bg-ink-900 text-paper-0", dot: "bg-gray-500" },
-  positive: { soft: "bg-green-100 text-green-700", solid: "bg-green-600 text-paper-0", dot: "bg-green-600" },
-  negative: { soft: "bg-red-100 text-red-700", solid: "bg-red-600 text-paper-0", dot: "bg-red-600" },
-  warning: { soft: "bg-amber-100 text-amber-600", solid: "bg-amber-600 text-paper-0", dot: "bg-amber-600" },
-  info: { soft: "bg-navy-100 text-navy-700", solid: "bg-navy-700 text-paper-0", dot: "bg-navy-700" },
-  accent: { soft: "bg-accent-100 text-accent-700", solid: "bg-accent-500 text-ink-900", dot: "bg-accent-500" },
+  neutral: {
+    soft: "bg-sand-100 text-gray-700",
+    solid: "bg-ink-900 text-paper-0",
+    dot: "bg-gray-500",
+  },
+  positive: {
+    soft: "bg-green-100 text-green-700",
+    solid: "bg-green-600 text-paper-0",
+    dot: "bg-green-600",
+  },
+  negative: {
+    soft: "bg-red-100 text-red-700",
+    solid: "bg-red-600 text-paper-0",
+    dot: "bg-red-600",
+  },
+  warning: {
+    soft: "bg-amber-100 text-amber-600",
+    solid: "bg-amber-600 text-paper-0",
+    dot: "bg-amber-600",
+  },
+  info: {
+    soft: "bg-navy-100 text-navy-700",
+    solid: "bg-navy-700 text-paper-0",
+    dot: "bg-navy-700",
+  },
+  accent: {
+    soft: "bg-accent-100 text-accent-700",
+    solid: "bg-accent-500 text-ink-900",
+    dot: "bg-accent-500",
+  },
 };
 
 /**
@@ -49,7 +73,14 @@ export function Badge({
       )}
       {...rest}
     >
-      {dot && <span className={cn("inline-block w-1.5 h-1.5 rounded-full shrink-0", t.dot)} />}
+      {dot && (
+        <span
+          className={cn(
+            "inline-block w-1.5 h-1.5 rounded-full shrink-0",
+            t.dot,
+          )}
+        />
+      )}
       {children}
     </span>
   );

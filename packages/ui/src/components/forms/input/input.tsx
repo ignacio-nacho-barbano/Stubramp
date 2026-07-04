@@ -2,7 +2,10 @@ import { type InputHTMLAttributes, type ReactNode } from "react";
 
 import { cn } from "../../../lib/cn";
 
-export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "prefix"> {
+export interface InputProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  "prefix"
+> {
   /** Field label rendered above the control. */
   label?: string;
   /** Helper text below the field. */
@@ -19,12 +22,24 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
  * Ramp Input — small radius (4px) on an otherwise sharp UI.
  * Hairline border, ink focus ring (via `focus-within`).
  */
-export function Input({ label, hint, error, prefix, suffix, id, className, ...rest }: InputProps) {
-  const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, "-") : undefined);
+export function Input({
+  label,
+  hint,
+  error,
+  prefix,
+  suffix,
+  id,
+  className,
+  ...rest
+}: InputProps) {
+  const inputId =
+    id || (label ? label.toLowerCase().replace(/\s+/g, "-") : undefined);
   return (
     <label htmlFor={inputId} className="flex flex-col gap-2">
       {label && (
-        <span className="font-sans text-sm font-medium leading-snug text-ink-900">{label}</span>
+        <span className="font-sans text-sm font-medium leading-snug text-ink-900">
+          {label}
+        </span>
       )}
       <span
         className={cn(
@@ -34,7 +49,9 @@ export function Input({ label, hint, error, prefix, suffix, id, className, ...re
             : "border-gray-300 focus-within:border-ink-900 focus-within:shadow-[0_0_0_3px_rgba(0,0,0,0.06)]",
         )}
       >
-        {prefix && <span className="font-sans text-base text-gray-500">{prefix}</span>}
+        {prefix && (
+          <span className="font-sans text-base text-gray-500">{prefix}</span>
+        )}
         <input
           id={inputId}
           className={cn(
@@ -43,7 +60,9 @@ export function Input({ label, hint, error, prefix, suffix, id, className, ...re
           )}
           {...rest}
         />
-        {suffix && <span className="font-sans text-base text-gray-500">{suffix}</span>}
+        {suffix && (
+          <span className="font-sans text-base text-gray-500">{suffix}</span>
+        )}
       </span>
       {(hint || error) && (
         <span

@@ -1,13 +1,13 @@
-import type { Meta, StoryObj } from '@storybook/react-vite';
-import { useState } from 'react';
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
 
-import { Button } from '../../forms/button';
-import { Modal } from './modal';
+import { Button } from "../../forms/button";
+import { Modal } from "./modal";
 
 const meta = {
   component: Modal,
-  tags: ['ai-generated'],
-  parameters: { layout: 'fullscreen' },
+  tags: ["ai-generated"],
+  parameters: { layout: "fullscreen" },
 } satisfies Meta<typeof Modal>;
 
 export default meta;
@@ -21,7 +21,11 @@ function Demo() {
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title={<span className="font-sans text-md font-semibold">Confirm action</span>}
+        title={
+          <span className="font-sans text-md font-semibold">
+            Confirm action
+          </span>
+        }
         footer={
           <>
             <Button variant="primary" onClick={() => setOpen(false)}>

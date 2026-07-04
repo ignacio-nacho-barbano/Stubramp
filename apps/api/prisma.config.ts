@@ -4,7 +4,8 @@ import { config as loadEnv } from "dotenv";
 import { defineConfig } from "prisma/config";
 
 // Default: Neon's pulled vars (.env.local). USE_LOCAL_DB=1 → local Docker (.env.docker).
-const dbEnvFile = process.env.USE_LOCAL_DB === "1" ? ".env.docker" : ".env.local";
+const dbEnvFile =
+  process.env.USE_LOCAL_DB === "1" ? ".env.docker" : ".env.local";
 loadEnv({ path: [dbEnvFile, ".env"] });
 
 export default defineConfig({

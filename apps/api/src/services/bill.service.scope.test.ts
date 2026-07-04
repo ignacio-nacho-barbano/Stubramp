@@ -8,7 +8,12 @@ import type { PaymentRepository } from "../repositories/PaymentRepository.js";
 import type { VendorRepository } from "../repositories/VendorRepository.js";
 import { BillService } from "./bill.service.js";
 
-const BILL = { id: "bill-1", companyId: "company-A", status: "DRAFT", lineItems: [] };
+const BILL = {
+  id: "bill-1",
+  companyId: "company-A",
+  status: "DRAFT",
+  lineItems: [],
+};
 
 function ctx(over: Partial<AuthContext>): AuthContext {
   return {

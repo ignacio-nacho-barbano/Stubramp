@@ -12,7 +12,14 @@ export interface AvatarProps extends HTMLAttributes<HTMLSpanElement> {
 }
 
 /** Ramp Avatar — circular, initials fallback, warm neutral fill. */
-export function Avatar({ src, name = "", size = 32, className, style, ...rest }: AvatarProps) {
+export function Avatar({
+  src,
+  name = "",
+  size = 32,
+  className,
+  style,
+  ...rest
+}: AvatarProps) {
   const initials = name
     .split(" ")
     .map((n) => n[0])
@@ -22,7 +29,11 @@ export function Avatar({ src, name = "", size = 32, className, style, ...rest }:
     .toUpperCase();
 
   // Size is prop-driven, so width/height/font-size stay inline.
-  const sizing: CSSProperties = { width: size, height: size, fontSize: Math.round(size * 0.4) };
+  const sizing: CSSProperties = {
+    width: size,
+    height: size,
+    fontSize: Math.round(size * 0.4),
+  };
 
   return (
     <span

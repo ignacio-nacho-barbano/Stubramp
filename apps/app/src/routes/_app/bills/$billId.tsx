@@ -2,7 +2,14 @@ import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
-import { Card, formatDate, Money, STATUS_LABEL, useToast, VendorAvatar } from '@stubramp/ui'
+import {
+  Card,
+  formatDate,
+  Money,
+  STATUS_LABEL,
+  useToast,
+  VendorAvatar,
+} from '@stubramp/ui'
 import { settlePaymentFn, transitionBillFn } from '../../../lib/bills'
 import type {
   BillStatus,

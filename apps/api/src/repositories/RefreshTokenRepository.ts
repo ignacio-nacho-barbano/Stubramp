@@ -17,7 +17,9 @@ interface RefreshTokenTypes extends ModelTypes {
 }
 
 export class RefreshTokenRepository extends BaseRepository<RefreshTokenTypes> {
-  constructor(private readonly tokens: Prisma.TransactionClient["refreshToken"]) {
+  constructor(
+    private readonly tokens: Prisma.TransactionClient["refreshToken"],
+  ) {
     super(tokens as unknown as ModelDelegate, "RefreshToken");
   }
 

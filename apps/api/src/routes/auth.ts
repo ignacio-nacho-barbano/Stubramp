@@ -25,40 +25,42 @@ export async function authRoutes(app: FastifyInstance) {
     "/auth/signup",
     { schema: { body: signupInput }, config: authRateLimit },
     async (req, reply) => {
-    const { user, company } = await app.services.auth.signup(req.body);
-    const tokens = await app.tokenService.issuePair({
-      id: user.id,
-      companyId: user.companyId,
-      role: user.role,
-    });
-    persistSession(reply, tokens);
-    return reply.code(201).send({ user, company });
-  });
+      const { user, company } = await app.services.auth.signup(req.body);
+      const tokens = await app.tokenService.issuePair({
+        id: user.id,
+        companyId: user.companyId,
+        role: user.role,
+      });
+      persistSession(reply, tokens);
+      return reply.code(201).send({ user, company });
+    },
+  );
 
   // Public: exchange credentials for a session (set as httpOnly cookies).
   r.post(
     "/auth/login",
     { schema: { body: loginInput }, config: authRateLimit },
     async (req, reply) => {
-    const user = await app.repositories.users.findByEmail(req.body.email);
-    if (!user || !user.isActive) {
-      throw new UnauthorizedError("Invalid credentials");
-    }
-    const ok = await verifyPassword(
-      req.body.password,
-      user.passwordHash,
-      env.PASSWORD_PEPPER,
-    );
-    if (!ok) throw new UnauthorizedError("Invalid credentials");
+      const user = await app.repositories.users.findByEmail(req.body.email);
+      if (!user || !user.isActive) {
+        throw new UnauthorizedError("Invalid credentials");
+      }
+      const ok = await verifyPassword(
+        req.body.password,
+        user.passwordHash,
+        env.PASSWORD_PEPPER,
+      );
+      if (!ok) throw new UnauthorizedError("Invalid credentials");
 
-    const tokens = await app.tokenService.issuePair({
-      id: user.id,
-      companyId: user.companyId,
-      role: user.role,
-    });
-    persistSession(reply, tokens);
-    return { ok: true };
-  });
+      const tokens = await app.tokenService.issuePair({
+        id: user.id,
+        companyId: user.companyId,
+        role: user.role,
+      });
+      persistSession(reply, tokens);
+      return { ok: true };
+    },
+  );
 
   // Public: rotate the refresh-token cookie for a fresh session.
   r.post("/auth/refresh", { config: authRateLimit }, async (req, reply) => {

@@ -1,4 +1,10 @@
-import { AllocationBar, allocationColor, Badge, Card, Money } from '@stubramp/ui'
+import {
+  AllocationBar,
+  allocationColor,
+  Badge,
+  Card,
+  Money,
+} from '@stubramp/ui'
 import type { BillLineItem } from '../../lib/bills'
 
 const KIND: Record<

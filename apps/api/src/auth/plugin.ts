@@ -56,7 +56,8 @@ export const authPlugin = fp(async (fastify: FastifyInstance) => {
   fastify.decorate(
     "tokenService",
     new TokenService(
-      (payload) => fastify.jwt.sign(payload, { expiresIn: env.ACCESS_TOKEN_TTL }),
+      (payload) =>
+        fastify.jwt.sign(payload, { expiresIn: env.ACCESS_TOKEN_TTL }),
       repositories.refreshTokens,
       async (id) => {
         const user = await repositories.users.findById(id);

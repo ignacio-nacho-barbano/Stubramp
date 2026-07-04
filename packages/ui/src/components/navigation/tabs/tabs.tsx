@@ -11,7 +11,10 @@ export interface TabItem {
   count?: number;
 }
 
-export interface TabsProps extends Omit<HTMLAttributes<HTMLDivElement>, "onChange"> {
+export interface TabsProps extends Omit<
+  HTMLAttributes<HTMLDivElement>,
+  "onChange"
+> {
   tabs: TabItem[];
   value?: string;
   defaultValue?: string;
@@ -19,7 +22,14 @@ export interface TabsProps extends Omit<HTMLAttributes<HTMLDivElement>, "onChang
 }
 
 /** Ramp Tabs — underline indicator, ink active, muted rest. */
-export function Tabs({ tabs = [], value, defaultValue, onChange, className, ...rest }: TabsProps) {
+export function Tabs({
+  tabs = [],
+  value,
+  defaultValue,
+  onChange,
+  className,
+  ...rest
+}: TabsProps) {
   const [internal, setInternal] = useState(defaultValue ?? tabs[0]?.id);
   const active = value !== undefined ? value : internal;
 
@@ -29,7 +39,11 @@ export function Tabs({ tabs = [], value, defaultValue, onChange, className, ...r
   };
 
   return (
-    <div role="tablist" className={cn("flex gap-6 border-b border-gray-200", className)} {...rest}>
+    <div
+      role="tablist"
+      className={cn("flex gap-6 border-b border-gray-200", className)}
+      {...rest}
+    >
       {tabs.map((t) => {
         const on = t.id === active;
         return (

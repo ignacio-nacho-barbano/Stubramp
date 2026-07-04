@@ -10,19 +10,32 @@ export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 }
 
 /** Ramp Select — native select styled to match Input. */
-export function Select({ label, hint, error, children, id, className, ...rest }: SelectProps) {
-  const selId = id || (label ? label.toLowerCase().replace(/\s+/g, "-") : undefined);
+export function Select({
+  label,
+  hint,
+  error,
+  children,
+  id,
+  className,
+  ...rest
+}: SelectProps) {
+  const selId =
+    id || (label ? label.toLowerCase().replace(/\s+/g, "-") : undefined);
   return (
     <label htmlFor={selId} className="flex flex-col gap-2">
       {label && (
-        <span className="font-sans text-sm font-medium leading-snug text-ink-900">{label}</span>
+        <span className="font-sans text-sm font-medium leading-snug text-ink-900">
+          {label}
+        </span>
       )}
       <span className="relative flex">
         <select
           id={selId}
           className={cn(
             "appearance-none w-full h-10 pl-3 pr-9 bg-surface-card border rounded-sm font-sans text-base text-ink-900 cursor-pointer focus:outline-none",
-            error ? "border-status-negative" : "border-gray-300 focus:border-ink-900",
+            error
+              ? "border-status-negative"
+              : "border-gray-300 focus:border-ink-900",
             className,
           )}
           {...rest}

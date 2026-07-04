@@ -1,10 +1,18 @@
 "use client";
 
-import { type ChangeEvent, type InputHTMLAttributes, type ReactNode, useState } from "react";
+import {
+  type ChangeEvent,
+  type InputHTMLAttributes,
+  type ReactNode,
+  useState,
+} from "react";
 
 import { cn } from "../../../lib/cn";
 
-export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "onChange"> {
+export interface CheckboxProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  "onChange"
+> {
   label?: ReactNode;
   checked?: boolean;
   defaultChecked?: boolean;

@@ -15,7 +15,11 @@ async function main() {
           type: "VIRTUAL",
           spendLimit: "35000",
           transactions: {
-            create: { merchant: "Delta Airlines", amount: "812.40", status: "CLEARED" },
+            create: {
+              merchant: "Delta Airlines",
+              amount: "812.40",
+              status: "CLEARED",
+            },
           },
         },
       },
