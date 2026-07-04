@@ -26,9 +26,21 @@ const envSchema = z.object({
   REFRESH_TOKEN_TTL: z.string().default("30d"),
   // Server-side secret mixed into every password hash (never stored in the DB).
   PASSWORD_PEPPER: z.string().min(16),
-  // The browser SPA origin — the single allowed CORS origin (credentials mode
-  // forbids the `*` wildcard). e.g. https://app.stubramp.barbano.uy
+  // The browser SPA origin. e.g. https://app.stubramp.barbano.uy
   APP_URL: z.string().url().default("http://localhost:3000"),
+  // Comma-separated list of allowed browser origins — one or more. One domain in
+  // prod; the two local dev servers locally. Credentials mode forbids the `*`
+  // wildcard, so every allowed origin is listed explicitly.
+  CORS_WHITELIST: z
+    .string()
+    .default("http://localhost:3000,http://localhost:3002")
+    .transform((s) =>
+      s
+        .split(",")
+        .map((o) => o.trim())
+        .filter(Boolean),
+    )
+    .pipe(z.array(z.string().url()).min(1)),
   // Parent domain the session cookies are scoped to, so they're shared across
   // the app + api subdomains (e.g. `.stubramp.barbano.uy`). Left unset locally
   // (localhost), where the browser scopes cookies to the exact host.

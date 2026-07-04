@@ -46,13 +46,11 @@ fastify.addHook("onClose", async () => {
 // need to know about Prisma error codes.
 fastify.setErrorHandler((error, _request, reply) => {
   if (error instanceof NotFoundError) {
-    return reply
-      .status(404)
-      .send({
-        error: "Not Found",
-        model: error.model,
-        criteria: error.criteria,
-      });
+    return reply.status(404).send({
+      error: "Not Found",
+      model: error.model,
+      criteria: error.criteria,
+    });
   }
   if (error instanceof UniqueConstraintError) {
     return reply
@@ -98,9 +96,10 @@ const start = async () => {
   try {
     // Allow the browser SPA (a different subdomain → a different origin) to call
     // the API with credentials so the httpOnly session cookies flow both ways.
-    // `credentials` forbids the `*` wildcard, hence the explicit single origin.
+    // `credentials` forbids the `*` wildcard, so CORS_WHITELIST lists each allowed
+    // origin explicitly (one in prod; the two local dev servers locally).
     await fastify.register(fastifyCors, {
-      origin: env.APP_URL,
+      origin: env.CORS_WHITELIST,
       credentials: true,
     });
 
