@@ -89,6 +89,56 @@ export function computeAging(bills: BillListItem[], today: number): Aging {
   return { tiles, rows, totals }
 }
 
+export interface BillStats {
+  openCount: number
+  openCents: number
+  submittedCount: number
+  submittedCents: number
+  scheduledCount: number
+  scheduledCents: number
+  overdueCount: number
+  overdueCents: number
+}
+
+/**
+ * At-a-glance KPI aggregates for the Bill Pay dashboard, all in cents.
+ * "Open" excludes settled/void bills; "overdue" is any open bill past its due
+ * date relative to the loader-provided `today`.
+ */
+export function computeBillStats(
+  bills: BillListItem[],
+  today: number,
+): BillStats {
+  const s: BillStats = {
+    openCount: 0,
+    openCents: 0,
+    submittedCount: 0,
+    submittedCents: 0,
+    scheduledCount: 0,
+    scheduledCents: 0,
+    overdueCount: 0,
+    overdueCents: 0,
+  }
+  for (const b of bills) {
+    if (CLOSED.has(b.status)) continue
+    s.openCount += 1
+    s.openCents += b.totalCents
+    if (b.status === 'SUBMITTED') {
+      s.submittedCount += 1
+      s.submittedCents += b.totalCents
+    }
+    if (b.status === 'SCHEDULED') {
+      s.scheduledCount += 1
+      s.scheduledCents += b.totalCents
+    }
+    if (new Date(b.dueDate).getTime() < today) {
+      s.overdueCount += 1
+      s.overdueCents += b.totalCents
+    }
+  }
+  return s
+}
+
 export interface VendorRollup {
   vendorId: string
   vendor: string

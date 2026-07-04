@@ -2,13 +2,19 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { z } from 'zod'
+import { Search } from 'lucide-react'
 import { Tabs, useToast } from '@stubramp/ui'
 import { billKeys, billsQueryOptions } from '../../../lib/bills-queries'
 import { transitionBillFn } from '../../../lib/bills'
 import type { BillStatus } from '../../../lib/bills'
+import { computeBillStats } from '../../../lib/aging'
 import { can } from '../../../lib/permissions'
 import { BillsTable } from '../../../components/bill-pay/BillsTable'
 import { BulkActionBar } from '../../../components/bill-pay/BulkActionBar'
+import { BillKpiTiles } from '../../../components/bill-pay/BillKpiTiles'
+import { DashboardCharts } from '../../../components/bill-pay/DashboardCharts'
+
+type SortBy = 'due' | 'amount' | 'vendor'
 
 const SUB_TABS: { id: string; label: string; status?: BillStatus }[] = [
   { id: 'ALL', label: 'All bills' },
@@ -44,6 +50,8 @@ function BillsListPage() {
   const { data: bills } = useSuspenseQuery(billsQueryOptions())
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [busy, setBusy] = useState(false)
+  const [search, setSearch] = useState('')
+  const [sortBy, setSortBy] = useState<SortBy>('due')
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { ALL: bills.length }
@@ -51,10 +59,30 @@ function BillsListPage() {
     return c
   }, [bills])
 
+  const stats = useMemo(() => computeBillStats(bills, now), [bills, now])
+
   const rows = useMemo(() => {
-    if (tab === 'ALL') return bills
-    return bills.filter((b) => b.status === tab)
-  }, [bills, tab])
+    let list = tab === 'ALL' ? bills : bills.filter((b) => b.status === tab)
+    const q = search.trim().toLowerCase()
+    if (q) {
+      list = list.filter(
+        (b) =>
+          b.vendor.name.toLowerCase().includes(q) ||
+          b.billNumber.toLowerCase().includes(q),
+      )
+    }
+    const sorted = [...list]
+    if (sortBy === 'amount') {
+      sorted.sort((a, b) => b.totalCents - a.totalCents)
+    } else if (sortBy === 'vendor') {
+      sorted.sort((a, b) => a.vendor.name.localeCompare(b.vendor.name))
+    } else {
+      sorted.sort(
+        (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime(),
+      )
+    }
+    return sorted
+  }, [bills, tab, search, sortBy])
 
   const toggle = (id: string) =>
     setSelected((s) => {
@@ -98,6 +126,40 @@ function BillsListPage() {
 
   return (
     <div>
+      <BillKpiTiles
+        stats={stats}
+        activeTab={tab}
+        onSelect={(status) => navigate({ to: '/bills', search: { status } })}
+      />
+
+      <DashboardCharts bills={bills} now={now} />
+
+      <div className="mb-3.5 flex items-center gap-2.5">
+        <div className="flex h-[38px] max-w-[340px] flex-1 items-center gap-2 rounded-sm border border-gray-200 bg-surface-card px-2.5">
+          <Search size={15} className="shrink-0 text-gray-500" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search vendor or invoice…"
+            className="min-w-0 flex-1 border-none bg-transparent text-[13px] text-ink-900 outline-none placeholder:text-gray-500"
+          />
+        </div>
+        <div className="ml-auto flex items-center gap-3">
+          <span className="text-xs tabular-nums text-gray-500">
+            {rows.length} {rows.length === 1 ? 'result' : 'results'}
+          </span>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortBy)}
+            className="h-[38px] cursor-pointer rounded-sm border border-gray-200 bg-surface-card px-2.5 text-[13px] text-ink-900"
+          >
+            <option value="due">Sort: Due date</option>
+            <option value="amount">Sort: Amount</option>
+            <option value="vendor">Sort: Vendor</option>
+          </select>
+        </div>
+      </div>
+
       <div className="mb-4">
         <Tabs
           tabs={SUB_TABS.map((t) => ({
