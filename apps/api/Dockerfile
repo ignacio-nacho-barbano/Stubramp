@@ -38,8 +38,14 @@ COPY . .
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile
 
+# Build @stubramp/api AND its workspace deps (@stubramp/contracts) in
+# topological order. The trailing `...` on the filter selects the package plus
+# its dependencies, so contracts' `tsc` runs first and produces
+# packages/contracts/dist — otherwise the api compiles fine (its type resolution
+# reads contracts' src) but crashes at runtime on the missing dist/*.js that its
+# export map's `default` condition points at.
 # `prisma generate` (into apps/api/src/generated) + `tsc` → apps/api/dist.
-RUN pnpm --filter @stubramp/api build
+RUN pnpm --filter "@stubramp/api..." build
 
 # Produce a self-contained bundle at /app/out (compiled dist + node_modules +
 # the prisma/ schema & migrations). We deliberately keep devDependencies (no
