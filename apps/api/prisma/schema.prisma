@@ -138,15 +138,23 @@ enum TransactionStatus {
 // ----------------------------------------------------------------------------
 
 model Vendor {
-  id        String   @id @default(uuid())
-  company   Company  @relation(fields: [companyId], references: [id])
-  companyId String
-  name      String
-  email     String?
-  bankRef   String?
-  bills     Bill[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String         @id @default(uuid())
+  company       Company        @relation(fields: [companyId], references: [id])
+  companyId     String
+  name          String
+  email         String?
+  bankRef       String?
+  // Payment terms (e.g. "NET_30") — validated against contracts' PAYMENT_TERMS
+  // at the wire boundary; stored as a plain string here.
+  terms         String?
+  // Default payment method for this vendor's bills.
+  paymentMethod PaymentMethod?
+  // Soft status: inactive vendors are hidden from new-bill pickers but kept for
+  // history. Deletion is only allowed when the vendor has no bills.
+  active        Boolean        @default(true)
+  bills         Bill[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@index([companyId])
 }

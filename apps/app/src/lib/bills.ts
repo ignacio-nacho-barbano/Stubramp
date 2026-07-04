@@ -4,12 +4,14 @@ import {
   createVendorInput,
   settlePaymentInput,
   transitionInput,
+  updateVendorInput,
 } from '@stubramp/contracts/schemas'
 import type {
   CreateBillInput,
   CreateVendorInput,
   SettlePaymentInput,
   TransitionInput,
+  UpdateVendorInput,
 } from '@stubramp/contracts/schemas'
 import type {
   BillSource,
@@ -17,6 +19,7 @@ import type {
   Classification,
   PaymentMethod,
   PaymentStatus,
+  PaymentTerms,
 } from '@stubramp/contracts/enums'
 import { apiFetch, mapApiError } from './api'
 
@@ -34,15 +37,23 @@ export type {
   Classification,
   PaymentMethod,
   PaymentStatus,
+  PaymentTerms,
   BillSource,
 } from '@stubramp/contracts/enums'
+export { PAYMENT_METHODS, PAYMENT_TERMS } from '@stubramp/contracts/enums'
 export {
   createBillInput,
   transitionInput,
   createVendorInput,
+  updateVendorInput,
   settlePaymentInput,
 }
-export type { CreateBillInput, TransitionInput, SettlePaymentInput }
+export type {
+  CreateBillInput,
+  TransitionInput,
+  SettlePaymentInput,
+  UpdateVendorInput,
+}
 
 // ---- Response shapes (DTOs returned by the API) ----
 
@@ -52,6 +63,9 @@ export interface Vendor {
   name: string
   email?: string | null
   bankRef?: string | null
+  terms?: PaymentTerms | null
+  paymentMethod?: PaymentMethod | null
+  active: boolean
   createdAt: string
   updatedAt: string
 }
@@ -135,8 +149,7 @@ export interface Paginated<T> {
 }
 
 export type MutationResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; error: string }
+  { ok: true; data: T } | { ok: false; error: string }
 
 // ---- Data functions (call the API from the browser) ----
 
@@ -220,6 +233,34 @@ export async function createVendorFn({
   })
   if (status >= 400) return { ok: false, error: mapApiError(status, json) }
   return { ok: true, data: json as Vendor }
+}
+
+export async function updateVendorFn({
+  data,
+}: {
+  data: UpdateVendorInput & { id: string }
+}): Promise<MutationResult<Vendor>> {
+  const id = z.string().uuid().parse(data.id)
+  const body = updateVendorInput.parse(data)
+  const { status, json } = await apiFetch(`/vendors/${id}`, {
+    method: 'PATCH',
+    body,
+  })
+  if (status >= 400) return { ok: false, error: mapApiError(status, json) }
+  return { ok: true, data: json as Vendor }
+}
+
+export async function deleteVendorFn({
+  data,
+}: {
+  data: { id: string }
+}): Promise<MutationResult<null>> {
+  const id = z.string().uuid().parse(data.id)
+  const { status, json } = await apiFetch(`/vendors/${id}`, {
+    method: 'DELETE',
+  })
+  if (status >= 400) return { ok: false, error: mapApiError(status, json) }
+  return { ok: true, data: null }
 }
 
 export async function settlePaymentFn({

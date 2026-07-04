@@ -34,7 +34,26 @@ export const PAYMENT_METHODS = ["ACH", "WIRE", "CHECK", "CARD"] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 export const paymentMethodEnum = z.enum(PAYMENT_METHODS);
 
-export const BILL_SOURCES = ["MANUAL", "UPLOAD", "OCR", "EMAIL", "CSV"] as const;
+// Vendor payment terms — how long after the issue date a bill is due. Stored as
+// a plain string on the Vendor row (no Prisma enum), validated at the wire
+// boundary against this list. Used to pre-fill the due date on new bills.
+export const PAYMENT_TERMS = [
+  "DUE_ON_RECEIPT",
+  "NET_15",
+  "NET_30",
+  "NET_45",
+  "NET_60",
+] as const;
+export type PaymentTerms = (typeof PAYMENT_TERMS)[number];
+export const paymentTermsEnum = z.enum(PAYMENT_TERMS);
+
+export const BILL_SOURCES = [
+  "MANUAL",
+  "UPLOAD",
+  "OCR",
+  "EMAIL",
+  "CSV",
+] as const;
 export type BillSource = (typeof BILL_SOURCES)[number];
 export const billSourceEnum = z.enum(BILL_SOURCES);
 

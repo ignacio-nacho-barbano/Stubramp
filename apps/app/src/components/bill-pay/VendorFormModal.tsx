@@ -1,0 +1,254 @@
+import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { Button, Input, Modal, Select, Switch, useToast } from '@stubramp/ui'
+import {
+  PAYMENT_METHODS,
+  PAYMENT_TERMS,
+  createVendorFn,
+  deleteVendorFn,
+  updateVendorFn,
+} from '../../lib/bills'
+import type { PaymentMethod, PaymentTerms, Vendor } from '../../lib/bills'
+import { billKeys } from '../../lib/bills-queries'
+
+// Display labels for the wire enums. Kept here (client-only, user-facing copy)
+// per the contract convention that form copy lives in the app, not @contracts.
+export const TERM_LABELS: Record<PaymentTerms, string> = {
+  DUE_ON_RECEIPT: 'Due on receipt',
+  NET_15: 'Net 15',
+  NET_30: 'Net 30',
+  NET_45: 'Net 45',
+  NET_60: 'Net 60',
+}
+
+export const METHOD_LABELS: Record<PaymentMethod, string> = {
+  ACH: 'ACH',
+  WIRE: 'Wire',
+  CHECK: 'Check',
+  CARD: 'Card',
+}
+
+interface VendorFormModalProps {
+  /** `null` → hidden. A vendor → edit that vendor. `'new'` → create form. */
+  target: Vendor | 'new' | null
+  onClose: () => void
+}
+
+interface FormState {
+  name: string
+  email: string
+  terms: PaymentTerms | ''
+  paymentMethod: PaymentMethod | ''
+  active: boolean
+}
+
+function initialState(target: Vendor | 'new'): FormState {
+  if (target === 'new') {
+    return { name: '', email: '', terms: '', paymentMethod: '', active: true }
+  }
+  return {
+    name: target.name,
+    email: target.email ?? '',
+    terms: target.terms ?? '',
+    paymentMethod: target.paymentMethod ?? '',
+    active: target.active,
+  }
+}
+
+export function VendorFormModal({ target, onClose }: VendorFormModalProps) {
+  if (!target) return null
+  return (
+    <VendorForm
+      key={target === 'new' ? 'new' : target.id}
+      target={target}
+      onClose={onClose}
+    />
+  )
+}
+
+function VendorForm({
+  target,
+  onClose,
+}: {
+  target: Vendor | 'new'
+  onClose: () => void
+}) {
+  const isCreate = target === 'new'
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+  const [form, setForm] = useState<FormState>(() => initialState(target))
+  const [busy, setBusy] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
+  const set = <TKey extends keyof FormState>(
+    key: TKey,
+    value: FormState[TKey],
+  ) => setForm((f) => ({ ...f, [key]: value }))
+
+  async function refresh() {
+    await queryClient.invalidateQueries({ queryKey: billKeys.vendors })
+  }
+
+  async function save() {
+    if (!form.name.trim()) {
+      return toast({ message: 'Vendor name is required.', tone: 'negative' })
+    }
+    setBusy(true)
+    try {
+      if (isCreate) {
+        const res = await createVendorFn({
+          data: {
+            name: form.name.trim(),
+            email: form.email.trim() || undefined,
+            terms: form.terms || undefined,
+            paymentMethod: form.paymentMethod || undefined,
+          },
+        })
+        if (!res.ok) return toast({ message: res.error, tone: 'negative' })
+        toast({ message: `${res.data.name} added`, tone: 'positive' })
+      } else {
+        const res = await updateVendorFn({
+          data: {
+            id: target.id,
+            name: form.name.trim(),
+            email: form.email.trim() || null,
+            terms: form.terms || null,
+            paymentMethod: form.paymentMethod || null,
+            active: form.active,
+          },
+        })
+        if (!res.ok) return toast({ message: res.error, tone: 'negative' })
+        toast({ message: `${res.data.name} updated`, tone: 'positive' })
+      }
+      await refresh()
+      onClose()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function remove() {
+    if (isCreate) return
+    setBusy(true)
+    try {
+      const res = await deleteVendorFn({ data: { id: target.id } })
+      if (!res.ok) return toast({ message: res.error, tone: 'negative' })
+      toast({ message: `${target.name} removed`, tone: 'positive' })
+      await refresh()
+      onClose()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      size="sm"
+      title={
+        <div className="font-sans text-lg font-semibold text-ink-900">
+          {isCreate ? 'Add vendor' : 'Edit vendor'}
+        </div>
+      }
+      footer={
+        <>
+          {!isCreate &&
+            (confirmDelete ? (
+              <span className="flex items-center gap-2">
+                <span className="text-[13px] text-gray-600">Remove?</span>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  disabled={busy}
+                  onClick={() => void remove()}
+                >
+                  Confirm
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={busy}
+                  onClick={() => setConfirmDelete(false)}
+                >
+                  Keep
+                </Button>
+              </span>
+            ) : (
+              <Button
+                variant="danger"
+                size="sm"
+                disabled={busy}
+                onClick={() => setConfirmDelete(true)}
+              >
+                Delete
+              </Button>
+            ))}
+          <span className="ml-auto flex items-center gap-2">
+            <Button variant="secondary" disabled={busy} onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              disabled={busy}
+              onClick={() => void save()}
+            >
+              {isCreate ? 'Add vendor' : 'Save changes'}
+            </Button>
+          </span>
+        </>
+      }
+    >
+      <div className="flex flex-col gap-4">
+        <Input
+          label="Vendor name"
+          value={form.name}
+          onChange={(e) => set('name', e.target.value)}
+          placeholder="Acme Cloud Inc."
+        />
+        <Input
+          label="Contact email"
+          type="email"
+          value={form.email}
+          onChange={(e) => set('email', e.target.value)}
+          placeholder="ap@acme.com"
+        />
+        <div className="grid grid-cols-2 gap-4">
+          <Select
+            label="Payment terms"
+            value={form.terms}
+            onChange={(e) => set('terms', e.target.value as PaymentTerms | '')}
+          >
+            <option value="">Not set</option>
+            {PAYMENT_TERMS.map((t) => (
+              <option key={t} value={t}>
+                {TERM_LABELS[t]}
+              </option>
+            ))}
+          </Select>
+          <Select
+            label="Payment method"
+            value={form.paymentMethod}
+            onChange={(e) =>
+              set('paymentMethod', e.target.value as PaymentMethod | '')
+            }
+          >
+            <option value="">Not set</option>
+            {PAYMENT_METHODS.map((m) => (
+              <option key={m} value={m}>
+                {METHOD_LABELS[m]}
+              </option>
+            ))}
+          </Select>
+        </div>
+        {!isCreate && (
+          <Switch
+            label="Active"
+            checked={form.active}
+            onChange={(next) => set('active', next)}
+          />
+        )}
+      </div>
+    </Modal>
+  )
+}

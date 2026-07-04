@@ -53,11 +53,13 @@ async function main() {
 
   await prisma.vendor.upsert({
     where: { id: DEMO_VENDOR_ID },
-    update: { name: "Acme Supplies" },
+    update: { name: "Acme Supplies", terms: "NET_30", paymentMethod: "ACH" },
     create: {
       id: DEMO_VENDOR_ID,
       name: "Acme Supplies",
       email: "ap@acme.test",
+      terms: "NET_30",
+      paymentMethod: "ACH",
       company: { connect: { id: company.id } },
     },
   });

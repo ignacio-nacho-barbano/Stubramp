@@ -9,6 +9,7 @@ import {
   classificationEnum,
   paymentMethodEnum,
   paymentOutcomeEnum,
+  paymentTermsEnum,
   roleEnum,
 } from "./enums.js";
 
@@ -101,7 +102,22 @@ export const createVendorInput = z.object({
   name: z.string().min(1),
   email: z.string().email().optional(),
   bankRef: z.string().optional(),
+  terms: paymentTermsEnum.optional(),
+  paymentMethod: paymentMethodEnum.optional(),
 });
+
+// Partial update — every field optional. Nullable fields accept `null` to clear
+// them; `active` toggles the vendor's status (activate / deactivate).
+export const updateVendorInput = z
+  .object({
+    name: z.string().min(1),
+    email: z.string().email().nullable(),
+    bankRef: z.string().nullable(),
+    terms: paymentTermsEnum.nullable(),
+    paymentMethod: paymentMethodEnum.nullable(),
+    active: z.boolean(),
+  })
+  .partial();
 
 export const listVendorsQuery = z.object({
   page: z.coerce.number().int().positive().optional(),
@@ -113,6 +129,7 @@ export const vendorIdParams = z.object({
 });
 
 export type CreateVendorInput = z.infer<typeof createVendorInput>;
+export type UpdateVendorInput = z.infer<typeof updateVendorInput>;
 
 // ---- Companies ----
 
