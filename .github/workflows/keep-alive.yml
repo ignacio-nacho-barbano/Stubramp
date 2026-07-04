@@ -1,0 +1,41 @@
+# Keeps the Neon Postgres compute warm to avoid cold starts. The Fly machine is
+# kept warm separately via `min_machines_running = 1` (apps/api/fly.toml), so
+# this only needs to touch the database. GET /health runs `SELECT 1` against
+# Neon (see apps/api/src/index.ts), which resets its autosuspend timer.
+# /health is public (allowlisted in apps/api/src/auth/plugin.ts) — no secrets.
+#
+# Neon autosuspends after ~5 min idle, and GitHub cron is best-effort (runs are
+# often delayed and occasionally dropped). We schedule every 5 min AND ping a
+# few times per run 2 min apart, so a late next run is less likely to leave a
+# >5 min gap that lets Neon suspend.
+name: keep-alive
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}
+
+# A slow run must never stack up behind the next scheduled trigger.
+concurrency:
+  group: keep-alive
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      HEALTH_URL: https://api.stubramp.barbano.uy/health
+    steps:
+      - name: Ping /health to keep Neon warm
+        run: |
+          set -u
+          for i in 1 2 3; do
+            # A failed ping is logged but doesn't abort — we still want the
+            # remaining pings to run.
+            code=$(curl -sS -m 30 --retry 2 \
+              -o /dev/null -w '%{http_code}' "$HEALTH_URL") || code="curl-error"
+            echo "ping $i/3 -> $code"
+            # Don't sleep after the last ping.
+            if [ "$i" -lt 3 ]; then sleep 120; fi
+          done

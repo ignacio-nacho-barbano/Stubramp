@@ -43,15 +43,16 @@ primary_region = "iad"
   # across the app + api subdomains.
   COOKIE_DOMAIN = ".stubramp.barbano.uy"
 
-# Cost-minimal setup: a single machine that stops when idle and starts on the
-# first request, scaling all the way to zero (you pay ~nothing while idle).
-# Deploy with a single machine (no HA standby): `fly deploy --ha=false`.
+# Keep one machine always running to avoid Fly cold starts (the ~seconds-long
+# wake on the first request after idle). This trades the scale-to-zero savings
+# for a warm API; Neon is kept warm separately by .github/workflows/keep-alive.
+# Still a single machine (no HA standby): `fly deploy --ha=false`.
 [http_service]
   internal_port = 3001
   force_https = true
   auto_stop_machines = "stop"
   auto_start_machines = true
-  min_machines_running = 0
+  min_machines_running = 1
   processes = ["app"]
 
   [[http_service.checks]]
