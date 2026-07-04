@@ -8,27 +8,29 @@ A Ramp-style bill-pay / payables demo built as a technical test. It's a **Turbor
 
 ## Monorepo layout
 
-| Path | Package | What it is |
-| --- | --- | --- |
-| `apps/api` | `@stubramp/api` | Fastify REST API — auth, multi-tenancy/RBAC, bill-pay domain. Prisma + Postgres (Neon). |
-| `apps/app` | `@stubramp/app` | React 19 SPA dashboard (Vite + TanStack Router/Query/Table/Form). The main product UI. |
-| `apps/website` | `@stubramp/website` | Next.js 16 static marketing site. |
-| `packages/contracts` | `@stubramp/contracts` | Zod schemas, enums, permissions, and the bill state machine shared by API + app. |
-| `packages/ui` | `@stubramp/ui` | Shared React component library (Ramp-style design system, Tailwind v4, Storybook). |
-| `packages/typescript-config` | `@stubramp/typescript-config` | Shared `tsconfig` bases. |
-| `packages/eslint-config` | `@stubramp/eslint-config` | Shared ESLint config. |
-| `e2e` | — | Playwright end-to-end tests. |
+| Path                         | Package                       | What it is                                                                              |
+| ---------------------------- | ----------------------------- | --------------------------------------------------------------------------------------- |
+| `apps/api`                   | `@stubramp/api`               | Fastify REST API — auth, multi-tenancy/RBAC, bill-pay domain. Prisma + Postgres (Neon). |
+| `apps/app`                   | `@stubramp/app`               | React 19 SPA dashboard (Vite + TanStack Router/Query/Table/Form). The main product UI.  |
+| `apps/website`               | `@stubramp/website`           | Next.js 16 SSR marketing site.                                                          |
+| `packages/contracts`         | `@stubramp/contracts`         | Zod schemas, enums, permissions, and the bill state machine shared by API + app.        |
+| `packages/ui`                | `@stubramp/ui`                | Shared React component library (Ramp-style design system, Tailwind v4, Storybook).      |
+| `packages/typescript-config` | `@stubramp/typescript-config` | Shared `tsconfig` bases.                                                                |
+| `packages/eslint-config`     | `@stubramp/eslint-config`     | Shared ESLint config.                                                                   |
+| `e2e`                        | —                             | Playwright end-to-end tests.                                                            |
 
 ---
 
 ## Tech stack
 
 **Language & tooling**
+
 - TypeScript everywhere · **pnpm 11** workspaces · **Turborepo** task runner
 - Node **22.23+** (see `.node-version`)
 - ESLint + Prettier · Vitest (unit) · Playwright (e2e)
 
 **API (`apps/api`)**
+
 - **Fastify 5** with `fastify-type-provider-zod` (Zod 4 request/response validation)
 - **Prisma 7** ORM over **Postgres**, using the `@prisma/adapter-pg` driver adapter
 - Auth: `@fastify/jwt` (short-lived access JWT) + opaque server-side refresh tokens, delivered as **httpOnly cookies** set by the API
@@ -36,19 +38,23 @@ A Ramp-style bill-pay / payables demo built as a technical test. It's a **Turbor
 - Fail-fast env validation with Zod (`src/env.ts`)
 
 **App (`apps/app`)**
+
 - **React 19** SPA on **Vite 8**
 - **TanStack** Router / Query / Table / Form
 - Sentry error monitoring · Zod-validated env
 - Talks to the API as a pure client (cookie-based sessions)
 
 **Website (`apps/website`)**
+
 - **Next.js 16** with `output: 'export'` (fully static)
 - **Tailwind CSS v4**
 
 **UI (`packages/ui`)**
+
 - React component library, **Tailwind v4**, **Storybook 10**, ships raw `.tsx` source consumed by both apps
 
 **Infrastructure**
+
 - **API** → deployed to **Fly.io** (`stubramp-api`, region `iad`) via Docker; scale-to-zero single machine; migrations run as a Fly `release_command`
 - **Database** → **Neon** serverless Postgres (pooled `DATABASE_URL` for the runtime, direct `DATABASE_URL_UNPOOLED` for migrations); local **Docker Postgres** available as an offline alternative
 - **App** → **Cloudflare** (static SPA assets via Wrangler)
@@ -114,10 +120,8 @@ pnpm dev                 # → http://localhost:3000  (defaults to VITE_API_URL=
 
 ```sh
 cd apps/website
-pnpm dev                 # → http://localhost:3001
+pnpm dev                 # → http://localhost:3002
 ```
-
-> **Port note:** the API and the website both default to port **3001**. If you want both running at once, start the website on another port: `pnpm --filter @stubramp/website dev -- --port 3002` (or edit its `dev` script).
 
 ### Run tasks across the whole monorepo
 
@@ -136,13 +140,13 @@ pnpm check-types    # typecheck everything
 
 `pnpm db:seed` creates a `Demo Co` company. All seeded users share the password **`demo-password`**:
 
-| Email | Role |
-| --- | --- |
-| `root@stubramp.test` | SUPERUSER (platform staff, no company) |
-| `admin@demo.test` | ADMIN |
-| `accountant@demo.test` | ACCOUNTANT |
-| `approver@demo.test` | APPROVER |
-| `employee@demo.test` | EMPLOYEE |
+| Email                  | Role                                   |
+| ---------------------- | -------------------------------------- |
+| `root@stubramp.test`   | SUPERUSER (platform staff, no company) |
+| `admin@demo.test`      | ADMIN                                  |
+| `accountant@demo.test` | ACCOUNTANT                             |
+| `approver@demo.test`   | APPROVER                               |
+| `employee@demo.test`   | EMPLOYEE                               |
 
 ---
 
@@ -158,14 +162,14 @@ cd e2e && pnpm test                  # end-to-end (Playwright)
 
 ## Useful API scripts (`apps/api`)
 
-| Script | Purpose |
-| --- | --- |
-| `pnpm dev` / `pnpm dev:docker` | Run the API (Neon / local Docker) with hot reload |
-| `pnpm db:migrate` / `db:migrate:docker` | Create + apply a migration |
-| `pnpm db:deploy` | Apply pending migrations (production) |
-| `pnpm db:seed` | Seed demo data |
-| `pnpm db:studio` | Open Prisma Studio |
-| `pnpm db:up` / `db:down` / `db:reset` | Start / stop / wipe local Docker Postgres |
+| Script                                  | Purpose                                           |
+| --------------------------------------- | ------------------------------------------------- |
+| `pnpm dev` / `pnpm dev:docker`          | Run the API (Neon / local Docker) with hot reload |
+| `pnpm db:migrate` / `db:migrate:docker` | Create + apply a migration                        |
+| `pnpm db:deploy`                        | Apply pending migrations (production)             |
+| `pnpm db:seed`                          | Seed demo data                                    |
+| `pnpm db:studio`                        | Open Prisma Studio                                |
+| `pnpm db:up` / `db:down` / `db:reset`   | Start / stop / wipe local Docker Postgres         |
 
 ## Deployment
 
