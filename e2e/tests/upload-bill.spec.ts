@@ -24,9 +24,11 @@ const INVOICES_DIR = path.resolve(
 );
 // sample_invoice_1.pdf is a clean text-based invoice the heuristic parser reads
 // end-to-end. Its fields (see the PDF) drive the assertions below:
-//   Invoice #: INV-TEST-00123, and four line items summing to $1,505.00
-//   (500 + 750 + 135 + 120) — the parser extracts the line rows, not the
-//   printed "Total Due: $1,625.40" (which includes tax).
+//   Invoice #: INV-TEST-00123, four line items summing to $1,505.00 (500 + 750 +
+//   135 + 120 = the subtotal), plus the printed "Total Due: $1,625.40". The
+//   parser extracts both the line rows and the grand total; the confirm screen
+//   reconciles the gap with a "Tax & adjustments" line ($120.40) so the bill
+//   total equals Total Due.
 const SAMPLE_PDF = path.join(INVOICES_DIR, "sample_invoice_1.pdf");
 const SAMPLE_BILL_NUMBER = "INV-TEST-00123";
 const SAMPLE_VENDOR_DETECTED = "Northwind Sample Co.";
@@ -157,8 +159,12 @@ test.describe("new bill flow", () => {
     await expect(page.getByPlaceholder("Description").first()).toHaveValue(
       "Sample Widget Design Services",
     );
-    // Parsed line rows sum to $1,505.00 (excludes the printed tax).
-    await expect(page.getByText("$1,505.00").first()).toBeVisible();
+    // The four line rows ($1,505.00 subtotal) are reconciled up to the invoice's
+    // "Total Due: $1,625.40" by a synthesized "Tax & adjustments" line ($120.40).
+    await expect(page.getByPlaceholder("Description").last()).toHaveValue(
+      "Tax & adjustments",
+    );
+    await expect(page.getByText("$1,625.40").first()).toBeVisible();
 
     // The PDF's vendor isn't seeded, so pick the known vendor to satisfy the
     // required field, then save the reviewed draft.

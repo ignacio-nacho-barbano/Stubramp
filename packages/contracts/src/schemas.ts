@@ -114,6 +114,11 @@ export const parsedBillDocument = z.object({
   billNumber: z.string(),
   issueDate: z.string().nullable(),
   dueDate: z.string().nullable(),
+  // The invoice's stated grand total ("Total Due" / "Amount Due"), distinct from
+  // the line-item subtotal — null when none is found. The confirm screen uses it
+  // to reconcile the seeded line items (which sum to the subtotal) up to the real
+  // total by appending a tax/adjustments line.
+  totalCents: cents.nullable(),
   lines: z.array(parsedLineItem),
 });
 

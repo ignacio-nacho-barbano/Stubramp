@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { __test } from "./parse-document.service.js";
 
-const { extractBillFields, normalizeDate, toCents } = __test;
+const { extractBillFields, extractTotal, normalizeDate, toCents } = __test;
 
 // A realistic text-based invoice as pdf-parse would extract it (line per row).
 const INVOICE_TEXT = `Acme Cloud Inc.
@@ -79,6 +79,8 @@ describe("extractBillFields", () => {
     expect(result.billNumber).toBe("INV-0042");
     expect(result.issueDate).toBe("2026-06-12");
     expect(result.dueDate).toBe("2026-07-12");
+    // Bare "Total  $1,250.00" (no "due"): a weak match, still the grand total.
+    expect(result.totalCents).toBe(125000);
     expect(result.lines).toEqual([
       { description: "Software subscription", unitCents: 100000 },
       { description: "Implementation & onboarding", unitCents: 25000 },
@@ -99,6 +101,7 @@ describe("extractBillFields", () => {
       billNumber: "",
       issueDate: null,
       dueDate: null,
+      totalCents: null,
       lines: [],
     });
   });
@@ -116,6 +119,8 @@ describe("extractBillFields", () => {
     expect(result.billNumber).toBe("INV-TEST-00123");
     expect(result.issueDate).toBe("2026-07-01");
     expect(result.dueDate).toBe("2026-07-15");
+    // "Total Due: $1,625.40", not the "Subtotal: $1,505.00" above it.
+    expect(result.totalCents).toBe(162540);
     expect(result.lines).toEqual([
       { description: "Sample Widget Design Services", unitCents: 50000 },
       // amount column (10 x $75 = $750), not the unit price
@@ -133,6 +138,8 @@ describe("extractBillFields", () => {
     // "DD Mon YYYY" dates behind "Date Issued:" / "Due Date:" labels.
     expect(result.issueDate).toBe("2026-07-06");
     expect(result.dueDate).toBe("2026-08-05");
+    // "Total Due (USD): $5,484.68", not the "Subtotal: $5,055.00".
+    expect(result.totalCents).toBe(548468);
     expect(result.lines).toEqual([
       {
         description: "Enterprise Cloud Infrastructure Hosting",
@@ -164,6 +171,40 @@ describe("normalizeDate", () => {
   it("rejects impossible or unparseable dates", () => {
     expect(normalizeDate("2026-13-40")).toBeNull();
     expect(normalizeDate("not a date")).toBeNull();
+  });
+});
+
+describe("extractTotal", () => {
+  const lines = (text: string) =>
+    text
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean);
+
+  it("prefers 'Total Due' over the subtotal above it", () => {
+    expect(
+      extractTotal(
+        lines("Subtotal: $1,505.00\nTax (8%): $120.40\nTotal Due: $1,625.40"),
+      ),
+    ).toBe(162540);
+  });
+
+  it("never picks up a subtotal-only summary", () => {
+    expect(extractTotal(lines("Subtotal: $1,505.00"))).toBeNull();
+    expect(extractTotal(lines("Sub-total: $1,505.00"))).toBeNull();
+  });
+
+  it("matches a bare 'Total' when no due variant is present", () => {
+    expect(extractTotal(lines("Total $1,250.00"))).toBe(125000);
+  });
+
+  it("handles 'Amount Due' and trailing currency codes", () => {
+    expect(extractTotal(lines("Amount Due: $900.00"))).toBe(90000);
+    expect(extractTotal(lines("Total Due (USD): $5,484.68"))).toBe(548468);
+  });
+
+  it("returns null when no total line exists", () => {
+    expect(extractTotal(lines("Thanks for your business!"))).toBeNull();
   });
 });
 

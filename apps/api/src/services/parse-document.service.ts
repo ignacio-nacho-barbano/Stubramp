@@ -71,6 +71,7 @@ function extractBillFields(text: string): ParsedBillDocument {
     billNumber: extractBillNumber(text),
     issueDate: extractIssueDate(text),
     dueDate: extractDueDate(text),
+    totalCents: extractTotal(lines),
     lines: extractLineItems(lines),
   };
 }
@@ -271,6 +272,37 @@ function extractLineItems(lines: string[]): ParsedLineItem[] {
   return items;
 }
 
+// The invoice's stated grand total — the "Total Due" line, NOT the subtotal. We
+// scan the summary rows and score each label: an explicit due/balance/grand
+// variant beats a bare "Total", and among equal-strength matches the later one
+// wins (Total Due is printed after Subtotal). Subtotal rows are skipped outright:
+// `\btotal\b` already can't match inside "Subtotal" (no word boundary), but the
+// explicit skip also covers the hyphenated "Sub-total" / "Sub Total" forms.
+const SUBTOTAL_LABEL_RE = /^\s*sub[\s-]*total\b/i;
+const STRONG_TOTAL_LABEL_RE =
+  /^\s*(?:total\s*(?:amount\s*)?due|amount\s*due|balance\s*due|grand\s*total|total\b.*\bdue)\b/i;
+const WEAK_TOTAL_LABEL_RE = /^\s*total\b/i;
+
+function extractTotal(lines: string[]): number | null {
+  let best: { cents: number; score: number } | null = null;
+  for (const line of lines) {
+    if (SUBTOTAL_LABEL_RE.test(line)) continue;
+    const score = STRONG_TOTAL_LABEL_RE.test(line)
+      ? 2
+      : WEAK_TOTAL_LABEL_RE.test(line)
+        ? 1
+        : 0;
+    if (score === 0) continue;
+    const money = line.match(MONEY_RE);
+    if (!money) continue;
+    const cents = toCents(money[money.length - 1]!);
+    if (cents === null) continue;
+    // `>=` so a later same-strength match (e.g. a final "Total Due") wins.
+    if (!best || score >= best.score) best = { cents, score };
+  }
+  return best?.cents ?? null;
+}
+
 // Strip the trailing numeric columns (currency amounts + a bare qty) off a row
 // to leave just its description. Empty when the row is amounts-only (layout b).
 function descriptionFromRow(line: string): string {
@@ -293,4 +325,9 @@ function toCents(amount: string): number | null {
 
 // Exposed only for unit tests — the parsing logic is worth testing without a
 // real PDF. Not part of the DocumentParser port.
-export const __test = { extractBillFields, normalizeDate, toCents };
+export const __test = {
+  extractBillFields,
+  extractTotal,
+  normalizeDate,
+  toCents,
+};

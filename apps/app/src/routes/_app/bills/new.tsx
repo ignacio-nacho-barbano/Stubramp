@@ -98,15 +98,33 @@ function BillCreatePage() {
               issueDate: toDateInputValue(parsed.issueDate) || m.issueDate,
               dueDate: toDateInputValue(parsed.dueDate),
             }))
-            setLines(
-              parsed.lines.length > 0
-                ? parsed.lines.map((l) => ({
-                    ...newDraftLine(),
-                    description: l.description,
-                    amountCents: l.unitCents,
-                  }))
-                : [newDraftLine()],
-            )
+            // Seed line items, then reconcile them up to the invoice's stated
+            // Total Due: the parsed items sum to the subtotal, so any gap (tax,
+            // fees) is added as one line, keeping the bill total — which the
+            // server derives from the line items — equal to what the invoice says.
+            const items = parsed.lines.map((l) => ({
+              ...newDraftLine(),
+              description: l.description,
+              amountCents: l.unitCents,
+            }))
+            const itemsSum = items.reduce((s, l) => s + l.amountCents, 0)
+            if (items.length === 0 && parsed.totalCents != null) {
+              items.push({
+                ...newDraftLine(),
+                description: 'Invoice total',
+                amountCents: parsed.totalCents,
+              })
+            } else if (
+              parsed.totalCents != null &&
+              parsed.totalCents !== itemsSum
+            ) {
+              items.push({
+                ...newDraftLine(),
+                description: 'Tax & adjustments',
+                amountCents: parsed.totalCents - itemsSum,
+              })
+            }
+            setLines(items.length > 0 ? items : [newDraftLine()])
             setSource('UPLOAD')
             setShowUpload(false)
             toast({
