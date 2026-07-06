@@ -134,8 +134,8 @@ function BillsListPage() {
 
       <DashboardCharts bills={bills} now={now} />
 
-      <div className="mb-3.5 flex items-center gap-2.5">
-        <div className="flex h-[38px] max-w-[340px] flex-1 items-center gap-2 rounded-sm border border-gray-200 bg-surface-card px-2.5">
+      <div className="mb-3.5 flex flex-wrap items-center gap-2.5">
+        <div className="flex h-[38px] min-w-[200px] max-w-[340px] flex-1 items-center gap-2 rounded-sm border border-gray-200 bg-surface-card px-2.5">
           <Search size={15} className="shrink-0 text-gray-500" />
           <input
             value={search}
@@ -160,8 +160,9 @@ function BillsListPage() {
         </div>
       </div>
 
-      <div className="mb-4">
+      <div className="mb-4 overflow-x-auto">
         <Tabs
+          className="min-w-max"
           tabs={SUB_TABS.map((t) => ({
             id: t.id,
             label: t.label,

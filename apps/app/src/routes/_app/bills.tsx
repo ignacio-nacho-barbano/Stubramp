@@ -33,22 +33,23 @@ function BillsLayout() {
   const activeTab = TOP_TABS.find((t) => t.to === pathname)?.id ?? 'bills'
 
   return (
-    <div className="mx-auto max-w-[1100px] px-9 pb-20 pt-7">
+    <div className="mx-auto max-w-[1100px] px-4 pb-20 pt-6 sm:px-6 lg:px-9 lg:pt-7">
       {showChrome && (
         <>
-          <div className="mb-5 flex items-end justify-between">
+          <div className="mb-5 flex items-end justify-between gap-3">
             <div>
               <div className="mb-1.5 text-xs font-medium uppercase tracking-wide text-gray-500">
                 Accounts payable
               </div>
-              <h1 className="m-0 text-3xl font-semibold tracking-[-0.02em]">
+              <h1 className="m-0 text-2xl font-semibold tracking-[-0.02em] lg:text-3xl">
                 Bill Pay
               </h1>
             </div>
             <NewBillMenu />
           </div>
-          <div className="mb-[22px]">
+          <div className="mb-[22px] overflow-x-auto">
             <Tabs
+              className="min-w-max"
               tabs={TOP_TABS.map((t) => ({ id: t.id, label: t.label }))}
               value={activeTab}
               onChange={(id) => {

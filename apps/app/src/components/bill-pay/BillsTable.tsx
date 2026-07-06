@@ -32,75 +32,79 @@ export function BillsTable({
 }) {
   return (
     <Card padded={false}>
-      <div
-        className={cn(
-          GRID,
-          'border-b border-gray-200 bg-surface-page px-4 py-[11px] text-xs font-medium uppercase tracking-wide text-gray-500',
-        )}
-      >
-        <span />
-        <span>Vendor</span>
-        <span>Invoice</span>
-        <span>Due date</span>
-        <span>Lines</span>
-        <span className="text-right">Amount</span>
-        <span className="text-right">Status</span>
-        <span />
-      </div>
+      <div className="overflow-x-auto">
+        <div className="min-w-[720px]">
+          <div
+            className={cn(
+              GRID,
+              'border-b border-gray-200 bg-surface-page px-4 py-[11px] text-xs font-medium uppercase tracking-wide text-gray-500',
+            )}
+          >
+            <span />
+            <span>Vendor</span>
+            <span>Invoice</span>
+            <span>Due date</span>
+            <span>Lines</span>
+            <span className="text-right">Amount</span>
+            <span className="text-right">Status</span>
+            <span />
+          </div>
 
-      {bills.length === 0 ? (
-        <div className="px-12 py-12 text-center text-sm text-gray-500">
-          No bills in this view.
-        </div>
-      ) : (
-        bills.map((b) => {
-          const overdue =
-            !OPEN.has(b.status) && new Date(b.dueDate).getTime() < now
-          return (
-            <div
-              key={b.id}
-              onClick={() => onOpen(b.id)}
-              className={cn(
-                GRID,
-                'cursor-pointer border-b border-gray-200 px-4 py-3 transition-[background-color] duration-[120ms] hover:bg-surface-page',
-              )}
-            >
-              <span onClick={(e) => e.stopPropagation()} className="flex">
-                <Checkbox
-                  checked={selected.has(b.id)}
-                  onChange={() => onToggle(b.id)}
-                />
-              </span>
-              <span className="flex items-center gap-2.5 text-sm font-medium">
-                <VendorAvatar name={b.vendor.name} />
-                <span className="truncate">{b.vendor.name}</span>
-              </span>
-              <span className="font-mono text-xs text-gray-600">
-                {b.billNumber}
-              </span>
-              <span
-                className={cn(
-                  'text-[13px]',
-                  overdue ? 'text-status-negative' : 'text-gray-600',
-                )}
-              >
-                {formatDate(b.dueDate)}
-              </span>
-              <span className="text-xs text-gray-500">
-                {b._count.lineItems}{' '}
-                {b._count.lineItems === 1 ? 'line' : 'lines'}
-              </span>
-              <span className="text-right text-sm font-semibold">
-                <Money cents={b.totalCents} />
-              </span>
-              <span className="flex justify-end">
-                <StatusBadge status={b.status} />
-              </span>
-              <ChevronRight size={15} className="text-gray-400" />
+          {bills.length === 0 ? (
+            <div className="px-12 py-12 text-center text-sm text-gray-500">
+              No bills in this view.
             </div>
-          )
-        })
-      )}
+          ) : (
+            bills.map((b) => {
+              const overdue =
+                !OPEN.has(b.status) && new Date(b.dueDate).getTime() < now
+              return (
+                <div
+                  key={b.id}
+                  onClick={() => onOpen(b.id)}
+                  className={cn(
+                    GRID,
+                    'cursor-pointer border-b border-gray-200 px-4 py-3 transition-[background-color] duration-[120ms] hover:bg-surface-page',
+                  )}
+                >
+                  <span onClick={(e) => e.stopPropagation()} className="flex">
+                    <Checkbox
+                      checked={selected.has(b.id)}
+                      onChange={() => onToggle(b.id)}
+                    />
+                  </span>
+                  <span className="flex items-center gap-2.5 text-sm font-medium">
+                    <VendorAvatar name={b.vendor.name} />
+                    <span className="truncate">{b.vendor.name}</span>
+                  </span>
+                  <span className="font-mono text-xs text-gray-600">
+                    {b.billNumber}
+                  </span>
+                  <span
+                    className={cn(
+                      'text-[13px]',
+                      overdue ? 'text-status-negative' : 'text-gray-600',
+                    )}
+                  >
+                    {formatDate(b.dueDate)}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {b._count.lineItems}{' '}
+                    {b._count.lineItems === 1 ? 'line' : 'lines'}
+                  </span>
+                  <span className="text-right text-sm font-semibold">
+                    <Money cents={b.totalCents} />
+                  </span>
+                  <span className="flex justify-end">
+                    <StatusBadge status={b.status} />
+                  </span>
+                  <ChevronRight size={15} className="text-gray-400" />
+                </div>
+              )
+            })
+          )}
+        </div>
+      </div>
     </Card>
   )
 }

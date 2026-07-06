@@ -1,11 +1,19 @@
-import { Search, Settings } from 'lucide-react'
+import { Menu, Search, Settings } from 'lucide-react'
 import { NotificationsMenu } from './NotificationsMenu'
 import { UserMenu } from './UserMenu'
 
 /** App top bar — search affordance, notifications, settings, and user avatar. */
-export function TopBar() {
+export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   return (
-    <header className="flex h-14 shrink-0 items-center gap-3 border-b border-gray-200 bg-surface-card px-6">
+    <header className="flex h-14 shrink-0 items-center gap-3 border-b border-gray-200 bg-surface-card px-4 lg:px-6">
+      <button
+        type="button"
+        onClick={onMenuClick}
+        aria-label="Open menu"
+        className="-ml-1 shrink-0 cursor-pointer rounded-sm p-1.5 text-gray-600 hover:bg-sand-100 lg:hidden"
+      >
+        <Menu size={20} />
+      </button>
       <div
         className="flex h-8.5 flex-1 items-center gap-2 rounded-sm bg-sand-100 px-2.5 text-gray-500"
         title="Press Command-K to search"

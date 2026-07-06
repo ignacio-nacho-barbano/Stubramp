@@ -131,7 +131,7 @@ export function Donut({
               </span>
             )}
             {centerValue != null && (
-              <span className="font-sans text-xl font-semibold tracking-snug text-ink-900 tabular-nums">
+              <span className="font-sans text-md font-semibold tracking-snug text-ink-900 tabular-nums">
                 {centerValue}
               </span>
             )}

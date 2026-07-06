@@ -62,7 +62,7 @@ export function BillKpiTiles({
   ]
 
   return (
-    <div className="mb-3.5 grid grid-cols-4 gap-3">
+    <div className="mb-3.5 grid grid-cols-2 gap-3 lg:grid-cols-4">
       {tiles.map((t) => {
         const active = t.tab !== 'ALL' && activeTab === t.tab
         return (

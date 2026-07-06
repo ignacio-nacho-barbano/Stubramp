@@ -42,7 +42,7 @@ export function DashboardCharts({
   const maxAge = Math.max(1, ...AGING_TILES.map((t) => aging.tiles[t.key]))
 
   return (
-    <div className="mb-4 grid grid-cols-2 gap-3">
+    <div className="mb-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
       <Card header="Outstanding by age">
         <div className="flex h-[150px] items-end gap-3.5 px-1 pt-1.5">
           {AGING_TILES.map((t) => {
