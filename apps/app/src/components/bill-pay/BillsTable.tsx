@@ -4,6 +4,7 @@ import { ChevronRight } from 'lucide-react'
 import {
   Card,
   Checkbox,
+  cn,
   formatDate,
   Money,
   StatusBadge,
@@ -32,7 +33,10 @@ export function BillsTable({
   return (
     <Card padded={false}>
       <div
-        className={`${GRID} border-b border-gray-200 bg-surface-page px-4 py-[11px] text-xs font-medium uppercase tracking-wide text-gray-500`}
+        className={cn(
+          GRID,
+          'border-b border-gray-200 bg-surface-page px-4 py-[11px] text-xs font-medium uppercase tracking-wide text-gray-500',
+        )}
       >
         <span />
         <span>Vendor</span>
@@ -56,7 +60,10 @@ export function BillsTable({
             <div
               key={b.id}
               onClick={() => onOpen(b.id)}
-              className={`${GRID} cursor-pointer border-b border-gray-200 px-4 py-3 transition-[background-color] duration-[120ms] hover:bg-surface-page`}
+              className={cn(
+                GRID,
+                'cursor-pointer border-b border-gray-200 px-4 py-3 transition-[background-color] duration-[120ms] hover:bg-surface-page',
+              )}
             >
               <span onClick={(e) => e.stopPropagation()} className="flex">
                 <Checkbox
@@ -72,7 +79,10 @@ export function BillsTable({
                 {b.billNumber}
               </span>
               <span
-                className={`text-[13px] ${overdue ? 'text-status-negative' : 'text-gray-600'}`}
+                className={cn(
+                  'text-[13px]',
+                  overdue ? 'text-status-negative' : 'text-gray-600',
+                )}
               >
                 {formatDate(b.dueDate)}
               </span>

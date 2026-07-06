@@ -8,6 +8,7 @@ import {
 } from "react";
 
 import { cn } from "../../../lib/cn";
+import type { PropsWithClass } from "../../../types/props";
 
 export interface CheckboxProps extends Omit<
   InputHTMLAttributes<HTMLInputElement>,
@@ -29,7 +30,7 @@ export function Checkbox({
   disabled,
   className,
   ...rest
-}: CheckboxProps) {
+}: CheckboxProps & PropsWithClass) {
   const [internal, setInternal] = useState(defaultChecked || false);
   const isControlled = checked !== undefined;
   const on = isControlled ? checked : internal;

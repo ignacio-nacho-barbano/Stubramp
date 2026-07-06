@@ -1,6 +1,7 @@
 import { type HTMLAttributes, type ReactNode } from "react";
 
 import { cn } from "../../../lib/cn";
+import type { PropsWithClass } from "../../../types/props";
 
 export interface StatTileProps extends Omit<
   HTMLAttributes<HTMLDivElement>,
@@ -33,7 +34,7 @@ export function StatTile({
   suffix,
   className,
   ...rest
-}: StatTileProps) {
+}: StatTileProps & PropsWithClass) {
   const positive = deltaDir === "up";
   return (
     <div

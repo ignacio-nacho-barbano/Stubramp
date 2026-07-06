@@ -1,17 +1,24 @@
 import { cn } from "../../../lib/cn";
+import type { PropsWithClass } from "../../../types/props";
 
 /** Small two-plus option segmented control (expense/item, percent/amount). */
 export function SegmentedToggle<T extends string>({
   options,
   value,
   onChange,
+  className,
 }: {
   options: { value: T; label: string }[];
   value: T;
   onChange: (v: T) => void;
-}) {
+} & PropsWithClass) {
   return (
-    <div className="inline-flex overflow-hidden rounded-sm border border-gray-300 text-xs">
+    <div
+      className={cn(
+        "inline-flex overflow-hidden rounded-sm border border-gray-300 text-xs",
+        className,
+      )}
+    >
       {options.map((o) => (
         <span
           key={o.value}

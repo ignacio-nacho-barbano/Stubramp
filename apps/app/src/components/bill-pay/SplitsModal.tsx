@@ -5,6 +5,7 @@ import { Plus, X } from 'lucide-react'
 import {
   allocationColor,
   Button,
+  cn,
   formatCents,
   Modal,
   SegmentedToggle,
@@ -327,10 +328,20 @@ export function SplitsModal({
         </div>
         <div className="mt-2.5 flex items-center text-[13px]">
           <span
-            className={`inline-flex items-center gap-1.5 font-semibold ${remainderColor}`}
+            className={cn(
+              'inline-flex items-center gap-1.5 font-semibold',
+              remainderColor,
+            )}
           >
             <span
-              className={`h-2 w-2 rounded-full ${remaining === 0 ? 'bg-status-positive' : remaining > 0 ? 'bg-status-warning' : 'bg-status-negative'}`}
+              className={cn(
+                'h-2 w-2 rounded-full',
+                remaining === 0
+                  ? 'bg-status-positive'
+                  : remaining > 0
+                    ? 'bg-status-warning'
+                    : 'bg-status-negative',
+              )}
             />
             {remainderLabel}
           </span>

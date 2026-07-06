@@ -46,6 +46,10 @@ export * from "./components/business/allocation-bar";
 
 // shared presentational helpers + status vocabulary (used by the business
 // components and reusable directly by consuming apps)
+export * from "./lib/cn";
 export * from "./lib/money";
 export * from "./lib/format";
 export * from "./lib/bill-status";
+
+// types that enhance compatibility
+export * from "./types";

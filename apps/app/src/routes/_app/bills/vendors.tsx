@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { ChevronRight } from 'lucide-react'
-import { Badge, Button, Card, Money, VendorAvatar } from '@stubramp/ui'
+import { Badge, Button, Card, cn, Money, VendorAvatar } from '@stubramp/ui'
 import {
   billsQueryOptions,
   vendorsQueryOptions,
@@ -57,7 +57,10 @@ function VendorsPage() {
 
       <Card padded={false}>
         <div
-          className={`${GRID} border-b border-gray-200 bg-surface-page px-4 py-[11px] text-xs font-medium uppercase tracking-wide text-gray-500`}
+          className={cn(
+            GRID,
+            'border-b border-gray-200 bg-surface-page px-4 py-[11px] text-xs font-medium uppercase tracking-wide text-gray-500',
+          )}
         >
           <span>Vendor</span>
           <span>Contact</span>

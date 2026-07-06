@@ -1,3 +1,5 @@
+import type { PropsWithClass } from "../../../types/props";
+
 export interface AllocationSegment {
   label: string;
   pct: number;
@@ -5,9 +7,12 @@ export interface AllocationSegment {
 }
 
 /** Colored proportional bar + legend for a line item's cost-center splits. */
-export function AllocationBar({ segments }: { segments: AllocationSegment[] }) {
+export function AllocationBar({
+  segments,
+  className,
+}: { segments: AllocationSegment[] } & PropsWithClass) {
   return (
-    <div>
+    <div className={className}>
       <div className="mb-2 flex h-2 overflow-hidden border border-gray-300">
         {segments.map((s, i) => (
           <span key={i} style={{ width: `${s.pct}%`, background: s.color }} />

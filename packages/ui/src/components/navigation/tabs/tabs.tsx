@@ -3,6 +3,7 @@
 import { type HTMLAttributes, type ReactNode, useState } from "react";
 
 import { cn } from "../../../lib/cn";
+import type { PropsWithClass } from "../../../types/props";
 
 export interface TabItem {
   id: string;
@@ -29,7 +30,7 @@ export function Tabs({
   onChange,
   className,
   ...rest
-}: TabsProps) {
+}: TabsProps & PropsWithClass) {
   const [internal, setInternal] = useState(defaultValue ?? tabs[0]?.id);
   const active = value !== undefined ? value : internal;
 
@@ -53,7 +54,7 @@ export function Tabs({
             aria-selected={on}
             onClick={() => select(t.id)}
             className={cn(
-              "inline-flex items-center gap-2 pb-3 -mb-px appearance-none bg-none border-none border-b-2 cursor-pointer font-sans text-sm transition-[color] duration-[120ms]",
+              "inline-flex items-center gap-2 pb-3 -mb-px appearance-none bg-none border-none border-b-2 cursor-pointer font-sans text-sm transition-[color] duration-120",
               on
                 ? "border-black font-semibold text-ink-900"
                 : "border-transparent font-medium text-gray-500",

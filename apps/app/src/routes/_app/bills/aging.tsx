@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import {
   Card,
+  cn,
   formatCents,
   formatDate,
   Money,
@@ -41,7 +42,10 @@ function AgingPage() {
 
       <Card padded={false} header="Unpaid bills by age">
         <div
-          className={`${GRID} border-b border-gray-200 bg-surface-page px-4 py-[11px] text-xs font-medium uppercase tracking-wide text-gray-500`}
+          className={cn(
+            GRID,
+            'border-b border-gray-200 bg-surface-page px-4 py-[11px] text-xs font-medium uppercase tracking-wide text-gray-500',
+          )}
         >
           <span>Vendor</span>
           <span>Earliest due</span>
@@ -59,7 +63,10 @@ function AgingPage() {
           aging.rows.map((r) => (
             <div
               key={r.vendorId}
-              className={`${GRID} border-b border-gray-200 px-4 py-3 text-[13px] tabular-nums`}
+              className={cn(
+                GRID,
+                'border-b border-gray-200 px-4 py-3 text-[13px] tabular-nums',
+              )}
             >
               <span className="flex items-center gap-2.5 font-medium">
                 <VendorAvatar name={r.vendor} size={24} />
@@ -85,7 +92,10 @@ function AgingPage() {
           ))
         )}
         <div
-          className={`${GRID} bg-surface-page px-4 py-3 text-[13px] font-bold tabular-nums`}
+          className={cn(
+            GRID,
+            'bg-surface-page px-4 py-3 text-[13px] font-bold tabular-nums',
+          )}
         >
           <span>Total outstanding</span>
           <span />

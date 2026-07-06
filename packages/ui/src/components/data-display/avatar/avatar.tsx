@@ -1,6 +1,7 @@
 import { type CSSProperties, type HTMLAttributes } from "react";
 
 import { cn } from "../../../lib/cn";
+import type { PropsWithClass } from "../../../types/props";
 
 export interface AvatarProps extends HTMLAttributes<HTMLSpanElement> {
   /** Image URL; falls back to initials when absent. */
@@ -19,7 +20,7 @@ export function Avatar({
   className,
   style,
   ...rest
-}: AvatarProps) {
+}: AvatarProps & PropsWithClass) {
   const initials = name
     .split(" ")
     .map((n) => n[0])

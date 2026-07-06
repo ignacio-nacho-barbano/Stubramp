@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Badge, Card, Money, Switch, VendorAvatar } from '@stubramp/ui'
+import { Badge, Card, cn, Money, Switch, VendorAvatar } from '@stubramp/ui'
 import { RECURRING_RULES } from '../../../lib/stubs'
 
 export const Route = createFileRoute('/_app/bills/recurring')({
@@ -21,7 +21,10 @@ function RecurringPage() {
       }
     >
       <div
-        className={`${GRID} border-b border-gray-200 bg-surface-page px-4 py-[11px] text-xs font-medium uppercase tracking-wide text-gray-500`}
+        className={cn(
+          GRID,
+          'border-b border-gray-200 bg-surface-page px-4 py-[11px] text-xs font-medium uppercase tracking-wide text-gray-500',
+        )}
       >
         <span>Vendor</span>
         <span>Cadence</span>
@@ -32,7 +35,7 @@ function RecurringPage() {
       {RECURRING_RULES.map((r) => (
         <div
           key={r.id}
-          className={`${GRID} border-b border-gray-200 px-4 py-3 text-[13px]`}
+          className={cn(GRID, 'border-b border-gray-200 px-4 py-3 text-[13px]')}
         >
           <span className="flex items-center gap-2.5 font-medium">
             <VendorAvatar name={r.vendor} size={24} />

@@ -12,7 +12,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 
-import { cn } from "../../../lib/cn";
+import { cva } from "../../../lib/cn";
 
 export type ToastTone = "neutral" | "positive" | "negative";
 
@@ -38,11 +38,19 @@ export function useToast(): ToastContextValue {
   return ctx;
 }
 
-const TONE_STYLES: Record<ToastTone, string> = {
-  neutral: "bg-ink-900 text-paper-0",
-  positive: "bg-green-600 text-paper-0",
-  negative: "bg-red-600 text-paper-0",
-};
+const toastPill = cva(
+  "cursor-pointer rounded-none px-5 py-2.5 font-sans text-sm font-medium shadow-pop",
+  {
+    variants: {
+      tone: {
+        neutral: "bg-ink-900 text-paper-0",
+        positive: "bg-green-600 text-paper-0",
+        negative: "bg-red-600 text-paper-0",
+      },
+    },
+    defaultVariants: { tone: "neutral" },
+  },
+);
 
 /**
  * Ramp toast provider — a bottom-center stack of dark, auto-dismissing pills.
@@ -96,10 +104,7 @@ function ToastPill({
     <div
       role="status"
       onClick={() => onDismiss(toast.id)}
-      className={cn(
-        "cursor-pointer rounded-none px-5 py-2.5 font-sans text-sm font-medium shadow-pop",
-        TONE_STYLES[toast.tone ?? "neutral"],
-      )}
+      className={toastPill({ tone: toast.tone })}
     >
       {toast.message}
     </div>

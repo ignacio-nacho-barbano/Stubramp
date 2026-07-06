@@ -1,7 +1,7 @@
 'use client'
 
 import { useNavigate } from '@tanstack/react-router'
-import { FileSpreadsheet, Inbox, PenLine, UploadCloud } from 'lucide-react'
+import { FileSpreadsheet, PenLine, UploadCloud } from 'lucide-react'
 import { Button, Menu, useToast } from '@stubramp/ui'
 
 /** The "+ New bill" dropdown. Manual + Upload are wired; CSV/AP-inbox are stubs. */
@@ -40,14 +40,14 @@ export function NewBillMenu() {
               message: 'CSV import is not available in this build yet.',
             }),
         },
-        {
-          id: 'email',
-          label: 'Forward to AP inbox',
-          description: 'ap@northwind.stubramp.com',
-          icon: <Inbox size={18} className="text-gray-500" />,
-          onSelect: () =>
-            toast({ message: 'AP inbox forwarding is not available yet.' }),
-        },
+        // {
+        //   id: 'email',
+        //   label: 'Forward to AP inbox',
+        //   description: 'ap@northwind.stubramp.com',
+        //   icon: <Inbox size={18} className="text-gray-500" />,
+        //   onSelect: () =>
+        //     toast({ message: 'AP inbox forwarding is not available yet.' }),
+        // },
       ]}
     />
   )

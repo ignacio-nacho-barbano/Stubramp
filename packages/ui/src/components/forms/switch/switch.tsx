@@ -3,13 +3,13 @@
 import { type ReactNode, useState } from "react";
 
 import { cn } from "../../../lib/cn";
+import type { PropsWithClass } from "../../../types/props";
 
 export interface SwitchProps {
   label?: ReactNode;
   checked?: boolean;
   defaultChecked?: boolean;
   disabled?: boolean;
-  className?: string;
   /** Receives the next boolean state. */
   onChange?: (next: boolean) => void;
 }
@@ -22,7 +22,7 @@ export function Switch({
   onChange,
   disabled,
   className,
-}: SwitchProps) {
+}: SwitchProps & PropsWithClass) {
   const [internal, setInternal] = useState(defaultChecked || false);
   const isControlled = checked !== undefined;
   const on = isControlled ? checked : internal;

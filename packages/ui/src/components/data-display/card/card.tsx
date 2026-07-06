@@ -1,6 +1,7 @@
 import { type HTMLAttributes, type ReactNode } from "react";
 
-import { cn } from "../../../lib/cn";
+import { cn, cva } from "../../../lib/cn";
+import type { PropsWithClass } from "../../../types/props";
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   /** Shadow depth. Default "flat" (border-only). */
@@ -14,34 +15,31 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   children?: ReactNode;
 }
 
-const SHADOWS: Record<NonNullable<CardProps["elevation"]>, string> = {
-  flat: "shadow-none",
-  sm: "shadow-sm",
-  md: "shadow-md",
-};
+const card = cva(
+  "flex flex-col bg-surface-card border border-gray-200 rounded-none",
+  {
+    variants: {
+      elevation: { flat: "shadow-none", sm: "shadow-sm", md: "shadow-md" },
+    },
+    defaultVariants: { elevation: "flat" },
+  },
+);
 
 /**
  * Ramp Card — squared surface, hairline border, optional soft shadow.
  * Ramp leans on borders over shadow; default is border-only.
  */
 export function Card({
-  elevation = "flat",
+  elevation,
   padded = true,
   header = null,
   footer = null,
   children,
   className,
   ...rest
-}: CardProps) {
+}: CardProps & PropsWithClass) {
   return (
-    <div
-      className={cn(
-        "flex flex-col bg-surface-card border border-gray-200 rounded-none",
-        SHADOWS[elevation],
-        className,
-      )}
-      {...rest}
-    >
+    <div className={cn(card({ elevation }), className)} {...rest}>
       {header && (
         <div className="px-5 py-4 border-b border-gray-200 font-sans text-md font-semibold leading-snug text-ink-900">
           {header}

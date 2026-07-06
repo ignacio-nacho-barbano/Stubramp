@@ -1,4 +1,10 @@
-import { avatarColor, formatCents, formatDate, initials } from '@stubramp/ui'
+import {
+  avatarColor,
+  cn,
+  formatCents,
+  formatDate,
+  initials,
+} from '@stubramp/ui'
 
 export interface InvoiceDocLine {
   idx: string
@@ -164,7 +170,10 @@ export function InvoiceDoc({ doc }: { doc: InvoiceDocData }) {
         {/* line items */}
         <div>
           <div
-            className={`${COLS} bg-ink-900 px-2.5 py-[7px] text-[10px] font-semibold text-white`}
+            className={cn(
+              COLS,
+              'bg-ink-900 px-2.5 py-[7px] text-[10px] font-semibold text-white',
+            )}
           >
             <span>Item</span>
             <span>Description</span>
@@ -175,9 +184,11 @@ export function InvoiceDoc({ doc }: { doc: InvoiceDocData }) {
           {doc.lines.map((ln, i) => (
             <div
               key={ln.idx}
-              className={`${COLS} border-b border-[#ECEAE4] px-2.5 py-[7px] text-[10.5px] tabular-nums ${
-                i % 2 === 1 ? 'bg-[#FAF9F6]' : 'bg-white'
-              }`}
+              className={cn(
+                COLS,
+                'border-b border-[#ECEAE4] px-2.5 py-[7px] text-[10.5px] tabular-nums',
+                i % 2 === 1 ? 'bg-[#FAF9F6]' : 'bg-white',
+              )}
             >
               <span className="text-[#6b655b]">{ln.idx}</span>
               <span>{ln.description}</span>

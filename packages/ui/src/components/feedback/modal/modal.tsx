@@ -3,7 +3,8 @@
 import { type ReactNode, useEffect } from "react";
 import { createPortal } from "react-dom";
 
-import { cn } from "../../../lib/cn";
+import { cn, cva } from "../../../lib/cn";
+import type { PropsWithClass } from "../../../types/props";
 
 export interface ModalProps {
   /** Whether the dialog is shown. */
@@ -21,11 +22,19 @@ export interface ModalProps {
   children?: ReactNode;
 }
 
-const SIZES: Record<NonNullable<ModalProps["size"]>, string> = {
-  sm: "max-w-[420px]",
-  md: "max-w-[600px]",
-  lg: "max-w-[820px]",
-};
+const dialog = cva(
+  "flex max-h-[90vh] w-full flex-col overflow-hidden bg-surface-card border border-gray-300 rounded-none shadow-pop",
+  {
+    variants: {
+      size: {
+        sm: "max-w-[420px]",
+        md: "max-w-[600px]",
+        lg: "max-w-[820px]",
+      },
+    },
+    defaultVariants: { size: "md" },
+  },
+);
 
 /**
  * Ramp Modal — a centered dialog over a dim scrim. Sharp corners, hairline
@@ -37,10 +46,11 @@ export function Modal({
   onClose,
   title,
   footer,
-  size = "md",
+  size,
   closeOnScrim = true,
   children,
-}: ModalProps) {
+  className,
+}: ModalProps & PropsWithClass) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -67,17 +77,14 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
-        className={cn(
-          "flex max-h-[90vh] w-full flex-col overflow-hidden bg-surface-card border border-gray-300 rounded-none shadow-pop",
-          SIZES[size],
-        )}
+        className={cn(dialog({ size }), className)}
       >
         {title && (
-          <div className="shrink-0 px-[22px] py-[18px] border-b border-gray-200">
+          <div className="shrink-0 px-5.5 py-4.5 border-b border-gray-200">
             {title}
           </div>
         )}
-        <div className="min-h-0 flex-1 overflow-y-auto px-[22px] py-5">
+        <div className="min-h-0 flex-1 overflow-y-auto px-5.5 py-5">
           {children}
         </div>
         {footer && (

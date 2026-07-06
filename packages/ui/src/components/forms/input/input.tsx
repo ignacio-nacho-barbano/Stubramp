@@ -1,6 +1,7 @@
 import { type InputHTMLAttributes, type ReactNode } from "react";
 
 import { cn } from "../../../lib/cn";
+import type { PropsWithClass } from "../../../types/props";
 
 export interface InputProps extends Omit<
   InputHTMLAttributes<HTMLInputElement>,
@@ -31,7 +32,7 @@ export function Input({
   id,
   className,
   ...rest
-}: InputProps) {
+}: InputProps & PropsWithClass) {
   const inputId =
     id || (label ? label.toLowerCase().replace(/\s+/g, "-") : undefined);
   return (

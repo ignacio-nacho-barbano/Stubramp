@@ -3,6 +3,7 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { cn } from "../../../lib/cn";
+import type { PropsWithClass } from "../../../types/props";
 
 export interface MenuItem {
   id: string;
@@ -25,7 +26,6 @@ export interface MenuProps {
   align?: "start" | "end";
   /** Panel width in px. Default 260. */
   width?: number;
-  className?: string;
 }
 
 /**
@@ -40,7 +40,7 @@ export function Menu({
   align = "end",
   width = 260,
   className,
-}: MenuProps) {
+}: MenuProps & PropsWithClass) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -92,7 +92,7 @@ export function Menu({
                     item.onSelect?.();
                   }}
                   className={cn(
-                    "flex w-full items-start gap-[11px] rounded-sm px-[11px] py-2.5 text-left font-sans transition-[background-color] duration-[120ms]",
+                    "flex w-full items-start gap-2.75 rounded-sm px-2.75 py-2.5 text-left font-sans transition-[background-color] duration-120",
                     item.disabled
                       ? "cursor-not-allowed opacity-45"
                       : "cursor-pointer hover:bg-surface-page",

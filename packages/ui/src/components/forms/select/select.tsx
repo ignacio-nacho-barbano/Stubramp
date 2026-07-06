@@ -1,6 +1,7 @@
 import { type ReactNode, type SelectHTMLAttributes } from "react";
 
 import { cn } from "../../../lib/cn";
+import type { PropsWithClass } from "../../../types/props";
 
 export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
@@ -18,11 +19,11 @@ export function Select({
   id,
   className,
   ...rest
-}: SelectProps) {
+}: SelectProps & PropsWithClass) {
   const selId =
     id || (label ? label.toLowerCase().replace(/\s+/g, "-") : undefined);
   return (
-    <label htmlFor={selId} className="flex flex-col gap-2">
+    <label htmlFor={selId} className={cn(className, "flex flex-col gap-2")}>
       {label && (
         <span className="font-sans text-sm font-medium leading-snug text-ink-900">
           {label}

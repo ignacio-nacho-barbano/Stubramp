@@ -1,6 +1,7 @@
 import { type HTMLAttributes } from "react";
 
 import { cn } from "../../../lib/cn";
+import type { PropsWithClass } from "../../../types/props";
 
 export interface LogoProps extends HTMLAttributes<HTMLSpanElement> {
   /** Tile/glyph size in px. Default 22. */
@@ -29,7 +30,7 @@ export function Logo({
   glyphColor = "var(--accent-500)",
   className,
   ...rest
-}: LogoProps) {
+}: LogoProps & PropsWithClass) {
   return (
     <span className={cn("flex items-center gap-[9px]", className)} {...rest}>
       <svg
