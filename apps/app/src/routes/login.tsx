@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import { z } from 'zod'
 import { Button, Checkbox, Input } from '@stubramp/ui'
 import {
@@ -23,28 +24,28 @@ function LoginPage() {
   const [password, setPassword] = useState('')
   const [remember, setRemember] = useState(true)
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
 
-  async function submit() {
+  const login = useMutation({
+    mutationFn: loginFn,
+    onSuccess: async (res) => {
+      if (!res.ok) {
+        setError(res.error)
+        return
+      }
+      await navigate({ to: redirectTo ?? '/bills' })
+    },
+    onError: () => setError('Something went wrong. Please try again.'),
+  })
+  const loading = login.isPending
+
+  function submit() {
     const parsed = loginSchema.safeParse({ email, password })
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message ?? 'Please check your details.')
       return
     }
-    setLoading(true)
     setError('')
-    try {
-      const res = await loginFn({ data: parsed.data })
-      if (!res.ok) {
-        setError(res.error)
-        setLoading(false)
-        return
-      }
-      await navigate({ to: redirectTo ?? '/bills' })
-    } catch {
-      setError('Something went wrong. Please try again.')
-      setLoading(false)
-    }
+    login.mutate({ data: parsed.data })
   }
 
   return (

@@ -1,6 +1,7 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import { useDropzone } from 'react-dropzone'
 import { Loader2, UploadCloud } from 'lucide-react'
 import { Button, Card, cn, useToast } from '@stubramp/ui'
@@ -23,22 +24,25 @@ export function UploadFlow({
   onCancel: () => void
 }) {
   const { toast } = useToast()
-  const [parsing, setParsing] = useState(false)
 
-  const onDrop = useCallback(
-    async (files: File[]) => {
-      if (files.length === 0) return
-      const file = files[0]
-      setParsing(true)
-      const res = await parseBillDocumentFn({ data: { file } })
+  const parse = useMutation({
+    mutationFn: (file: File) => parseBillDocumentFn({ data: { file } }),
+    onSuccess: (res) => {
       if (!res.ok) {
         toast({ message: res.error, tone: 'negative' })
-        setParsing(false)
         return
       }
       onAccept(res.data)
     },
-    [toast, onAccept],
+  })
+  const parsing = parse.isPending
+
+  const onDrop = useCallback(
+    (files: File[]) => {
+      if (files.length === 0) return
+      parse.mutate(files[0])
+    },
+    [parse.mutate],
   )
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

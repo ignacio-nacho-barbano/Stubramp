@@ -1,6 +1,9 @@
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
-import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import {
   Card,
@@ -42,9 +45,56 @@ function BillDetailPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { toast } = useToast()
-  const [busy, setBusy] = useState(false)
 
   const { data: bill } = useSuspenseQuery(billDetailQueryOptions(billId))
+
+  // The data fns resolve to a MutationResult union rather than throwing, so the
+  // ok/error branch is handled in onSuccess. On success we seed the detail cache
+  // with the fresh aggregate and invalidate the lists so derived views refetch.
+  function applyResult(
+    res: MutationResult<BillWithRelations>,
+    success: string,
+  ) {
+    if (res.ok) {
+      queryClient.setQueryData(billKeys.detail(billId), res.data)
+      void queryClient.invalidateQueries({ queryKey: billKeys.lists() })
+      toast({ message: success, tone: 'positive' })
+    } else {
+      toast({ message: res.error, tone: 'negative' })
+    }
+  }
+
+  const transition = useMutation({
+    mutationFn: (data: {
+      id: string
+      to: BillStatus
+      scheduledFor?: string
+      method?: PaymentMethod
+    }) => transitionBillFn({ data }),
+    onSuccess: (res, data) =>
+      applyResult(
+        res,
+        data.to === 'SCHEDULED'
+          ? 'Payment scheduled'
+          : `Bill ${STATUS_LABEL[data.to].toLowerCase()}`,
+      ),
+  })
+
+  const settle = useMutation({
+    mutationFn: (vars: {
+      paymentId: string
+      outcome: 'SUCCEEDED' | 'FAILED'
+    }) => settlePaymentFn({ data: vars }),
+    onSuccess: (res, vars) =>
+      applyResult(
+        res,
+        vars.outcome === 'SUCCEEDED'
+          ? 'Bill marked as paid'
+          : 'Payment marked as failed',
+      ),
+  })
+
+  const busy = transition.isPending || settle.isPending
 
   if (!bill) {
     return (
@@ -57,39 +107,10 @@ function BillDetailPage() {
     )
   }
 
-  async function run(
-    fn: () => Promise<MutationResult<BillWithRelations>>,
-    success: string,
-  ) {
-    setBusy(true)
-    try {
-      const res = await fn()
-      if (res.ok) {
-        queryClient.setQueryData(billKeys.detail(billId), res.data)
-        void queryClient.invalidateQueries({ queryKey: billKeys.lists() })
-        toast({ message: success, tone: 'positive' })
-      } else {
-        toast({ message: res.error, tone: 'negative' })
-      }
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const onTransition = (to: BillStatus) =>
-    run(
-      () => transitionBillFn({ data: { id: billId, to } }),
-      `Bill ${STATUS_LABEL[to].toLowerCase()}`,
-    )
+  const onTransition = (to: BillStatus) => transition.mutate({ id: billId, to })
 
   const onSchedule = (scheduledFor: string, method: PaymentMethod) =>
-    run(
-      () =>
-        transitionBillFn({
-          data: { id: billId, to: 'SCHEDULED', scheduledFor, method },
-        }),
-      'Payment scheduled',
-    )
+    transition.mutate({ id: billId, to: 'SCHEDULED', scheduledFor, method })
 
   const onSettle = (outcome: 'SUCCEEDED' | 'FAILED') => {
     const pending = bill.payments.find((p) => p.status === 'PENDING')
@@ -97,12 +118,7 @@ function BillDetailPage() {
       toast({ message: 'No scheduled payment to settle.', tone: 'negative' })
       return
     }
-    void run(
-      () => settlePaymentFn({ data: { paymentId: pending.id, outcome } }),
-      outcome === 'SUCCEEDED'
-        ? 'Bill marked as paid'
-        : 'Payment marked as failed',
-    )
+    settle.mutate({ paymentId: pending.id, outcome })
   }
 
   const doc = buildInvoiceDoc({

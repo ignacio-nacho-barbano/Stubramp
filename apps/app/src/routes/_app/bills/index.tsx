@@ -1,12 +1,16 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
-import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from '@tanstack/react-query'
 import { z } from 'zod'
 import { Search } from 'lucide-react'
 import { Tabs, useToast } from '@stubramp/ui'
 import { billKeys, billsQueryOptions } from '../../../lib/bills-queries'
 import { transitionBillFn } from '../../../lib/bills'
-import type { BillStatus } from '../../../lib/bills'
+import type { BillListItem, BillStatus } from '../../../lib/bills'
 import { computeBillStats } from '../../../lib/aging'
 import { can } from '../../../lib/permissions'
 import { BillsTable } from '../../../components/bill-pay/BillsTable'
@@ -49,7 +53,6 @@ function BillsListPage() {
 
   const { data: bills } = useSuspenseQuery(billsQueryOptions())
   const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [busy, setBusy] = useState(false)
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState<SortBy>('due')
 
@@ -97,31 +100,37 @@ function BillsListPage() {
   )
   const canApprove = can(user.role, 'bill:approve')
 
-  async function bulkApprove() {
+  const approve = useMutation({
+    mutationFn: async (items: BillListItem[]) => {
+      const results = await Promise.allSettled(
+        items.map((b) =>
+          transitionBillFn({ data: { id: b.id, to: 'APPROVED' } }),
+        ),
+      )
+      const ok = results.filter(
+        (r) => r.status === 'fulfilled' && r.value.ok,
+      ).length
+      return { ok, failed: items.length - ok }
+    },
+    onSuccess: async ({ ok, failed }) => {
+      await queryClient.invalidateQueries({ queryKey: billKeys.all })
+      setSelected(new Set())
+      toast({
+        message:
+          failed === 0
+            ? `${ok} ${ok === 1 ? 'bill' : 'bills'} approved`
+            : `${ok} approved · ${failed} failed`,
+        tone: failed === 0 ? 'positive' : 'negative',
+      })
+    },
+  })
+
+  function bulkApprove() {
     if (!selectedSubmitted.length) {
       toast({ message: 'Only submitted bills can be approved.' })
       return
     }
-    setBusy(true)
-    const results = await Promise.allSettled(
-      selectedSubmitted.map((b) =>
-        transitionBillFn({ data: { id: b.id, to: 'APPROVED' } }),
-      ),
-    )
-    const ok = results.filter(
-      (r) => r.status === 'fulfilled' && r.value.ok,
-    ).length
-    const failed = selectedSubmitted.length - ok
-    await queryClient.invalidateQueries({ queryKey: billKeys.all })
-    setSelected(new Set())
-    setBusy(false)
-    toast({
-      message:
-        failed === 0
-          ? `${ok} ${ok === 1 ? 'bill' : 'bills'} approved`
-          : `${ok} approved · ${failed} failed`,
-      tone: failed === 0 ? 'positive' : 'negative',
-    })
+    approve.mutate(selectedSubmitted)
   }
 
   return (
@@ -189,9 +198,9 @@ function BillsListPage() {
         <BulkActionBar
           count={selected.size}
           canApprove={canApprove && selectedSubmitted.length > 0}
-          onApprove={() => void bulkApprove()}
+          onApprove={bulkApprove}
           onClear={() => setSelected(new Set())}
-          busy={busy}
+          busy={approve.isPending}
         />
       )}
     </div>

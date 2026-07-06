@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useRouter } from '@tanstack/react-router'
 import { LogOut, Settings, UserPlus, UserRound } from 'lucide-react'
 import { Avatar, Menu, avatarColor, cn, useToast } from '@stubramp/ui'
@@ -12,41 +12,52 @@ export function UserMenu() {
   const { name, email, role } = useCurrentUser()
   const navigate = useNavigate()
   const router = useRouter()
+  const queryClient = useQueryClient()
   const { toast } = useToast()
-  const [signingOut, setSigningOut] = useState(false)
-  const [inviting, setInviting] = useState(false)
 
   // Admin-only: mint an invite link for this workspace and copy it to the
   // clipboard so it can be shared manually. The token is company-scoped by the
   // API from the caller's session.
-  async function handleInvite() {
-    if (inviting) return
-    setInviting(true)
-    const res = await createInviteFn()
-    setInviting(false)
-    if (!res.ok) {
-      toast({ message: res.error, tone: 'negative' })
-      return
-    }
-    const url = `${window.location.origin}/join?token=${res.token}`
-    try {
-      await navigator.clipboard.writeText(url)
-      toast({ message: 'Invite link copied to clipboard', tone: 'positive' })
-    } catch {
-      // Clipboard can be blocked (permissions / insecure context) — still hand
-      // the link over so it isn't lost.
-      toast({ message: url })
-    }
+  const invite = useMutation({
+    mutationFn: createInviteFn,
+    onSuccess: async (res) => {
+      if (!res.ok) {
+        toast({ message: res.error, tone: 'negative' })
+        return
+      }
+      const url = `${window.location.origin}/join?token=${res.token}`
+      try {
+        await navigator.clipboard.writeText(url)
+        toast({ message: 'Invite link copied to clipboard', tone: 'positive' })
+      } catch {
+        // Clipboard can be blocked (permissions / insecure context) — still hand
+        // the link over so it isn't lost.
+        toast({ message: url })
+      }
+    },
+  })
+
+  const logout = useMutation({
+    mutationFn: logoutFn,
+    onSuccess: async () => {
+      // Drop any cached queries (bills/vendors) so a next user can't see the
+      // previous session's data, then invalidate route context (which holds the
+      // resolved user) so the /_app guard re-runs on the way out.
+      queryClient.clear()
+      await router.invalidate()
+      await navigate({ to: '/login' })
+    },
+  })
+
+  const inviting = invite.isPending
+  const signingOut = logout.isPending
+
+  function handleInvite() {
+    if (!inviting) invite.mutate()
   }
 
-  async function handleLogout() {
-    if (signingOut) return
-    setSigningOut(true)
-    await logoutFn()
-    // Drop cached route context (which holds the resolved user) so the
-    // /_app guard re-runs and can't serve stale authed data on the way out.
-    await router.invalidate()
-    await navigate({ to: '/login' })
+  function handleLogout() {
+    if (!signingOut) logout.mutate()
   }
 
   return (

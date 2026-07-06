@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button, Input, Modal, Select, Switch, useToast } from '@stubramp/ui'
 import {
   PAYMENT_METHODS,
@@ -86,12 +86,14 @@ function VendorForm({
   onCreation,
 }: VendorFormModalProps & { target: Vendor | 'new' }) {
   const isCreate = target === 'new'
+  // The existing vendor when editing (null on the create form) — its id/name
+  // drive the update + delete mutations.
+  const editingVendor = target === 'new' ? null : target
   const queryClient = useQueryClient()
   const { toast } = useToast()
   const [form, setForm] = useState<FormState>(() =>
     initialState(target, defaultName),
   )
-  const [busy, setBusy] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const set = <TKey extends keyof FormState>(
@@ -99,60 +101,66 @@ function VendorForm({
     value: FormState[TKey],
   ) => setForm((f) => ({ ...f, [key]: value }))
 
-  async function refresh() {
-    await queryClient.invalidateQueries({ queryKey: billKeys.vendors })
-  }
+  const refresh = () =>
+    queryClient.invalidateQueries({ queryKey: billKeys.vendors })
 
-  async function save() {
+  const create = useMutation({
+    mutationFn: createVendorFn,
+    onSuccess: async (res) => {
+      if (!res.ok) return toast({ message: res.error, tone: 'negative' })
+      onCreation?.(res.data)
+      toast({ message: `${res.data.name} added`, tone: 'positive' })
+      await refresh()
+      onClose()
+    },
+  })
+
+  const update = useMutation({
+    mutationFn: updateVendorFn,
+    onSuccess: async (res) => {
+      if (!res.ok) return toast({ message: res.error, tone: 'negative' })
+      toast({ message: `${res.data.name} updated`, tone: 'positive' })
+      await refresh()
+      onClose()
+    },
+  })
+
+  const remove = useMutation({
+    mutationFn: deleteVendorFn,
+    onSuccess: async (res) => {
+      if (!res.ok) return toast({ message: res.error, tone: 'negative' })
+      toast({ message: `${editingVendor?.name} removed`, tone: 'positive' })
+      await refresh()
+      onClose()
+    },
+  })
+
+  const busy = create.isPending || update.isPending || remove.isPending
+
+  function save() {
     if (!form.name.trim()) {
       return toast({ message: 'Vendor name is required.', tone: 'negative' })
     }
-    setBusy(true)
-    try {
-      if (isCreate) {
-        const res = await createVendorFn({
-          data: {
-            name: form.name.trim(),
-            email: form.email.trim() || undefined,
-            terms: form.terms || undefined,
-            paymentMethod: form.paymentMethod || undefined,
-          },
-        })
-        if (!res.ok) return toast({ message: res.error, tone: 'negative' })
-        onCreation?.(res.data)
-        toast({ message: `${res.data.name} added`, tone: 'positive' })
-      } else {
-        const res = await updateVendorFn({
-          data: {
-            id: target.id,
-            name: form.name.trim(),
-            email: form.email.trim() || null,
-            terms: form.terms || null,
-            paymentMethod: form.paymentMethod || null,
-            active: form.active,
-          },
-        })
-        if (!res.ok) return toast({ message: res.error, tone: 'negative' })
-        toast({ message: `${res.data.name} updated`, tone: 'positive' })
-      }
-      await refresh()
-      onClose()
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function remove() {
-    if (isCreate) return
-    setBusy(true)
-    try {
-      const res = await deleteVendorFn({ data: { id: target.id } })
-      if (!res.ok) return toast({ message: res.error, tone: 'negative' })
-      toast({ message: `${target.name} removed`, tone: 'positive' })
-      await refresh()
-      onClose()
-    } finally {
-      setBusy(false)
+    if (isCreate) {
+      create.mutate({
+        data: {
+          name: form.name.trim(),
+          email: form.email.trim() || undefined,
+          terms: form.terms || undefined,
+          paymentMethod: form.paymentMethod || undefined,
+        },
+      })
+    } else {
+      update.mutate({
+        data: {
+          id: target.id,
+          name: form.name.trim(),
+          email: form.email.trim() || null,
+          terms: form.terms || null,
+          paymentMethod: form.paymentMethod || null,
+          active: form.active,
+        },
+      })
     }
   }
 
@@ -176,7 +184,10 @@ function VendorForm({
                   variant="danger"
                   size="sm"
                   disabled={busy}
-                  onClick={() => void remove()}
+                  onClick={() =>
+                    editingVendor &&
+                    remove.mutate({ data: { id: editingVendor.id } })
+                  }
                 >
                   Confirm
                 </Button>
@@ -203,11 +214,7 @@ function VendorForm({
             <Button variant="secondary" disabled={busy} onClick={onClose}>
               Cancel
             </Button>
-            <Button
-              variant="primary"
-              disabled={busy}
-              onClick={() => void save()}
-            >
+            <Button variant="primary" disabled={busy} onClick={save}>
               {isCreate ? 'Add vendor' : 'Save changes'}
             </Button>
           </span>

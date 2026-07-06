@@ -1,6 +1,10 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
-import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { z } from 'zod'
 import { Card, toDateInputValue, useToast } from '@stubramp/ui'
@@ -65,7 +69,49 @@ function BillCreatePage() {
   // Vendor name parsed off an uploaded invoice that didn't match an existing
   // vendor — surfaced in the form and used to pre-fill the create-vendor modal.
   const [detectedVendorName, setDetectedVendorName] = useState('')
-  const [busy, setBusy] = useState(false)
+
+  // Creates the draft, then (optionally) submits it for approval. Both API calls
+  // are sequenced inside the mutationFn so `isPending` covers the whole flow and
+  // a partial success (draft saved, submit failed) surfaces its own warning.
+  const createBill = useMutation({
+    mutationFn: async ({
+      data,
+      submit,
+    }: {
+      data: Parameters<typeof createBillFn>[0]['data']
+      submit: boolean
+    }) => {
+      const res = await createBillFn({ data })
+      if (!res.ok) return { ok: false as const, error: res.error }
+      let submitError: string | undefined
+      if (submit) {
+        const t = await transitionBillFn({
+          data: { id: res.data.id, to: 'SUBMITTED' },
+        })
+        if (!t.ok) submitError = t.error
+      }
+      return { ok: true as const, bill: res.data, submit, submitError }
+    },
+    onSuccess: async (res) => {
+      if (!res.ok) {
+        toast({ message: res.error, tone: 'negative' })
+        return
+      }
+      await queryClient.invalidateQueries({ queryKey: billKeys.all })
+      if (res.submitError) {
+        toast({
+          message: `Draft saved, but submit failed: ${res.submitError}`,
+          tone: 'negative',
+        })
+      } else {
+        toast({
+          message: res.submit ? 'Bill submitted for approval' : 'Draft saved',
+          tone: 'positive',
+        })
+      }
+      navigate({ to: '/bills/$billId', params: { billId: res.bill.id } })
+    },
+  })
 
   const canManageVendors = can(user.role, 'vendor:manage')
 
@@ -167,7 +213,7 @@ function BillCreatePage() {
     }
   }
 
-  async function save(submit: boolean) {
+  function save(submit: boolean) {
     if (!meta.vendorId)
       return toast({ message: 'Select a vendor first.', tone: 'negative' })
     if (total <= 0)
@@ -183,32 +229,7 @@ function BillCreatePage() {
       })
     }
 
-    setBusy(true)
-    try {
-      const res = await createBillFn({ data: parsed.data })
-      if (!res.ok) return toast({ message: res.error, tone: 'negative' })
-
-      const bill = res.data
-      if (submit) {
-        const t = await transitionBillFn({
-          data: { id: bill.id, to: 'SUBMITTED' },
-        })
-        if (!t.ok) {
-          toast({
-            message: `Draft saved, but submit failed: ${t.error}`,
-            tone: 'negative',
-          })
-        }
-      }
-      await queryClient.invalidateQueries({ queryKey: billKeys.all })
-      toast({
-        message: submit ? 'Bill submitted for approval' : 'Draft saved',
-        tone: 'positive',
-      })
-      navigate({ to: '/bills/$billId', params: { billId: bill.id } })
-    } finally {
-      setBusy(false)
-    }
+    createBill.mutate({ data: parsed.data, submit })
   }
 
   const previewDoc = buildInvoiceDoc({
@@ -255,10 +276,10 @@ function BillCreatePage() {
             vendorLabel={vendorLabel}
             lineCount={lines.length}
             totalCents={total}
-            busy={busy}
+            busy={createBill.isPending}
             canCreate={canCreate}
-            onSubmit={() => void save(true)}
-            onSaveDraft={() => void save(false)}
+            onSubmit={() => save(true)}
+            onSaveDraft={() => save(false)}
           />
           <Card header="Document preview" padded={false}>
             <InvoiceDoc doc={previewDoc} />

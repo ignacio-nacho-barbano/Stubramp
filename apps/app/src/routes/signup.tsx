@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import { Check } from 'lucide-react'
 import { Button, Checkbox, Input, Select } from '@stubramp/ui'
 import {
@@ -34,10 +35,22 @@ function SignupPage() {
   const [password, setPassword] = useState('')
   const [agree, setAgree] = useState(false)
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
 
-  async function submit() {
+  const signup = useMutation({
+    mutationFn: signupFn,
+    onSuccess: (res) => {
+      if (!res.ok) {
+        setError(res.error)
+        return
+      }
+      setDone(true)
+    },
+    onError: () => setError('Something went wrong. Please try again.'),
+  })
+  const loading = signup.isPending
+
+  function submit() {
     if (!firstName || !lastName) {
       setError('Enter your first and last name.')
       return
@@ -59,30 +72,17 @@ function SignupPage() {
       return
     }
 
-    setLoading(true)
     setError('')
-    try {
-      const res = await signupFn({
-        data: {
-          firstName,
-          lastName,
-          email,
-          password,
-          companyName: company,
-          companySize: size || undefined,
-        },
-      })
-      if (!res.ok) {
-        setError(res.error)
-        setLoading(false)
-        return
-      }
-      setLoading(false)
-      setDone(true)
-    } catch {
-      setError('Something went wrong. Please try again.')
-      setLoading(false)
-    }
+    signup.mutate({
+      data: {
+        firstName,
+        lastName,
+        email,
+        password,
+        companyName: company,
+        companySize: size || undefined,
+      },
+    })
   }
 
   return (
