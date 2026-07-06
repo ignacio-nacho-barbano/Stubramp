@@ -58,10 +58,15 @@ primary_region = "iad"
   min_machines_running = 1
   processes = ["app"]
 
+  # /health runs `SELECT 1`, so a cold-start Neon wake can make it slow. The
+  # check timeout MUST exceed the pool's connectionTimeoutMillis (30s, see
+  # apps/api/src/db.ts) — otherwise Fly evicts the only machine before the DB
+  # connect can even finish, taking the whole API down during a routine cold
+  # start. Generous grace covers the wake on a fresh boot.
   [[http_service.checks]]
-    interval = "15s"
-    timeout = "5s"
-    grace_period = "10s"
+    interval = "30s"
+    timeout = "31s"
+    grace_period = "45s"
     method = "GET"
     path = "/health"
 
