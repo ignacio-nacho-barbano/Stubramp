@@ -1,0 +1,23 @@
+{
+  "name": "@stubramp/core",
+  "type": "module",
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "tsc",
+    "check-types": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "exports": {
+    "./vendors": {
+      "types": "./src/vendors.ts",
+      "browser": "./src/vendors.ts",
+      "default": "./dist/vendors.js"
+    }
+  },
+  "devDependencies": {
+    "@stubramp/typescript-config": "workspace:*",
+    "typescript": "latest",
+    "vitest": "^4.1.9"
+  }
+}

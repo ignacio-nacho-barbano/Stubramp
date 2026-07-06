@@ -6,6 +6,12 @@ export {
   transitionInput,
   listBillsQuery,
   billIdParams,
+  parseDocumentType,
+  parsedLineItem,
+  parsedBillDocument,
   type CreateBillInput,
   type TransitionInput,
+  type ParseDocumentType,
+  type ParsedLineItem,
+  type ParsedBillDocument,
 } from "@stubramp/contracts/schemas";

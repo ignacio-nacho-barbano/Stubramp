@@ -82,6 +82,33 @@ export const billIdParams = z.object({
 export type CreateBillInput = z.infer<typeof createBillInput>;
 export type TransitionInput = z.infer<typeof transitionInput>;
 
+// ---- Document parsing (PDF upload) ----
+// The kinds of document the parser can extract. Only bills today; the enum keeps
+// the facade's `parse({ type })` contract explicit and extensible.
+export const parseDocumentType = z.enum(["bill"]);
+export type ParseDocumentType = z.infer<typeof parseDocumentType>;
+
+// A single best-effort line extracted from an invoice.
+export const parsedLineItem = z.object({
+  description: z.string(),
+  unitCents: cents,
+});
+
+// The parser's best-effort result for a bill PDF. Every field is best-effort:
+// unmatched fields come back empty ("" / null / []) for the user to fill in on
+// the confirm screen — the parser never fabricates data. Mirrors the fields the
+// client's create-bill form seeds from.
+export const parsedBillDocument = z.object({
+  vendorName: z.string(),
+  billNumber: z.string(),
+  issueDate: z.string().nullable(),
+  dueDate: z.string().nullable(),
+  lines: z.array(parsedLineItem),
+});
+
+export type ParsedLineItem = z.infer<typeof parsedLineItem>;
+export type ParsedBillDocument = z.infer<typeof parsedBillDocument>;
+
 // ---- Payments ----
 
 export const settlePaymentInput = z.object({

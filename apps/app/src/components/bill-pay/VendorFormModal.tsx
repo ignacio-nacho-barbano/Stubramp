@@ -31,6 +31,8 @@ export const METHOD_LABELS: Record<PaymentMethod, string> = {
 interface VendorFormModalProps {
   /** `null` → hidden. A vendor → edit that vendor. `'new'` → create form. */
   target: Vendor | 'new' | null
+  /** Seeds the name field on the create form (e.g. a vendor parsed off an invoice). */
+  defaultName?: string
   onCreation?: (vendor: Vendor) => void
   onClose: () => void
 }
@@ -43,9 +45,15 @@ interface FormState {
   active: boolean
 }
 
-function initialState(target: Vendor | 'new'): FormState {
+function initialState(target: Vendor | 'new', defaultName = ''): FormState {
   if (target === 'new') {
-    return { name: '', email: '', terms: '', paymentMethod: '', active: true }
+    return {
+      name: defaultName,
+      email: '',
+      terms: '',
+      paymentMethod: '',
+      active: true,
+    }
   }
   return {
     name: target.name,
@@ -58,6 +66,7 @@ function initialState(target: Vendor | 'new'): FormState {
 
 export function VendorFormModal({
   target,
+  defaultName,
   onCreation,
   onClose,
 }: VendorFormModalProps) {
@@ -65,20 +74,23 @@ export function VendorFormModal({
   return (
     <VendorForm
       key={target === 'new' ? 'new' : target.id}
-      {...{ target, onClose, onCreation }}
+      {...{ target, defaultName, onClose, onCreation }}
     />
   )
 }
 
 function VendorForm({
   target,
+  defaultName,
   onClose,
   onCreation,
 }: VendorFormModalProps & { target: Vendor | 'new' }) {
   const isCreate = target === 'new'
   const queryClient = useQueryClient()
   const { toast } = useToast()
-  const [form, setForm] = useState<FormState>(() => initialState(target))
+  const [form, setForm] = useState<FormState>(() =>
+    initialState(target, defaultName),
+  )
   const [busy, setBusy] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 

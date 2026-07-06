@@ -46,11 +46,20 @@ export async function apiRequest(
   init?: RequestInitLite,
 ): Promise<ApiResponse> {
   const hasBody = init?.body !== undefined
+  // FormData (file uploads) rides as-is with no content-type header, so the
+  // browser sets the multipart boundary. Everything else is JSON.
+  const isFormData =
+    typeof FormData !== 'undefined' && init?.body instanceof FormData
   const res = await fetch(buildUrl(path, init?.searchParams), {
     method: init?.method ?? 'GET',
     credentials: 'include',
-    headers: hasBody ? { 'content-type': 'application/json' } : {},
-    body: hasBody ? JSON.stringify(init.body) : undefined,
+    headers:
+      hasBody && !isFormData ? { 'content-type': 'application/json' } : {},
+    body: hasBody
+      ? isFormData
+        ? (init.body as FormData)
+        : JSON.stringify(init.body)
+      : undefined,
   })
   const json = await res.json().catch(() => ({}))
   return { status: res.status, json }

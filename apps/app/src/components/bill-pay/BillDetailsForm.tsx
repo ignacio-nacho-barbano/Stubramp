@@ -15,12 +15,18 @@ export function BillDetailsForm({
   vendors,
   onChange,
   onAddVendor,
+  detectedVendorName,
 }: {
   meta: DraftMeta
   vendors: Vendor[]
   onChange: (next: Partial<DraftMeta>) => void
   onAddVendor?: () => void
+  /** Vendor name read off an uploaded invoice that didn't match an existing one. */
+  detectedVendorName?: string
 }) {
+  // Surface the parsed vendor only while none is selected — once the user picks
+  // (or creates) one, the hint has served its purpose.
+  const showDetected = !!detectedVendorName && !meta.vendorId
   return (
     <Card header="Bill details">
       <div className="grid grid-cols-2 gap-4">
@@ -49,6 +55,25 @@ export function BillDetailsForm({
               </Button>
             )}
           </div>
+          {showDetected && (
+            <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[13px] text-gray-500">
+              <span>
+                Detected on invoice:{' '}
+                <span className="font-medium text-ink-900">
+                  {detectedVendorName}
+                </span>
+              </span>
+              {onAddVendor && (
+                <button
+                  type="button"
+                  onClick={onAddVendor}
+                  className="font-semibold text-accent-700 hover:underline"
+                >
+                  Create vendor
+                </button>
+              )}
+            </div>
+          )}
         </div>
         <Input
           label="Invoice #"

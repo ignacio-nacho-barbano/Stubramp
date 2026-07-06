@@ -31,6 +31,12 @@ export class GuardFailedError extends DomainError {
   }
 }
 
+export class BadRequestError extends DomainError {
+  constructor(message: string) {
+    super(message, 400);
+  }
+}
+
 export class UnauthorizedError extends DomainError {
   constructor(message = "Unauthorized") {
     super(message, 401);

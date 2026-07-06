@@ -4,6 +4,7 @@ import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { z } from 'zod'
 import { Card, toDateInputValue, useToast } from '@stubramp/ui'
+import { matchVendor } from '@stubramp/core/vendors'
 import {
   createBillFn,
   createBillInput,
@@ -49,6 +50,9 @@ function BillCreatePage() {
   const vendors = vendorPage.data
 
   const [showUpload, setShowUpload] = useState(mode === 'upload')
+  // Tracks how this draft originated, so a bill created from an uploaded PDF is
+  // stamped source: UPLOAD (vs. MANUAL for the typed-in flow).
+  const [source, setSource] = useState<'MANUAL' | 'UPLOAD'>('MANUAL')
   const [meta, setMeta] = useState<DraftMeta>({
     vendorId: '',
     billNumber: '',
@@ -58,6 +62,9 @@ function BillCreatePage() {
   const [lines, setLines] = useState<DraftLine[]>([newDraftLine()])
   const [splitLineId, setSplitLineId] = useState<string | null>(null)
   const [addingVendor, setAddingVendor] = useState(false)
+  // Vendor name parsed off an uploaded invoice that didn't match an existing
+  // vendor — surfaced in the form and used to pre-fill the create-vendor modal.
+  const [detectedVendorName, setDetectedVendorName] = useState('')
   const [busy, setBusy] = useState(false)
 
   const canManageVendors = can(user.role, 'vendor:manage')
@@ -77,21 +84,36 @@ function BillCreatePage() {
         <UploadFlow
           onCancel={() => navigate({ to: '/bills' })}
           onAccept={(parsed) => {
+            // Pre-select the vendor when the parsed name matches one we know
+            // (ignoring case / punctuation / company suffixes); otherwise keep
+            // the detected name so the form can offer a one-click create.
+            const matched = parsed.vendorName
+              ? matchVendor(parsed.vendorName, vendors)
+              : undefined
+            setDetectedVendorName(matched ? '' : parsed.vendorName)
             setMeta((m) => ({
               ...m,
+              vendorId: matched?.id ?? m.vendorId,
               billNumber: parsed.billNumber,
               issueDate: toDateInputValue(parsed.issueDate) || m.issueDate,
               dueDate: toDateInputValue(parsed.dueDate),
             }))
             setLines(
-              parsed.lines.map((l) => ({
-                ...newDraftLine(),
-                description: l.description,
-                amountCents: l.unitCents,
-              })),
+              parsed.lines.length > 0
+                ? parsed.lines.map((l) => ({
+                    ...newDraftLine(),
+                    description: l.description,
+                    amountCents: l.unitCents,
+                  }))
+                : [newDraftLine()],
             )
+            setSource('UPLOAD')
             setShowUpload(false)
-            toast({ message: 'Fields parsed — review and pick the vendor.' })
+            toast({
+              message: matched
+                ? 'Invoice parsed — review the details below.'
+                : 'Invoice parsed — review the details and pick the vendor.',
+            })
           }}
         />
       </div>
@@ -102,7 +124,7 @@ function BillCreatePage() {
     return {
       vendorId: meta.vendorId,
       billNumber: meta.billNumber,
-      source: 'MANUAL' as const,
+      source,
       issueDate: meta.issueDate,
       dueDate: meta.dueDate,
       currency: 'USD',
@@ -201,6 +223,7 @@ function BillCreatePage() {
             onAddVendor={
               canManageVendors ? () => setAddingVendor(true) : undefined
             }
+            detectedVendorName={detectedVendorName}
           />
           <LineItemEditor
             lines={lines}
@@ -228,8 +251,10 @@ function BillCreatePage() {
       {addingVendor && (
         <VendorFormModal
           target="new"
+          defaultName={detectedVendorName}
           onCreation={(vendor) => {
             setMeta((m) => ({ ...m, vendorId: vendor.id }))
+            setDetectedVendorName('')
             setAddingVendor(false)
           }}
           onClose={() => setAddingVendor(false)}

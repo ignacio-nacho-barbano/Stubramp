@@ -1,54 +1,55 @@
 'use client'
 
-import { useState } from 'react'
-import { Loader2, Sparkles, UploadCloud } from 'lucide-react'
-import { Badge, Button, Card, Input } from '@stubramp/ui'
-import { fakeParseInvoice } from '../../lib/stubs'
-import type { ParsedInvoice } from '../../lib/stubs'
+import { useCallback, useState } from 'react'
+import { useDropzone } from 'react-dropzone'
+import { Loader2, UploadCloud } from 'lucide-react'
+import { Button, Card, cn, useToast } from '@stubramp/ui'
+import { parseBillDocumentFn } from '../../lib/bills'
+import type { ParsedBillDocument } from '../../lib/bills'
 
 /**
- * OCR/upload flow. The parse is stubbed (no backend): a drop transitions
- * through a fake "reading…" state to an editable confirm screen that seeds the
- * manual create form.
+ * Invoice upload + parse step. Drop (or browse to) a PDF; it's uploaded to the
+ * API, which extracts best-effort fields (vendor, invoice #, dates, line items).
+ * On success we hand the parsed fields straight to the caller, which seeds the
+ * standard bill create form — the user reviews and corrects there in the exact
+ * same UI as a manual entry. Extraction is best-effort: unmatched fields just
+ * come back empty for the user to fill in.
  */
 export function UploadFlow({
   onAccept,
   onCancel,
 }: {
-  onAccept: (parsed: ParsedInvoice) => void
+  onAccept: (parsed: ParsedBillDocument) => void
   onCancel: () => void
 }) {
-  const [stage, setStage] = useState<'idle' | 'parsing' | 'confirm'>('idle')
-  const [parsed, setParsed] = useState<ParsedInvoice | null>(null)
+  const { toast } = useToast()
+  const [parsing, setParsing] = useState(false)
 
-  const drop = () => {
-    setStage('parsing')
-    setTimeout(() => {
-      setParsed(fakeParseInvoice())
-      setStage('confirm')
-    }, 1100)
-  }
+  const onDrop = useCallback(
+    async (files: File[]) => {
+      if (files.length === 0) return
+      const file = files[0]
+      setParsing(true)
+      const res = await parseBillDocumentFn({ data: { file } })
+      if (!res.ok) {
+        toast({ message: res.error, tone: 'negative' })
+        setParsing(false)
+        return
+      }
+      onAccept(res.data)
+    },
+    [toast, onAccept],
+  )
 
-  if (stage === 'idle') {
-    return (
-      <Card>
-        <div
-          onClick={drop}
-          className="cursor-pointer border-2 border-dashed border-gray-300 bg-surface-page p-14 text-center"
-        >
-          <UploadCloud size={46} className="mx-auto mb-3.5 text-gray-400" />
-          <div className="text-[15px] font-semibold">
-            Drop a PDF or click to browse
-          </div>
-          <div className="mt-1 text-[13px] text-gray-500">
-            We’ll auto-parse the vendor, amount and dates for you to confirm
-          </div>
-        </div>
-      </Card>
-    )
-  }
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: { 'application/pdf': ['.pdf'] },
+    maxFiles: 1,
+    multiple: false,
+    disabled: parsing,
+  })
 
-  if (stage === 'parsing') {
+  if (parsing) {
     return (
       <Card>
         <div className="p-10 text-center">
@@ -58,47 +59,34 @@ export function UploadFlow({
           />
           <div className="text-sm font-medium">Reading invoice…</div>
           <div className="mt-1 text-xs text-gray-500">
-            Extracting fields with OCR
+            Extracting fields from your PDF
           </div>
         </div>
       </Card>
     )
   }
 
-  if (!parsed) return null
-  const total = parsed.lines.reduce((s, l) => s + l.unitCents, 0)
-
   return (
-    <Card header="Confirm parsed fields">
-      <div className="mb-3.5 flex items-center gap-2">
-        <Badge tone="accent">Auto-parsed</Badge>
-        <span className="text-xs text-gray-500">
-          Review and correct before creating the draft
-        </span>
+    <Card>
+      <div
+        {...getRootProps()}
+        className={cn(
+          'cursor-pointer border-2 border-dashed border-gray-300 bg-surface-page p-14 text-center transition-colors',
+          isDragActive && 'border-accent-500 bg-accent-100',
+        )}
+      >
+        <input {...getInputProps()} />
+        <UploadCloud size={46} className="mx-auto mb-3.5 text-gray-400" />
+        <div className="text-[15px] font-semibold">
+          {isDragActive
+            ? 'Drop the PDF to upload'
+            : 'Drop a PDF or click to browse'}
+        </div>
+        <div className="mt-1 text-[13px] text-gray-500">
+          We’ll auto-fill the vendor, dates and line items for you to review
+        </div>
       </div>
-      <div className="grid grid-cols-2 gap-3.5">
-        <Input label="Vendor" defaultValue={parsed.vendorName} readOnly />
-        <Input
-          label="Amount"
-          defaultValue={`$${(total / 100).toFixed(2)}`}
-          readOnly
-        />
-        <Input label="Invoice #" defaultValue={parsed.billNumber} readOnly />
-        <Input
-          label="Due date"
-          type="date"
-          defaultValue={parsed.dueDate}
-          readOnly
-        />
-      </div>
-      <div className="mt-4 flex items-center gap-2">
-        <Button
-          variant="primary"
-          iconLeft={<Sparkles size={16} />}
-          onClick={() => onAccept(parsed)}
-        >
-          Confirm → create draft
-        </Button>
+      <div className="mt-4">
         <Button variant="secondary" onClick={onCancel}>
           Cancel
         </Button>

@@ -2,6 +2,7 @@ import { z } from 'zod'
 import {
   createBillInput,
   createVendorInput,
+  parsedBillDocument,
   settlePaymentInput,
   transitionInput,
   updateVendorInput,
@@ -9,6 +10,7 @@ import {
 import type {
   CreateBillInput,
   CreateVendorInput,
+  ParsedBillDocument,
   SettlePaymentInput,
   TransitionInput,
   UpdateVendorInput,
@@ -47,12 +49,14 @@ export {
   createVendorInput,
   updateVendorInput,
   settlePaymentInput,
+  parsedBillDocument,
 }
 export type {
   CreateBillInput,
   TransitionInput,
   SettlePaymentInput,
   UpdateVendorInput,
+  ParsedBillDocument,
 }
 
 // ---- Response shapes (DTOs returned by the API) ----
@@ -189,6 +193,26 @@ export async function createBillFn({
   })
   if (status >= 400) return { ok: false, error: mapApiError(status, json) }
   return { ok: true, data: json as BillWithRelations }
+}
+
+/**
+ * Upload an invoice PDF to the API for best-effort field extraction. Returns
+ * parsed fields only — it never persists; the caller confirms + picks a vendor,
+ * then calls createBillFn to create the draft.
+ */
+export async function parseBillDocumentFn({
+  data,
+}: {
+  data: { file: File }
+}): Promise<MutationResult<ParsedBillDocument>> {
+  const fd = new FormData()
+  fd.append('file', data.file)
+  const { status, json } = await apiFetch('/bills/parse', {
+    method: 'POST',
+    body: fd,
+  })
+  if (status >= 400) return { ok: false, error: mapApiError(status, json) }
+  return { ok: true, data: parsedBillDocument.parse(json) }
 }
 
 export async function transitionBillFn({

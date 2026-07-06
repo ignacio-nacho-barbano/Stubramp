@@ -22,6 +22,7 @@
     "@faker-js/faker": "^10.3.0",
     "@sentry/react": "^10.63.0",
     "@stubramp/contracts": "workspace:*",
+    "@stubramp/core": "workspace:*",
     "@stubramp/ui": "workspace:*",
     "@tanstack/match-sorter-utils": "latest",
     "@tanstack/react-devtools": "latest",
@@ -35,6 +36,7 @@
     "lucide-react": "^0.545.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-dropzone": "^15.0.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {

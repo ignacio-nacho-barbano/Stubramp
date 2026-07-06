@@ -1,6 +1,7 @@
 // ESM
 import fastifyCors from "@fastify/cors";
 import fastifyHelmet from "@fastify/helmet";
+import fastifyMultipart from "@fastify/multipart";
 import fastifyRateLimit from "@fastify/rate-limit";
 import Fastify from "fastify";
 import {
@@ -63,6 +64,23 @@ fastify.setErrorHandler((error, _request, reply) => {
       .status(error.statusCode)
       .send({ error: error.name, message: error.message });
   }
+  // @fastify/multipart rejects oversize / too-many files with a 4xx and a
+  // FST_REQ_* code; surface a friendly message under `message` (the client
+  // prefers it) rather than the terse default.
+  const code = (error as { code?: string }).code;
+  if (typeof code === "string" && code.startsWith("FST_REQ_FILE")) {
+    return reply
+      .status(413)
+      .send({
+        error: "PayloadTooLarge",
+        message: "File is too large (max 10 MB).",
+      });
+  }
+  if (code === "FST_FILES_LIMIT") {
+    return reply
+      .status(400)
+      .send({ error: "TooManyFiles", message: "Upload one file at a time." });
+  }
   // Fastify sets `validation` on schema (Zod) validation failures.
   if ((error as { validation?: unknown }).validation) {
     return reply
@@ -113,6 +131,13 @@ const start = async () => {
     await fastify.register(fastifyRateLimit, {
       max: 100,
       timeWindow: "1 minute",
+    });
+
+    // Multipart uploads (invoice PDFs → POST /bills/parse). Capped at one 10 MB
+    // file per request; @fastify/multipart throws a 413 past the size limit,
+    // mapped to a friendly message in the error handler above.
+    await fastify.register(fastifyMultipart, {
+      limits: { fileSize: 10 * 1024 * 1024, files: 1 },
     });
 
     // Order matters: services depend on repositories; auth depends on repos +

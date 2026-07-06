@@ -1,6 +1,6 @@
 // Fixtures for surfaces that have no backend yet (notifications, recurring
-// bills, the OCR/upload parse). Clearly isolated here so they're easy to
-// replace with real endpoints later. Nothing here calls the API.
+// bills). Clearly isolated here so they're easy to replace with real endpoints
+// later. Nothing here calls the API.
 
 export interface StubNotification {
   id: string
@@ -65,25 +65,3 @@ export const RECURRING_RULES: RecurringRule[] = [
     active: false,
   },
 ]
-
-export interface ParsedInvoice {
-  vendorName: string
-  billNumber: string
-  issueDate: string
-  dueDate: string
-  lines: { description: string; unitCents: number }[]
-}
-
-/** Stubbed OCR result — mimics a parsed PDF. No real extraction happens. */
-export function fakeParseInvoice(): ParsedInvoice {
-  return {
-    vendorName: 'Acme Cloud Inc.',
-    billNumber: 'INV-0042',
-    issueDate: '2026-06-12',
-    dueDate: '2026-07-12',
-    lines: [
-      { description: 'Software subscription', unitCents: 100000 },
-      { description: 'Implementation & onboarding', unitCents: 25000 },
-    ],
-  }
-}

@@ -2,12 +2,18 @@ import fp from "fastify-plugin";
 import type { FastifyInstance } from "fastify";
 import { AuthService } from "./auth.service.js";
 import { BillService } from "./bill.service.js";
+import {
+  type DocumentParser,
+  ParseDocumentService,
+} from "./parse-document.service.js";
 import { UserService } from "./user.service.js";
 
 export interface Services {
   bills: BillService;
   users: UserService;
   auth: AuthService;
+  // Typed to the port, not the concrete class — the parsing library stays hidden.
+  parseDocument: DocumentParser;
 }
 
 declare module "fastify" {
@@ -36,5 +42,6 @@ export const servicesPlugin = fp(async (fastify: FastifyInstance) => {
     ),
     users: new UserService(repositories.users),
     auth: new AuthService(prisma, repositories.companies, repositories.users),
+    parseDocument: new ParseDocumentService(),
   });
 });

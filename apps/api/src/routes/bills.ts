@@ -2,10 +2,12 @@ import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { requireTransitionPermission } from "../auth/bill-permissions.js";
 import { requirePermission } from "../auth/permissions.js";
+import { BadRequestError } from "../domain/errors.js";
 import {
   billIdParams,
   createBillInput,
   listBillsQuery,
+  parsedBillDocument,
   transitionInput,
 } from "../schemas/bill.schema.js";
 
@@ -21,6 +23,29 @@ export async function billRoutes(app: FastifyInstance) {
     async (req, reply) => {
       const bill = await app.services.bills.create(req.auth, req.body);
       return reply.code(201).send(bill);
+    },
+  );
+
+  // Parse an uploaded invoice PDF into best-effort bill fields. Returns fields
+  // only — it never persists; the client confirms + picks a vendor, then POSTs
+  // /bills to create the draft. Multipart, so no zod body schema; the response is
+  // serialized against parsedBillDocument.
+  r.post(
+    "/bills/parse",
+    {
+      schema: { response: { 200: parsedBillDocument } },
+      preHandler: requirePermission("bill:create"),
+    },
+    async (req) => {
+      const data = await req.file();
+      if (!data) {
+        throw new BadRequestError("No file uploaded");
+      }
+      if (data.mimetype !== "application/pdf") {
+        throw new BadRequestError("Only PDF files are supported");
+      }
+      const buffer = await data.toBuffer();
+      return app.services.parseDocument.parse({ type: "bill", file: buffer });
     },
   );
 
