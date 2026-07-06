@@ -1,13 +1,13 @@
 'use client'
 
 import { useMemo } from 'react'
-import { avatarColor, Card, formatCents, VendorAvatar } from '@stubramp/ui'
+import { allocationColor, Card, Donut, formatCents } from '@stubramp/ui'
 import { AGING_TILES, computeAging, vendorRollups } from '../../lib/aging'
 import type { BillListItem } from '../../lib/bills'
 
-// Two lightweight, dependency-free charts derived entirely from the bill list:
-// AP aging distribution (vertical bars) and the largest open vendor balances
-// (horizontal bars). Both share the aging helpers used by the Aging tab.
+// Two lightweight charts derived entirely from the bill list: AP aging
+// distribution (vertical bars) and the largest open vendor balances (donut).
+// Both share the aging helpers used by the Aging tab.
 export function DashboardCharts({
   bills,
   now,
@@ -16,16 +16,30 @@ export function DashboardCharts({
   now: number
 }) {
   const aging = useMemo(() => computeAging(bills, now), [bills, now])
-  const topVendors = useMemo(
-    () =>
-      [...vendorRollups(bills).values()]
-        .sort((a, b) => b.openCents - a.openCents)
-        .slice(0, 5),
-    [bills],
-  )
+  const vendors = useMemo(() => {
+    const all = [...vendorRollups(bills).values()].sort(
+      (a, b) => b.openCents - a.openCents,
+    )
+    const top = all.slice(0, 5)
+    const total = all.reduce((sum, v) => sum + v.openCents, 0)
+    const otherCents = all.slice(5).reduce((sum, v) => sum + v.openCents, 0)
+
+    const segments = top.map((v, i) => ({
+      label: v.vendor,
+      value: v.openCents,
+      color: allocationColor(i),
+    }))
+    if (otherCents > 0) {
+      segments.push({
+        label: 'Other',
+        value: otherCents,
+        color: 'var(--gray-300)',
+      })
+    }
+    return { segments, total, count: all.length }
+  }, [bills])
 
   const maxAge = Math.max(1, ...AGING_TILES.map((t) => aging.tiles[t.key]))
-  const maxVendor = Math.max(1, ...topVendors.map((v) => v.openCents))
 
   return (
     <div className="mb-4 grid grid-cols-2 gap-3">
@@ -56,37 +70,14 @@ export function DashboardCharts({
       </Card>
 
       <Card header="Top open vendors">
-        <div className="flex flex-col gap-[13px] pt-0.5">
-          {topVendors.length === 0 ? (
-            <div className="px-6 py-6 text-center text-[13px] text-gray-500">
-              No open bills.
-            </div>
-          ) : (
-            topVendors.map((v) => {
-              const color = avatarColor(v.vendor)
-              const width = `${Math.max(2, Math.round((v.openCents / maxVendor) * 100))}%`
-              return (
-                <div key={v.vendorId}>
-                  <div className="mb-[5px] flex items-center gap-2">
-                    <VendorAvatar name={v.vendor} size={20} />
-                    <span className="truncate text-[13px] font-medium">
-                      {v.vendor}
-                    </span>
-                    <span className="ml-auto shrink-0 text-xs font-semibold tabular-nums">
-                      {formatCents(v.openCents)}
-                    </span>
-                  </div>
-                  <div className="h-[7px] bg-surface-page">
-                    <div
-                      className="h-full transition-[width] duration-[240ms]"
-                      style={{ width, background: color }}
-                    />
-                  </div>
-                </div>
-              )
-            })
-          )}
-        </div>
+        <Donut
+          segments={vendors.segments}
+          formatValue={formatCents}
+          centerLabel="Total open"
+          centerValue={formatCents(vendors.total)}
+          centerCaption={`${vendors.count} vendor${vendors.count === 1 ? '' : 's'}`}
+          emptyMessage="No open bills."
+        />
       </Card>
     </div>
   )

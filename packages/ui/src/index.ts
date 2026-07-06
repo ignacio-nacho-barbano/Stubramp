@@ -25,6 +25,7 @@ export * from "./components/data-display/card";
 export * from "./components/data-display/stat-tile";
 export * from "./components/data-display/avatar";
 export * from "./components/data-display/badge";
+export * from "./components/data-display/donut";
 
 // feedback
 export * from "./components/feedback/modal";
