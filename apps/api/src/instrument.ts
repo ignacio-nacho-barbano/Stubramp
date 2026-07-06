@@ -17,12 +17,12 @@ loadEnv({ path: [dbEnvFile, ".env"] });
 // safe to leave in place for local dev / tests without a DSN configured.
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
-  environment: process.env.NODE_ENV ?? "development",
+  environment: process.env.ENV,
   // Attach request/user context (matches the frontend's sendDefaultPii).
   sendDefaultPii: true,
   // Performance tracing: full sampling everywhere except production, where 10%
-  // keeps volume sane. Trace headers stitch to the frontend's spans.
-  tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
+  // keeps volume sane. Trace headers stitch.t to the frontend's spans.
+  tracesSampleRate: process.env.ENV === "prod" ? 0.1 : 1.0,
   // Surface local variables in stack traces and forward console logs as logs.
   includeLocalVariables: true,
   enableLogs: true,
