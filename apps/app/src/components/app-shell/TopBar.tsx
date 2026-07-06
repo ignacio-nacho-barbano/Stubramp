@@ -1,13 +1,19 @@
 import { Search, Settings } from 'lucide-react'
-import { Avatar, avatarColor } from '@stubramp/ui'
 import { NotificationsMenu } from './NotificationsMenu'
+import { UserMenu } from './UserMenu'
 
 /** App top bar — search affordance, notifications, settings, and user avatar. */
-export function TopBar({ userName }: { userName: string }) {
+export function TopBar({
+  userName,
+  userEmail,
+}: {
+  userName: string
+  userEmail: string
+}) {
   return (
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-gray-200 bg-surface-card px-6">
       <div
-        className="flex h-[34px] flex-1 items-center gap-2 rounded-sm bg-sand-100 px-2.5 text-gray-500"
+        className="flex h-8.5 flex-1 items-center gap-2 rounded-sm bg-sand-100 px-2.5 text-gray-500"
         title="Press Command-K to search"
       >
         <Search size={15} className="text-gray-500" />
@@ -25,11 +31,7 @@ export function TopBar({ userName }: { userName: string }) {
         <NotificationsMenu />
         <Settings size={18} className="cursor-pointer text-gray-500" />
         <span className="h-[22px] w-px bg-gray-200" />
-        <Avatar
-          name={userName}
-          size={30}
-          style={{ background: avatarColor(userName), color: 'var(--paper-0)' }}
-        />
+        <UserMenu name={userName} email={userEmail} />
       </div>
     </header>
   )

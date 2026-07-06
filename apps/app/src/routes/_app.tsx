@@ -22,7 +22,7 @@ function AppLayout() {
   const { user } = Route.useLoaderData()
   return (
     <ToastProvider>
-      <AppShell userName={user.name}>
+      <AppShell userName={user.name} userEmail={user.email}>
         <Outlet />
       </AppShell>
     </ToastProvider>
