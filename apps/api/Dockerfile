@@ -38,12 +38,12 @@ COPY . .
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile
 
-# Build @stubramp/api AND its workspace deps (@stubramp/contracts) in
-# topological order. The trailing `...` on the filter selects the package plus
-# its dependencies, so contracts' `tsc` runs first and produces
-# packages/contracts/dist — otherwise the api compiles fine (its type resolution
-# reads contracts' src) but crashes at runtime on the missing dist/*.js that its
-# export map's `default` condition points at.
+# Build @stubramp/api AND its workspace deps (@stubramp/contracts,
+# @stubramp/core) in topological order. The trailing `...` on the filter selects
+# the package plus its dependencies, so those packages' `tsc` runs first and
+# produces their dist/ — otherwise the api compiles fine (its type resolution
+# reads their src) but crashes at runtime on the missing dist/*.js that their
+# export maps' `default` condition points at.
 # `prisma generate` (into apps/api/src/generated) + `tsc` → apps/api/dist.
 RUN pnpm --filter "@stubramp/api..." build
 
@@ -53,7 +53,9 @@ RUN pnpm --filter "@stubramp/api..." build
 # image, which needs the prisma CLI (a devDep) and its schema-engine binary
 # (downloaded by @prisma/engines' postinstall — so no --ignore-scripts here).
 # --legacy: pnpm 10+ otherwise refuses `deploy` unless inject-workspace-packages
-# is set. Our only workspace dep is a build-time devDep, so legacy deploy is fine.
+# is set. `deploy` bundles the runtime workspace deps (@stubramp/contracts,
+# @stubramp/core) into out/node_modules with their built dist/, so legacy deploy
+# is fine — they're already built by the step above.
 RUN pnpm --filter @stubramp/api deploy --legacy /app/out
 
 # ---- runtime ----------------------------------------------------------------
