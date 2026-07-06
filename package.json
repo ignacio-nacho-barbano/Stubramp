@@ -2,7 +2,7 @@
   "name": "Stubramp",
   "private": true,
   "scripts": {
-    "prepare": "git config core.hooksPath .githooks",
+    "prepare": "git config core.hooksPath .githooks || true",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "dev:app": "turbo run dev --filter @stubramp/app --filter @stubramp/api",
