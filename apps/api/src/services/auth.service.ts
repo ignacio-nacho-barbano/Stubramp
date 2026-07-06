@@ -8,9 +8,13 @@ import { hashPassword } from "../auth/password.js";
 import { env } from "../env.js";
 import type { CompanyRepository } from "../repositories/CompanyRepository.js";
 import type { UserRepository } from "../repositories/UserRepository.js";
-import type { SignupInput } from "../schemas/auth.schema.js";
+import type { AcceptInviteInput, SignupInput } from "../schemas/auth.schema.js";
 
 type SafeUser = Omit<User, "passwordHash">;
+
+// Role granted to teammates who join via an invite link: the highest tier below
+// ADMIN. Change here only.
+const INVITE_ROLE = "ACCOUNTANT" as const;
 
 // Turn a free-text company name into a URL-safe slug. Empty/odd input falls back
 // to a stable default so we always have something to make unique.
@@ -69,6 +73,36 @@ export class AuthService {
       const { passwordHash: _omit, ...user } = created;
       return { user, company };
     });
+  }
+
+  /**
+   * Accepts an invite: creates a new user inside an existing company (identified
+   * by the caller-verified `companyId` from the signed invite token). Unlike
+   * signup this never creates a company — it attaches to one that already exists,
+   * granting the fixed INVITE_ROLE. A missing company surfaces as a 404 and a
+   * duplicate email as a 409 (both mapped by the repos).
+   */
+  async acceptInvite(
+    companyId: string,
+    input: AcceptInviteInput,
+  ): Promise<{ user: SafeUser; company: Company }> {
+    const passwordHash = await hashPassword(
+      input.password,
+      env.PASSWORD_PEPPER,
+    );
+    const name = `${input.firstName} ${input.lastName}`.trim();
+
+    const company = await this.companies.findByIdOrThrow(companyId);
+    const created = await this.users.create({
+      email: input.email,
+      name,
+      passwordHash,
+      role: INVITE_ROLE,
+      company: { connect: { id: company.id } },
+    });
+
+    const { passwordHash: _omit, ...user } = created;
+    return { user, company };
   }
 
   // Find a free slug, suffixing a short random token on collision. A handful of

@@ -34,8 +34,19 @@ export const signupInput = z.object({
   companySize: z.string().optional(),
 });
 
+// Public invite acceptance: join an existing company via a signed link. The
+// target company is carried by the signed token, not the body.
+export const acceptInviteInput = z.object({
+  token: z.string().min(1),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  email: z.string().email(),
+  password: z.string().min(8),
+});
+
 export type LoginInput = z.infer<typeof loginInput>;
 export type SignupInput = z.infer<typeof signupInput>;
+export type AcceptInviteInput = z.infer<typeof acceptInviteInput>;
 
 // ---- Bills ----
 

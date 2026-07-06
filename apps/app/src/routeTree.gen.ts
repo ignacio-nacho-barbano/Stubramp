@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as JoinRouteImport } from './routes/join'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppBillsRouteImport } from './routes/_app/bills'
@@ -29,6 +30,11 @@ const SignupRoute = SignupRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinRoute = JoinRouteImport.update({
+  id: '/join',
+  path: '/join',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRoute = AppRouteImport.update({
@@ -78,6 +84,7 @@ const AppBillsBillIdRoute = AppBillsBillIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/bills': typeof AppBillsRouteWithChildren
@@ -90,6 +97,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/bills/$billId': typeof AppBillsBillIdRoute
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
+  '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/_app/bills': typeof AppBillsRouteWithChildren
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/join'
     | '/login'
     | '/signup'
     | '/bills'
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/join'
     | '/login'
     | '/signup'
     | '/bills/$billId'
@@ -141,6 +152,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_app'
+    | '/join'
     | '/login'
     | '/signup'
     | '/_app/bills'
@@ -155,6 +167,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
+  JoinRoute: typeof JoinRoute
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
 }
@@ -173,6 +186,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/join': {
+      id: '/join'
+      path: '/join'
+      fullPath: '/join'
+      preLoaderRoute: typeof JoinRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app': {
@@ -276,6 +296,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
+  JoinRoute: JoinRoute,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
 }

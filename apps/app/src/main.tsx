@@ -6,6 +6,7 @@ import * as Sentry from '@sentry/react'
 
 import { getRouter } from './router'
 import { env } from './lib/env'
+import { ErrorPage } from './components/ErrorPage'
 import './styles.css'
 
 const sentryDsn = env.VITE_SENTRY_DSN
@@ -26,8 +27,12 @@ const rootElement = document.getElementById('root')!
 
 createRoot(rootElement).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
+    <Sentry.ErrorBoundary
+      fallback={({ resetError }) => <ErrorPage onRetry={resetError} />}
+    >
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    </Sentry.ErrorBoundary>
   </StrictMode>,
 )

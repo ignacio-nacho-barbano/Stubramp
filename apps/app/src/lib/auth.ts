@@ -41,8 +41,19 @@ export const signupSchema = z.object({
   companySize: z.string().optional(),
 })
 
+// Joining an existing workspace: the target company rides in the signed token,
+// so the form only collects the person's own details.
+export const acceptInviteSchema = z.object({
+  token: z.string().min(1),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  email: z.string().email(),
+  password: z.string().min(8),
+})
+
 export type LoginValues = z.infer<typeof loginSchema>
 export type SignupValues = z.infer<typeof signupSchema>
+export type AcceptInviteValues = z.infer<typeof acceptInviteSchema>
 
 // Auth forms want friendlier, context-specific copy than the generic mapper.
 function authError(status: number, json: any): string {
@@ -78,6 +89,41 @@ export async function signupFn({
     body: parsed,
   })
   if (status >= 400) return { ok: false, error: authError(status, json) }
+  return { ok: true }
+}
+
+// Admin-only: mint an invite link for the current user's workspace. Authed, so
+// it uses apiFetch (transparent refresh). Returns the opaque signed token; the
+// caller builds the shareable /join URL from it.
+export async function createInviteFn(): Promise<
+  { ok: true; token: string } | { ok: false; error: string }
+> {
+  const { status, json } = await apiFetch('/auth/invites', { method: 'POST' })
+  if (status >= 400) return { ok: false, error: mapApiError(status, json) }
+  return { ok: true, token: json.token as string }
+}
+
+// Invite-specific error copy. Unlike login, a 401 here means the signed link is
+// bad (not wrong credentials), so it gets its own message.
+function inviteError(status: number, json: any): string {
+  if (status === 401) return 'This invite link is invalid or has expired.'
+  if (status === 404) return 'That workspace no longer exists.'
+  return authError(status, json)
+}
+
+// Public: accept an invite and land logged in. Mirrors signupFn — the API sets
+// the session cookies on success.
+export async function acceptInviteFn({
+  data,
+}: {
+  data: AcceptInviteValues
+}): Promise<AuthResult> {
+  const parsed = acceptInviteSchema.parse(data)
+  const { status, json } = await apiRequest('/auth/accept-invite', {
+    method: 'POST',
+    body: parsed,
+  })
+  if (status >= 400) return { ok: false, error: inviteError(status, json) }
   return { ok: true }
 }
 

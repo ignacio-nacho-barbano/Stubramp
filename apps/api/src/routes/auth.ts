@@ -1,6 +1,8 @@
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
-import { UnauthorizedError } from "../domain/errors.js";
+import { GuardFailedError, UnauthorizedError } from "../domain/errors.js";
+import type { AccessTokenPayload } from "../auth/tokens.js";
+import { requirePermission } from "../auth/permissions.js";
 import { verifyPassword } from "../auth/password.js";
 import {
   REFRESH_COOKIE,
@@ -8,7 +10,18 @@ import {
   persistSession,
 } from "../auth/cookies.js";
 import { env } from "../env.js";
-import { loginInput, signupInput } from "../schemas/auth.schema.js";
+import {
+  acceptInviteInput,
+  loginInput,
+  signupInput,
+} from "../schemas/auth.schema.js";
+
+// Shape of the signed invite token. Distinct from the access-token payload; the
+// `typ` discriminator is checked on accept so an access token can't stand in.
+interface InviteTokenPayload {
+  typ: "invite";
+  companyId: string;
+}
 
 export async function authRoutes(app: FastifyInstance) {
   const r = app.withTypeProvider<ZodTypeProvider>();
@@ -26,6 +39,60 @@ export async function authRoutes(app: FastifyInstance) {
     { schema: { body: signupInput }, config: authRateLimit },
     async (req, reply) => {
       const { user, company } = await app.services.auth.signup(req.body);
+      const tokens = await app.tokenService.issuePair({
+        id: user.id,
+        companyId: user.companyId,
+        role: user.role,
+      });
+      persistSession(reply, tokens);
+      return reply.code(201).send({ user, company });
+    },
+  );
+
+  // Authed: mint a shareable invite link for the caller's company. The signed
+  // token carries the company (never expires — the link works until the email is
+  // taken); accepting it (below) creates a teammate inside that company.
+  r.post(
+    "/auth/invites",
+    { preHandler: requirePermission("user:manage") },
+    async (req) => {
+      if (!req.auth.companyId) {
+        throw new GuardFailedError("A superuser has no company to invite to");
+      }
+      const payload: InviteTokenPayload = {
+        typ: "invite",
+        companyId: req.auth.companyId,
+      };
+      // The @fastify/jwt payload type is declared as the access-token shape; the
+      // invite payload is a distinct discriminated shape, hence the cast.
+      const token = app.jwt.sign(payload as unknown as AccessTokenPayload);
+      return { token };
+    },
+  );
+
+  // Public: accept an invite. Verifies the signed token, creates the teammate in
+  // the token's company, and sets the session cookies so they're logged straight
+  // in — same session handling as signup.
+  r.post(
+    "/auth/accept-invite",
+    { schema: { body: acceptInviteInput }, config: authRateLimit },
+    async (req, reply) => {
+      let decoded: InviteTokenPayload;
+      try {
+        decoded = app.jwt.verify(
+          req.body.token,
+        ) as unknown as InviteTokenPayload;
+      } catch {
+        throw new UnauthorizedError("Invalid invite link");
+      }
+      if (decoded.typ !== "invite" || !decoded.companyId) {
+        throw new UnauthorizedError("Invalid invite link");
+      }
+
+      const { user, company } = await app.services.auth.acceptInvite(
+        decoded.companyId,
+        req.body,
+      );
       const tokens = await app.tokenService.issuePair({
         id: user.id,
         companyId: user.companyId,

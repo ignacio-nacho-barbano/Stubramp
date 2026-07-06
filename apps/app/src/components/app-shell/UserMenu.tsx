@@ -2,17 +2,42 @@
 
 import { useState } from 'react'
 import { useNavigate, useRouter } from '@tanstack/react-router'
-import { LogOut, Settings, UserRound } from 'lucide-react'
-import { Avatar, Menu, avatarColor, cn } from '@stubramp/ui'
-import { logoutFn } from '../../lib/auth'
+import { LogOut, Settings, UserPlus, UserRound } from 'lucide-react'
+import { Avatar, Menu, avatarColor, cn, useToast } from '@stubramp/ui'
+import { createInviteFn, logoutFn } from '../../lib/auth'
 import { useCurrentUser } from '../../lib/useCurrentUser'
 
 /** User avatar with a dropdown menu — profile shortcuts and sign out. */
 export function UserMenu() {
-  const { name, email } = useCurrentUser()
+  const { name, email, role } = useCurrentUser()
   const navigate = useNavigate()
   const router = useRouter()
+  const { toast } = useToast()
   const [signingOut, setSigningOut] = useState(false)
+  const [inviting, setInviting] = useState(false)
+
+  // Admin-only: mint an invite link for this workspace and copy it to the
+  // clipboard so it can be shared manually. The token is company-scoped by the
+  // API from the caller's session.
+  async function handleInvite() {
+    if (inviting) return
+    setInviting(true)
+    const res = await createInviteFn()
+    setInviting(false)
+    if (!res.ok) {
+      toast({ message: res.error, tone: 'negative' })
+      return
+    }
+    const url = `${window.location.origin}/join?token=${res.token}`
+    try {
+      await navigator.clipboard.writeText(url)
+      toast({ message: 'Invite link copied to clipboard', tone: 'positive' })
+    } catch {
+      // Clipboard can be blocked (permissions / insecure context) — still hand
+      // the link over so it isn't lost.
+      toast({ message: url })
+    }
+  }
 
   async function handleLogout() {
     if (signingOut) return
@@ -53,6 +78,14 @@ export function UserMenu() {
         <div className="p-1.5">
           <MenuAction icon={<UserRound size={15} />} label="Profile" />
           <MenuAction icon={<Settings size={15} />} label="Settings" />
+          {role === 'ADMIN' && (
+            <MenuAction
+              icon={<UserPlus size={15} />}
+              label={inviting ? 'Creating link…' : 'Invite teammate'}
+              disabled={inviting}
+              onSelect={handleInvite}
+            />
+          )}
         </div>
         <div className="border-t border-gray-200 p-1.5">
           <MenuAction

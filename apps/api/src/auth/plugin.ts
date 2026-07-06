@@ -31,6 +31,10 @@ const PUBLIC_ROUTES = new Set([
   "POST:/auth/login",
   "POST:/auth/refresh",
   "POST:/auth/signup",
+  // Accepting an invite creates the user + logs them in; the signed token in the
+  // body is the credential, so no access token is required. (Minting invites,
+  // POST:/auth/invites, stays authed.)
+  "POST:/auth/accept-invite",
   // Logout authenticates via the refresh cookie + just clears cookies, so it
   // must work even once the access token has expired.
   "POST:/auth/logout",
