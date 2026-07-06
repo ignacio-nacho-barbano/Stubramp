@@ -1,0 +1,31 @@
+#!/bin/sh
+set -e
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$STAGED" ] && exit 0
+
+# 1. Auto-format staged files, then re-stage them.
+FMT=$(echo "$STAGED" | grep -E '\.(ts|tsx|js|jsx|mjs|cjs|json|md|css)$' || true)
+if [ -n "$FMT" ]; then
+  echo "$FMT" | xargs pnpm exec prettier --write --ignore-unknown
+  echo "$FMT" | xargs git add
+fi
+
+# 2. Lint ONLY staged JS/TS files, per package.
+#    ESLint v9 flat config resolves from the CWD, so run eslint inside each
+#    package on just its staged files.
+LINTABLE=$(echo "$STAGED" | grep -E '\.(ts|tsx|js|jsx|mjs|cjs)$' || true)
+if [ -n "$LINTABLE" ]; then
+  for cfg in $(find apps packages -maxdepth 2 -name 'eslint.config.*' -not -path '*/node_modules/*'); do
+    dir=$(dirname "$cfg")
+    files=$(echo "$LINTABLE" | grep "^$dir/" | sed "s|^$dir/||" || true)
+    if [ -n "$files" ]; then
+      echo "→ eslint ($dir)"
+      ( cd "$dir" && echo "$files" | xargs pnpm exec eslint )
+    fi
+  done
+fi
+
+# 3. Type-check via Turborepo (cached). Types need the full program, not
+#    single files, so this stays project-wide.
+pnpm exec turbo run check-types

@@ -13,6 +13,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "eslint",
+    "check-types": "tsc --noEmit",
     "format": "prettier --write . && eslint --fix",
     "check": "prettier --check .",
     "deploy": "pnpm run build && wrangler deploy"
