@@ -59,6 +59,15 @@ jobs:
       # client at apps/api/src/generated/prisma (gitignored).
       - run: pnpm install --frozen-lockfile
 
+      # The API boots from TypeScript source here (`tsx watch`), but
+      # @stubramp/contracts' export map points node consumers at dist/*.js, and
+      # dist is gitignored + never built by `pnpm install`. The Dockerfile
+      # compiles it via `pnpm --filter @stubramp/api... build`; e2e must do the
+      # same or the API crashes at boot with ERR_MODULE_NOT_FOUND on
+      # @stubramp/contracts/dist/schemas.js.
+      - name: Build contracts package
+        run: pnpm --filter @stubramp/contracts build
+
       # Ephemeral, copy-on-write branch of the Neon DB — the isolation a Docker
       # Postgres would otherwise provide, created in seconds and torn down below.
       - name: Create Neon branch
