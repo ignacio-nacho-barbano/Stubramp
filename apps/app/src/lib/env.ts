@@ -9,6 +9,7 @@ const envSchema = z.object({
   VITE_API_URL: z.string().url().default('http://localhost:3001'),
   // Optional Sentry DSN; when unset, error reporting is disabled.
   VITE_SENTRY_DSN: z.string().url().optional().or(z.literal('')),
+  VITE_ENV: z.enum(['local', 'dev', 'prod']).default('local'),
 })
 
 const parsed = envSchema.safeParse(import.meta.env)

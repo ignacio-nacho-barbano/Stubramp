@@ -18,7 +18,7 @@ const sentryDsn = env.VITE_SENTRY_DSN
 if (sentryDsn) {
   Sentry.init({
     dsn: sentryDsn,
-    environment: import.meta.env.MODE,
+    environment: env.VITE_ENV,
     sendDefaultPii: true,
     integrations: [
       Sentry.tanstackRouterBrowserTracingIntegration(router),
