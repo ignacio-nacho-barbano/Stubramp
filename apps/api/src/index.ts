@@ -13,7 +13,7 @@ import {
   validatorCompiler,
 } from "fastify-type-provider-zod";
 import { authPlugin } from "./auth/plugin.js";
-import { prisma } from "./db.js";
+import { pingDb, prisma } from "./db.js";
 import { DomainError } from "./domain/errors.js";
 import { env } from "./env.js";
 import { authRoutes } from "./routes/auth.js";
@@ -112,9 +112,47 @@ fastify.get("/", async () => {
 });
 
 // Liveness + DB connectivity check.
-fastify.get("/health", async () => {
-  await prisma.$queryRaw`SELECT 1`;
-  return { status: "ok" };
+//
+// The DB is probed with a bounded `pingDb` (see db.ts) so a wedged pool returns
+// 503 quickly instead of hanging on the 30s pool connect timeout. Crucially,
+// this endpoint also SELF-HEALS the "wedged pool" outage: when Neon autosuspends
+// (scale-to-zero) it drops the long-lived pool's connections, and node-postgres
+// can get stuck handing out / waiting on dead ones — a state a single process
+// never recovers from, but a fresh process (fresh pool) does. So if the DB stays
+// unreachable continuously past HEALTH_MAX_DB_DOWN_MS, we exit non-zero and let
+// Fly restart the machine (min_machines_running=1 brings it right back).
+//
+// A genuine Neon cold start resolves within one probe (pingDb's timeout exceeds
+// the worst-case wake) and returns 200, which clears the down-tracker — so a
+// routine cold start never trips the restart. Only a truly stuck pool does.
+const HEALTH_QUERY_TIMEOUT_MS = 25_000;
+const HEALTH_MAX_DB_DOWN_MS = 90_000;
+let dbDownSince: number | null = null;
+
+fastify.get("/health", async (_request, reply) => {
+  try {
+    await pingDb(HEALTH_QUERY_TIMEOUT_MS);
+    dbDownSince = null;
+    return { status: "ok" };
+  } catch (err) {
+    const now = Date.now();
+    if (dbDownSince === null) dbDownSince = now;
+    const downMs = now - dbDownSince;
+    fastify.log.error({ err, downMs }, "health: DB unreachable");
+
+    if (downMs >= HEALTH_MAX_DB_DOWN_MS) {
+      fastify.log.fatal(
+        { downMs },
+        "health: DB unreachable too long — pool likely wedged, exiting so Fly restarts the machine with a fresh pool",
+      );
+      // Flush Sentry (best-effort, bounded) so the fatal is reported, then exit
+      // non-zero. Detached + unref'd so this never blocks the 503 response.
+      void Sentry.flush(2000)
+        .catch(() => {})
+        .finally(() => process.exit(1));
+    }
+    return reply.status(503).send({ status: "error", db: "unreachable" });
+  }
 });
 
 const start = async () => {

@@ -33,3 +33,26 @@ const adapter = new PrismaPg(
 );
 
 export const prisma = new PrismaClient({ adapter });
+
+// Bounded liveness probe used by GET /health. Races `SELECT 1` against a timer
+// so a wedged pool fails fast instead of blocking for the full pool
+// `connectionTimeoutMillis` (30s). `timeoutMs` MUST sit between the worst-case
+// Neon cold-start wake (a slow-but-healthy connect, ~10-15s) and the pool
+// connect timeout, so a genuine cold start still resolves as a success while a
+// truly stuck pool trips the timer. The timer is unref'd so it never keeps the
+// event loop alive on its own.
+export async function pingDb(timeoutMs: number): Promise<void> {
+  let timer: NodeJS.Timeout | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error(`db ping timed out after ${timeoutMs}ms`)),
+      timeoutMs,
+    );
+    timer.unref();
+  });
+  try {
+    await Promise.race([prisma.$queryRaw`SELECT 1`, timeout]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
