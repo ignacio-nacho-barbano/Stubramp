@@ -253,7 +253,7 @@ function BillCreatePage() {
         New bill
       </h1>
 
-      <div className="grid grid-cols-[1.4fr_1fr] items-start gap-[18px]">
+      <div className="grid grid-cols-1 items-start gap-[18px] lg:grid-cols-[1.4fr_1fr]">
         <div className="flex flex-col gap-[18px]">
           <BillDetailsForm
             meta={meta}

@@ -29,7 +29,7 @@ export function BillDetailsForm({
   const showDetected = !!detectedVendorName && !meta.vendorId
   return (
     <Card header="Bill details">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <span className="font-sans text-sm font-medium leading-snug text-ink-900">

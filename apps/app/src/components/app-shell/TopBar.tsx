@@ -9,8 +9,8 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
       <button
         type="button"
         onClick={onMenuClick}
-        aria-label="Open menu"
-        className="-ml-1 shrink-0 cursor-pointer rounded-sm p-1.5 text-gray-600 hover:bg-sand-100 lg:hidden"
+        aria-label="Toggle menu"
+        className="-ml-1 shrink-0 cursor-pointer rounded-sm p-1.5 text-gray-600 hover:bg-sand-100"
       >
         <Menu size={20} />
       </button>
