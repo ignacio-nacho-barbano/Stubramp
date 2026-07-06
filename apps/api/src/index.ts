@@ -1,4 +1,8 @@
 // ESM
+// NOTE: Sentry is initialized in src/instrument.ts, loaded via the `--import`
+// flag in package.json's dev/start scripts *before* this module — so it is
+// already active by the time these imports evaluate.
+import * as Sentry from "@sentry/node";
 import fastifyCors from "@fastify/cors";
 import fastifyHelmet from "@fastify/helmet";
 import fastifyMultipart from "@fastify/multipart";
@@ -31,6 +35,11 @@ declare module "fastify" {
 const fastify = Fastify({
   logger: true,
 });
+
+// Wire Sentry into Fastify so unhandled route errors are captured. This only
+// reports server (5xx) errors — the expected 4xx domain/validation errors mapped
+// in the custom error handler below are not sent to Sentry.
+Sentry.setupFastifyErrorHandler(fastify);
 
 // Use Zod for request validation + response serialization. Compilers are opt-in
 // per route (via a `schema` block), so routes without one are unaffected.
@@ -69,12 +78,10 @@ fastify.setErrorHandler((error, _request, reply) => {
   // prefers it) rather than the terse default.
   const code = (error as { code?: string }).code;
   if (typeof code === "string" && code.startsWith("FST_REQ_FILE")) {
-    return reply
-      .status(413)
-      .send({
-        error: "PayloadTooLarge",
-        message: "File is too large (max 10 MB).",
-      });
+    return reply.status(413).send({
+      error: "PayloadTooLarge",
+      message: "File is too large (max 10 MB).",
+    });
   }
   if (code === "FST_FILES_LIMIT") {
     return reply

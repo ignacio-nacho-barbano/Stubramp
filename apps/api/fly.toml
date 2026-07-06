@@ -42,6 +42,9 @@ primary_region = "iad"
   # Parent domain the httpOnly session cookies are scoped to, so they're shared
   # across the app + api subdomains.
   COOKIE_DOMAIN = ".stubramp.barbano.uy"
+  # Sentry error monitoring. A DSN is a public identifier (not a secret), so it
+  # lives here rather than in `fly secrets`.
+  SENTRY_DSN = "https://daec2b1543ac69ac4128afcee42b6249@o4511689468608512.ingest.de.sentry.io/4511689520382032"
 
 # Keep one machine always running to avoid Fly cold starts (the ~seconds-long
 # wake on the first request after idle). This trades the scale-to-zero savings

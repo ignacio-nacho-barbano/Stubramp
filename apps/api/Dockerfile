@@ -69,4 +69,6 @@ ENV NODE_ENV=production
 COPY --from=build /app/out /app
 
 EXPOSE 3001
-CMD ["node", "dist/index.js"]
+# --import loads Sentry (dist/instrument.js) before the app so its
+# auto-instrumentation is active. Keep in sync with the `start` script.
+CMD ["node", "--import", "./dist/instrument.js", "dist/index.js"]

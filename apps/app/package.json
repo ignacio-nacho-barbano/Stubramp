@@ -40,6 +40,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@sentry/vite-plugin": "^5.3.0",
     "@stubramp/typescript-config": "workspace:*",
     "@tanstack/devtools-vite": "latest",
     "@tanstack/eslint-config": "latest",
