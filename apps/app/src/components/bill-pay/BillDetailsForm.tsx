@@ -1,6 +1,6 @@
 'use client'
 
-import { Card, Input, Select } from '@stubramp/ui'
+import { Button, Card, Input, Select } from '@stubramp/ui'
 import type { Vendor } from '../../lib/bills'
 
 export interface DraftMeta {
@@ -14,26 +14,42 @@ export function BillDetailsForm({
   meta,
   vendors,
   onChange,
+  onAddVendor,
 }: {
   meta: DraftMeta
   vendors: Vendor[]
   onChange: (next: Partial<DraftMeta>) => void
+  onAddVendor?: () => void
 }) {
   return (
     <Card header="Bill details">
       <div className="grid grid-cols-2 gap-4">
-        <Select
-          label="Vendor"
-          value={meta.vendorId}
-          onChange={(e) => onChange({ vendorId: e.target.value })}
-        >
-          <option value="">Select vendor…</option>
-          {vendors.map((v) => (
-            <option key={v.id} value={v.id}>
-              {v.name}
-            </option>
-          ))}
-        </Select>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span className="font-sans text-sm font-medium leading-snug text-ink-900">
+              Vendor
+            </span>
+          </div>
+          <div className="flex items-center gap-2 w-full">
+            <Select
+              className="w-full"
+              value={meta.vendorId}
+              onChange={(e) => onChange({ vendorId: e.target.value })}
+            >
+              <option value="">Select vendor…</option>
+              {vendors.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.name}
+                </option>
+              ))}
+            </Select>
+            {onAddVendor && (
+              <Button variant="secondary" onClick={onAddVendor}>
+                + New
+              </Button>
+            )}
+          </div>
+        </div>
         <Input
           label="Invoice #"
           value={meta.billNumber}

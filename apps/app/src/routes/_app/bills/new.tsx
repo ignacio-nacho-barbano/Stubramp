@@ -13,6 +13,7 @@ import { billKeys, vendorsQueryOptions } from '../../../lib/bills-queries'
 import { can } from '../../../lib/permissions'
 import { BillDetailsForm } from '../../../components/bill-pay/BillDetailsForm'
 import type { DraftMeta } from '../../../components/bill-pay/BillDetailsForm'
+import { VendorFormModal } from '../../../components/bill-pay/VendorFormModal'
 import { BillSummaryCard } from '../../../components/bill-pay/BillSummaryCard'
 import {
   LineItemEditor,
@@ -56,7 +57,10 @@ function BillCreatePage() {
   })
   const [lines, setLines] = useState<DraftLine[]>([newDraftLine()])
   const [splitLineId, setSplitLineId] = useState<string | null>(null)
+  const [addingVendor, setAddingVendor] = useState(false)
   const [busy, setBusy] = useState(false)
+
+  const canManageVendors = can(user.role, 'vendor:manage')
 
   const total = lines.reduce((s, l) => s + l.amountCents, 0)
   const vendorLabel = vendors.find((v) => v.id === meta.vendorId)?.name ?? ''
@@ -194,6 +198,9 @@ function BillCreatePage() {
             meta={meta}
             vendors={vendors}
             onChange={(next) => setMeta((m) => ({ ...m, ...next }))}
+            onAddVendor={
+              canManageVendors ? () => setAddingVendor(true) : undefined
+            }
           />
           <LineItemEditor
             lines={lines}
@@ -217,6 +224,17 @@ function BillCreatePage() {
           </Card>
         </div>
       </div>
+
+      {addingVendor && (
+        <VendorFormModal
+          target="new"
+          onCreation={(vendor) => {
+            setMeta((m) => ({ ...m, vendorId: vendor.id }))
+            setAddingVendor(false)
+          }}
+          onClose={() => setAddingVendor(false)}
+        />
+      )}
 
       {splitLine && (
         <SplitsModal

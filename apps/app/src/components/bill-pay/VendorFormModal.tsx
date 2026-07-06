@@ -31,6 +31,7 @@ export const METHOD_LABELS: Record<PaymentMethod, string> = {
 interface VendorFormModalProps {
   /** `null` → hidden. A vendor → edit that vendor. `'new'` → create form. */
   target: Vendor | 'new' | null
+  onCreation?: (vendor: Vendor) => void
   onClose: () => void
 }
 
@@ -55,13 +56,16 @@ function initialState(target: Vendor | 'new'): FormState {
   }
 }
 
-export function VendorFormModal({ target, onClose }: VendorFormModalProps) {
+export function VendorFormModal({
+  target,
+  onCreation,
+  onClose,
+}: VendorFormModalProps) {
   if (!target) return null
   return (
     <VendorForm
       key={target === 'new' ? 'new' : target.id}
-      target={target}
-      onClose={onClose}
+      {...{ target, onClose, onCreation }}
     />
   )
 }
@@ -69,10 +73,8 @@ export function VendorFormModal({ target, onClose }: VendorFormModalProps) {
 function VendorForm({
   target,
   onClose,
-}: {
-  target: Vendor | 'new'
-  onClose: () => void
-}) {
+  onCreation,
+}: VendorFormModalProps & { target: Vendor | 'new' }) {
   const isCreate = target === 'new'
   const queryClient = useQueryClient()
   const { toast } = useToast()
@@ -105,6 +107,7 @@ function VendorForm({
           },
         })
         if (!res.ok) return toast({ message: res.error, tone: 'negative' })
+        onCreation?.(res.data)
         toast({ message: `${res.data.name} added`, tone: 'positive' })
       } else {
         const res = await updateVendorFn({
