@@ -5,9 +5,11 @@ import { useNavigate, useRouter } from '@tanstack/react-router'
 import { LogOut, Settings, UserRound } from 'lucide-react'
 import { Avatar, Menu, avatarColor, cn } from '@stubramp/ui'
 import { logoutFn } from '../../lib/auth'
+import { useCurrentUser } from '../../lib/useCurrentUser'
 
 /** User avatar with a dropdown menu — profile shortcuts and sign out. */
-export function UserMenu({ name, email }: { name: string; email: string }) {
+export function UserMenu() {
+  const { name, email } = useCurrentUser()
   const navigate = useNavigate()
   const router = useRouter()
   const [signingOut, setSigningOut] = useState(false)

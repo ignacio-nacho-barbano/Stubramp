@@ -3,13 +3,7 @@ import { NotificationsMenu } from './NotificationsMenu'
 import { UserMenu } from './UserMenu'
 
 /** App top bar — search affordance, notifications, settings, and user avatar. */
-export function TopBar({
-  userName,
-  userEmail,
-}: {
-  userName: string
-  userEmail: string
-}) {
+export function TopBar() {
   return (
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-gray-200 bg-surface-card px-6">
       <div
@@ -31,7 +25,7 @@ export function TopBar({
         <NotificationsMenu />
         <Settings size={18} className="cursor-pointer text-gray-500" />
         <span className="h-[22px] w-px bg-gray-200" />
-        <UserMenu name={userName} email={userEmail} />
+        <UserMenu />
       </div>
     </header>
   )

@@ -19,10 +19,9 @@ export const Route = createFileRoute('/_app')({
 })
 
 function AppLayout() {
-  const { user } = Route.useLoaderData()
   return (
     <ToastProvider>
-      <AppShell userName={user.name} userEmail={user.email}>
+      <AppShell>
         <Outlet />
       </AppShell>
     </ToastProvider>
