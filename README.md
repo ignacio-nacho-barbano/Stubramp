@@ -4,6 +4,18 @@ A Ramp-style bill-pay / payables demo built as a technical test. It's a **Turbor
 
 > ⚠️ Technical test only — not a real product.
 
+## For Reviewers
+
+You can se the public "marketing website" at https://stubramp.barbano.uy
+
+Sign up to go to the app (or go directly to https://app.stubramp.barbano.uy)
+
+If you want to join a pre-filled workspace use this link
+https://app.stubramp.barbano.uy/join?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXAiOiJpbnZpdGUiLCJjb21wYW55SWQiOiI4YWZkNTNkNi04NzgwLTQwMTQtYWQwOC0xZjMzNzg0ZjJhYjkiLCJpYXQiOjE3ODMzNzQwOTd9.8rsvyVWe4cH5loQLodPya-QSfBytAQSGBvR3MSPQ2tQ
+
+Code can be found at
+https://github.com/ignacio-nacho-barbano/Stubramp
+
 ---
 
 ## Monorepo layout
