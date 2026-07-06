@@ -10,10 +10,11 @@ import {
   SignupPanel,
   StrengthMeter,
 } from '../components/auth'
-import { acceptInviteFn } from '../lib/auth'
+import { acceptInviteFn, loggedOutOnly } from '../lib/auth'
 
 export const Route = createFileRoute('/join')({
   validateSearch: z.object({ token: z.string().optional() }),
+  beforeLoad: loggedOutOnly,
   component: JoinPage,
 })
 

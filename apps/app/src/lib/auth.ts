@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { redirect } from '@tanstack/react-router'
 import type { Role } from '@stubramp/contracts/enums'
 import { apiFetch, apiRequest, mapApiError } from './api'
 
@@ -133,6 +134,13 @@ export async function meFn(): Promise<AuthUser | null> {
   const { status, json } = await apiFetch('/auth/me')
   if (status >= 400) return null
   return json as AuthUser
+}
+
+// Route guard for public auth pages (login/signup/join): if the visitor is
+// already signed in, bounce them into the app instead of showing the form.
+// The mirror of the _app layout's guard, which sends the unauthenticated to /login.
+export async function loggedOutOnly(): Promise<void> {
+  if (await meFn()) throw redirect({ to: '/bills' })
 }
 
 export async function logoutFn(): Promise<{ ok: true }> {

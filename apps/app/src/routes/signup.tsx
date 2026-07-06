@@ -9,9 +9,12 @@ import {
   SignupPanel,
   StrengthMeter,
 } from '../components/auth'
-import { signupFn } from '../lib/auth'
+import { loggedOutOnly, signupFn } from '../lib/auth'
 
-export const Route = createFileRoute('/signup')({ component: SignupPage })
+export const Route = createFileRoute('/signup')({
+  beforeLoad: loggedOutOnly,
+  component: SignupPage,
+})
 
 const SIZES = [
   '1–10 employees',

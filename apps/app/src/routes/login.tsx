@@ -8,16 +8,17 @@ import {
   LoginPanel,
   PasswordField,
 } from '../components/auth'
-import { loginFn, loginSchema } from '../lib/auth'
+import { loggedOutOnly, loginFn, loginSchema } from '../lib/auth'
 
 export const Route = createFileRoute('/login')({
   validateSearch: z.object({ redirect: z.string().optional() }),
+  beforeLoad: loggedOutOnly,
   component: LoginPage,
 })
 
 function LoginPage() {
   const navigate = useNavigate()
-  const { redirect } = Route.useSearch()
+  const { redirect: redirectTo } = Route.useSearch()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [remember, setRemember] = useState(true)
@@ -39,7 +40,7 @@ function LoginPage() {
         setLoading(false)
         return
       }
-      await navigate({ to: redirect ?? '/bills' })
+      await navigate({ to: redirectTo ?? '/bills' })
     } catch {
       setError('Something went wrong. Please try again.')
       setLoading(false)
