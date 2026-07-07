@@ -1,17 +1,8 @@
-# Fly.io config for the Stubramp API.
+# fly.toml app configuration file generated for stubramp-api on 2026-07-07T00:19:48Z
 #
-# This config + the Dockerfile live in apps/api, but the app is a pnpm workspace
-# package, so the Docker BUILD CONTEXT must be the monorepo ROOT (the build needs
-# pnpm-workspace.yaml, pnpm-lock.yaml and packages/*). Fly's build context is the
-# positional WORKING_DIRECTORY, so deploy from the repo root, pointing the
-# Docker paths back at apps/api. The root package.json wraps this as a script:
-#   pnpm deploy:api
-# which expands to:
-#   fly deploy . -c apps/api/fly.toml \
-#     --dockerfile apps/api/Dockerfile \
-#     --ignorefile apps/api/Dockerfile.dockerignore --ha=false
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
-# iad = Ashburn, Virginia.
 app = "stubramp-api"
 primary_region = "iad"
 
@@ -29,6 +20,7 @@ primary_region = "iad"
 # timeout and fail with P1001 ("can't reach database server") — which would
 # abort the whole deploy even when there are no pending migrations. Retry a few
 # times: the first attempt wakes the compute, later attempts hit a warm one.
+
 [deploy]
   release_command = "sh -c 'n=0; until npx prisma migrate deploy; do n=$((n+1)); if [ $n -ge 5 ]; then exit 1; fi; echo \"migrate attempt $n failed (likely Neon cold start), retrying in 5s...\"; sleep 5; done'"
 
@@ -50,19 +42,22 @@ primary_region = "iad"
 # wake on the first request after idle). This trades the scale-to-zero savings
 # for a warm API; Neon is kept warm separately by .github/workflows/keep-alive.
 # Still a single machine (no HA standby): `fly deploy --ha=false`.
+
 [http_service]
   internal_port = 3001
   force_https = true
-  auto_stop_machines = "stop"
+  auto_stop_machines = true
   auto_start_machines = true
   min_machines_running = 1
-  processes = ["app"]
+  processes = ['app']
 
   # /health runs `SELECT 1`, so a cold-start Neon wake can make it slow. The
   # check timeout MUST exceed the pool's connectionTimeoutMillis (30s, see
   # apps/api/src/db.ts) — otherwise Fly evicts the only machine before the DB
   # connect can even finish, taking the whole API down during a routine cold
   # start. Generous grace covers the wake on a fresh boot.
+  checks = [{ grace_period = '45s', interval = '30s', method = 'GET', path = '/health', timeout = '31s' }]
+
   [[http_service.checks]]
     interval = "30s"
     timeout = "31s"
@@ -71,6 +66,15 @@ primary_region = "iad"
     path = "/health"
 
 # Smallest/cheapest VM. Bump memory to 512mb if the app OOMs under load.
+
 [[vm]]
-  size = "shared-cpu-1x"
-  memory = "256mb"
+  size = 'shared-cpu-1x'
+  memory = '256mb'
+
+[[vm]]
+  size = 'shared-cpu-2x'
+  memory = '768mb'
+  cpu_kind = 'shared'
+  cpus = 2
+  memory_mb = 768
+  processes = ['app']
