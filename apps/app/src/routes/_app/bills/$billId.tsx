@@ -25,7 +25,7 @@ import { BillActions } from '../../../components/bill-pay/BillActions'
 import { BillDetailsCard } from '../../../components/bill-pay/BillDetailsCard'
 import { BillTimeline } from '../../../components/bill-pay/BillTimeline'
 import {
-  InvoiceDoc,
+  InvoicePreview,
   buildInvoiceDoc,
 } from '../../../components/bill-pay/InvoiceDoc'
 import { LineItemsCard } from '../../../components/bill-pay/LineItemsCard'
@@ -170,7 +170,7 @@ function BillDetailPage() {
       <div className="grid grid-cols-[1.6fr_1fr] items-start gap-[18px]">
         <div className="flex min-w-0 flex-col gap-[18px]">
           <Card header="Invoice document" padded={false}>
-            <InvoiceDoc doc={doc} />
+            <InvoicePreview doc={doc} />
           </Card>
           <LineItemsCard lines={bill.lineItems} />
         </div>

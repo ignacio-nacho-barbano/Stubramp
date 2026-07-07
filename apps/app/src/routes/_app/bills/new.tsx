@@ -26,7 +26,7 @@ import {
 } from '../../../components/bill-pay/LineItemEditor'
 import type { DraftLine } from '../../../components/bill-pay/LineItemEditor'
 import {
-  InvoiceDoc,
+  InvoicePreview,
   buildInvoiceDoc,
 } from '../../../components/bill-pay/InvoiceDoc'
 import { SplitsModal } from '../../../components/bill-pay/SplitsModal'
@@ -282,7 +282,7 @@ function BillCreatePage() {
             onSaveDraft={() => save(false)}
           />
           <Card header="Document preview" padded={false}>
-            <InvoiceDoc doc={previewDoc} />
+            <InvoicePreview doc={previewDoc} />
           </Card>
         </div>
       </div>
