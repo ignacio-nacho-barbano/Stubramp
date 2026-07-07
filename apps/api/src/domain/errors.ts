@@ -31,6 +31,19 @@ export class GuardFailedError extends DomainError {
   }
 }
 
+// A bill with this invoice number already exists for the same vendor. Invoice
+// numbers are only unique per vendor (different vendors legitimately reuse
+// numbers), so this is keyed on vendor, not the whole company. 409 because it's
+// a conflict with existing state — and, for an AP tool, a double-payment guard.
+export class DuplicateBillError extends DomainError {
+  constructor(billNumber: string) {
+    super(
+      `A bill with invoice number "${billNumber}" already exists for this vendor`,
+      409,
+    );
+  }
+}
+
 export class BadRequestError extends DomainError {
   constructor(message: string) {
     super(message, 400);

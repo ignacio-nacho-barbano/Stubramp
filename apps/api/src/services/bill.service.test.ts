@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AuthContext } from "../auth/context.js";
 import {
+  DuplicateBillError,
   GuardFailedError,
   IllegalTransitionError,
   NotFoundError,
@@ -96,6 +97,7 @@ describe("BillService", () => {
 
   let bills: {
     create: ReturnType<typeof vi.fn>;
+    exists: ReturnType<typeof vi.fn>;
     findByStatus: ReturnType<typeof vi.fn>;
     findByIdScoped: ReturnType<typeof vi.fn>;
     deleteScopedIfStatus: ReturnType<typeof vi.fn>;
@@ -118,6 +120,7 @@ describe("BillService", () => {
 
     bills = {
       create: vi.fn(async (_data: any, _args?: any) => makeBill()),
+      exists: vi.fn(async () => false),
       findByStatus: vi.fn(async () => [makeBill()]),
       findByIdScoped: vi.fn(async () => makeBill()),
       deleteScopedIfStatus: vi.fn(async () => 1),
@@ -160,6 +163,22 @@ describe("BillService", () => {
       await expect(service.create(auth, input as never)).rejects.toBeInstanceOf(
         GuardFailedError,
       );
+      expect(bills.create).not.toHaveBeenCalled();
+    });
+
+    it("rejects a duplicate invoice number for the same vendor", async () => {
+      // A bill with this vendor + invoice number already exists.
+      bills.exists.mockResolvedValueOnce(true);
+      const input = makeBillInput();
+      await expect(service.create(auth, input as never)).rejects.toBeInstanceOf(
+        DuplicateBillError,
+      );
+      // The duplicate check is scoped by company + vendor + invoice number.
+      expect(bills.exists).toHaveBeenCalledWith({
+        companyId: "company-1",
+        vendorId: input.vendorId,
+        billNumber: input.billNumber,
+      });
       expect(bills.create).not.toHaveBeenCalled();
     });
 

@@ -4,6 +4,7 @@ import { TX_OPTIONS, withDbRetry } from "../db-retry.js";
 import { requireCompanyForWrite, resolveCompanyId } from "../auth/scope.js";
 import { canDelete, canTransition } from "../domain/bill-state-machine.js";
 import {
+  DuplicateBillError,
   GuardFailedError,
   IllegalTransitionError,
   NotFoundError,
@@ -45,6 +46,19 @@ export class BillService {
     });
     if (!vendorOk) {
       throw new NotFoundError("Vendor", input.vendorId);
+    }
+
+    // Duplicate-invoice guard: reject a bill whose invoice number is already on
+    // the books for this vendor. Without it two bills for the same invoice can be
+    // scheduled and paid twice. Keyed on (companyId, vendorId, billNumber) —
+    // different vendors reusing a number is fine, the same vendor twice is not.
+    const duplicate = await this.bills.exists({
+      companyId,
+      vendorId: input.vendorId,
+      billNumber: input.billNumber,
+    });
+    if (duplicate) {
+      throw new DuplicateBillError(input.billNumber);
     }
 
     // Invariant: each line's splits must sum exactly to that line's amount.
