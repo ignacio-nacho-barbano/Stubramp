@@ -104,7 +104,7 @@ function BillDetailPage() {
       ),
   })
 
-  // Delete an unapproved draft. On success there's no aggregate to seed — drop
+  // Delete an unapproved bill. On success there's no aggregate to seed — drop
   // the detail cache, refresh the lists, and return to the bills index.
   const remove = useMutation({
     mutationFn: () => deleteBillFn({ data: { id: billId } }),
@@ -219,7 +219,7 @@ function BillDetailPage() {
                 Danger zone
               </div>
               <p className="mb-3 text-[13px] leading-relaxed text-gray-500">
-                Delete this draft and its line items. This can't be undone.
+                Delete this bill and its line items. This can't be undone.
               </p>
               <Button
                 variant="danger"
@@ -227,7 +227,7 @@ function BillDetailPage() {
                 onClick={() => setConfirmDelete(true)}
               >
                 <Trash2 size={15} className="mr-1.5" />
-                Delete draft
+                Delete bill
               </Button>
             </Card>
           )}
@@ -238,7 +238,7 @@ function BillDetailPage() {
         open={confirmDelete}
         onClose={() => setConfirmDelete(false)}
         size="sm"
-        title={<span className="text-md font-semibold">Delete draft?</span>}
+        title={<span className="text-md font-semibold">Delete bill?</span>}
         footer={
           <>
             <Button

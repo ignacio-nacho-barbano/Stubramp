@@ -103,11 +103,12 @@ export class BillService {
     return bill;
   }
 
-  // Hard-delete an unapproved bill. Only DRAFTs qualify (canDelete): once a bill
-  // is submitted/approved/scheduled it carries an approval or payment commitment
-  // whose history must survive. The scoped conditional delete is the atomic gate
-  // — if a concurrent transition moved the bill out of DRAFT it removes 0 rows
-  // and we 409. DB-level cascade drops the line items, splits, and events.
+  // Hard-delete an unapproved bill. Only DRAFT/SUBMITTED qualify (canDelete):
+  // once a bill is approved/scheduled it carries an approval or payment
+  // commitment whose history must survive. The scoped conditional delete is the
+  // atomic gate — it removes the row only if it's still in the status we read, so
+  // if a concurrent transition moved it (e.g. SUBMITTED -> APPROVED) it removes 0
+  // rows and we 409. DB-level cascade drops the line items, splits, and events.
   async delete(auth: AuthContext, id: string): Promise<void> {
     const companyId = requireCompanyForWrite(auth);
     const bill = await this.bills.findByIdScoped(id, companyId);
@@ -115,20 +116,18 @@ export class BillService {
 
     if (!canDelete(bill.status)) {
       throw new GuardFailedError(
-        `Cannot delete a bill in status ${bill.status}; only unapproved drafts can be deleted`,
+        `Cannot delete a bill in status ${bill.status}; only unapproved bills can be deleted`,
       );
     }
 
     const deleted = await withDbRetry(
-      () => this.bills.deleteScopedIfStatus(id, companyId, "DRAFT"),
+      () => this.bills.deleteScopedIfStatus(id, companyId, bill.status),
       { label: "bill.delete" },
     );
-    // Lost the race: another request moved the bill out of DRAFT between the read
-    // and the delete. Surface it as a conflict rather than a silent no-op.
+    // Lost the race: another request moved the bill out of the status we read
+    // between the read and the delete. Surface it as a conflict, not a no-op.
     if (deleted === 0) {
-      throw new GuardFailedError(
-        "Bill is no longer a draft and can't be deleted",
-      );
+      throw new GuardFailedError("Bill can no longer be deleted");
     }
   }
 

@@ -264,6 +264,18 @@ describe("BillService", () => {
       );
     });
 
+    it("deletes a SUBMITTED bill, guarding on its status", async () => {
+      bills.findByIdScoped.mockResolvedValueOnce(
+        makeBill({ status: "SUBMITTED" }),
+      );
+      await service.delete(auth, "bill-1");
+      expect(bills.deleteScopedIfStatus).toHaveBeenCalledWith(
+        "bill-1",
+        "company-1",
+        "SUBMITTED",
+      );
+    });
+
     it("404s when the bill doesn't exist (or is cross-tenant)", async () => {
       bills.findByIdScoped.mockResolvedValueOnce(null);
       await expect(service.delete(auth, "bill-1")).rejects.toBeInstanceOf(
@@ -272,9 +284,9 @@ describe("BillService", () => {
       expect(bills.deleteScopedIfStatus).not.toHaveBeenCalled();
     });
 
-    it("refuses to delete a non-draft bill", async () => {
+    it("refuses to delete an approved bill", async () => {
       bills.findByIdScoped.mockResolvedValueOnce(
-        makeBill({ status: "SUBMITTED" }),
+        makeBill({ status: "APPROVED" }),
       );
       await expect(service.delete(auth, "bill-1")).rejects.toBeInstanceOf(
         GuardFailedError,
