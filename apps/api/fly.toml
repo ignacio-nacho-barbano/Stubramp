@@ -58,18 +58,7 @@ primary_region = "iad"
   # start. Generous grace covers the wake on a fresh boot.
   checks = [{ grace_period = '45s', interval = '30s', method = 'GET', path = '/health', timeout = '31s' }]
 
-  [[http_service.checks]]
-    interval = "30s"
-    timeout = "31s"
-    grace_period = "45s"
-    method = "GET"
-    path = "/health"
-
-# Smallest/cheapest VM. Bump memory to 512mb if the app OOMs under load.
-
-[[vm]]
-  size = 'shared-cpu-1x'
-  memory = '256mb'
+# VM sizing, scaled via the flyio-scale-from-ui tooling.
 
 [[vm]]
   size = 'shared-cpu-2x'
