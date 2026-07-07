@@ -23,6 +23,14 @@ const adapter = new PrismaPg(
     max: 10,
     // Must exceed the worst-case Neon cold-start wake (see above).
     connectionTimeoutMillis: 30_000,
+    // Server-side ceilings so a single slow/wedged query can't pin one of the
+    // (only) `max` pool slots indefinitely and starve every other request — the
+    // pool-exhaustion cascade the /health self-heal exists to escape. These bound
+    // query *execution* time, not the cold-start *connect* (that's covered by
+    // connectionTimeoutMillis above), so they don't interfere with a Neon wake:
+    // once connected, real queries finish in well under a second.
+    statement_timeout: 20_000,
+    idle_in_transaction_session_timeout: 30_000,
   },
   {
     onPoolError: (err) =>

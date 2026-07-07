@@ -5,6 +5,7 @@ import type {
   User,
 } from "../generated/prisma/client.js";
 import { hashPassword } from "../auth/password.js";
+import { TX_OPTIONS, withDbRetry } from "../db-retry.js";
 import { env } from "../env.js";
 import type { CompanyRepository } from "../repositories/CompanyRepository.js";
 import type { UserRepository } from "../repositories/UserRepository.js";
@@ -51,28 +52,37 @@ export class AuthService {
     const name = `${input.firstName} ${input.lastName}`.trim();
 
     // The whole thing is atomic: a duplicate email (mapped to a 409 by the repo)
-    // rolls the just-created company back.
-    return this.prisma.$transaction(async (tx) => {
-      const companies = this.companies.withTx(tx);
-      const users = this.users.withTx(tx);
+    // rolls the just-created company back. Retried as a whole on transient DB
+    // faults — a failed attempt rolls back cleanly, and a duplicate email on a
+    // re-run surfaces as the same 409 it would have anyway.
+    return withDbRetry(
+      () =>
+        this.prisma.$transaction(async (tx) => {
+          const companies = this.companies.withTx(tx);
+          const users = this.users.withTx(tx);
 
-      const slug = await this.uniqueSlug(companies, slugify(input.companyName));
-      const company = await companies.create({
-        name: input.companyName,
-        slug,
-      });
+          const slug = await this.uniqueSlug(
+            companies,
+            slugify(input.companyName),
+          );
+          const company = await companies.create({
+            name: input.companyName,
+            slug,
+          });
 
-      const created = await users.create({
-        email: input.email,
-        name,
-        passwordHash,
-        role: "ADMIN",
-        company: { connect: { id: company.id } },
-      });
+          const created = await users.create({
+            email: input.email,
+            name,
+            passwordHash,
+            role: "ADMIN",
+            company: { connect: { id: company.id } },
+          });
 
-      const { passwordHash: _omit, ...user } = created;
-      return { user, company };
-    });
+          const { passwordHash: _omit, ...user } = created;
+          return { user, company };
+        }, TX_OPTIONS),
+      { label: "auth.signup" },
+    );
   }
 
   /**

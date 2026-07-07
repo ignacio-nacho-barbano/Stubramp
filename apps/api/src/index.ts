@@ -14,6 +14,7 @@ import {
 } from "fastify-type-provider-zod";
 import { authPlugin } from "./auth/plugin.js";
 import { pingDb, prisma } from "./db.js";
+import { isTransientDbError } from "./db-retry.js";
 import { DomainError } from "./domain/errors.js";
 import { env } from "./env.js";
 import { authRoutes } from "./routes/auth.js";
@@ -93,6 +94,17 @@ fastify.setErrorHandler((error, _request, reply) => {
     return reply
       .status(400)
       .send({ error: "ValidationError", message: (error as Error).message });
+  }
+  // A transient DB fault that survived the in-repo/in-service retries (e.g. a
+  // request that grabbed a dead connection outside a retried path, or Neon still
+  // waking). Return a retryable 503 rather than a generic 500 so the client knows
+  // to try again — and don't leak driver internals.
+  if (isTransientDbError(error)) {
+    fastify.log.error(error, "transient DB error surfaced to client");
+    return reply.status(503).send({
+      error: "ServiceUnavailable",
+      message: "The service is temporarily unavailable. Please retry.",
+    });
   }
   fastify.log.error(error);
   const statusCode =
@@ -203,11 +215,48 @@ const start = async () => {
   }
 };
 
-// Graceful shutdown (Fly.io sends SIGINT / SIGTERM on deploy/scale).
+// Last-resort process boundaries. Without these a single stray rejected promise
+// or thrown-outside-a-request error takes down the (single) machine with nothing
+// reported — our worst failures would be invisible. Report to Sentry, flush
+// best-effort, then exit non-zero so Fly restarts a clean process
+// (min_machines_running=1). We deliberately exit on both: after an uncaught
+// exception or unhandled rejection the process state may be corrupt, and a fast
+// restart is safer than limping on. `flush` is bounded so a wedged reporter
+// can't block the exit.
+function fatalExit(err: unknown, kind: string) {
+  fastify.log.fatal({ err, kind }, "unhandled process-level error — exiting");
+  Sentry.captureException(err);
+  void Sentry.flush(2000)
+    .catch(() => {})
+    .finally(() => process.exit(1));
+}
+process.on("uncaughtException", (err) => fatalExit(err, "uncaughtException"));
+process.on("unhandledRejection", (reason) =>
+  fatalExit(reason, "unhandledRejection"),
+);
+
+// Graceful shutdown (Fly.io sends SIGINT / SIGTERM on deploy/scale). Guarded by a
+// hard timeout: if `fastify.close()` hangs (e.g. an in-flight request stuck on a
+// dead DB connection), force-exit rather than wait for Fly to SIGKILL us — a
+// clean, prompt exit makes for smoother deploys.
+const SHUTDOWN_TIMEOUT_MS = 10_000;
+let shuttingDown = false;
 for (const signal of ["SIGINT", "SIGTERM"] as const) {
   process.on(signal, async () => {
-    await fastify.close();
-    process.exit(0);
+    if (shuttingDown) return; // ignore a second signal
+    shuttingDown = true;
+    const forceExit = setTimeout(() => {
+      fastify.log.error("shutdown timed out — forcing exit");
+      process.exit(1);
+    }, SHUTDOWN_TIMEOUT_MS);
+    forceExit.unref();
+    try {
+      await fastify.close();
+      process.exit(0);
+    } catch (err) {
+      fastify.log.error(err, "error during shutdown");
+      process.exit(1);
+    }
   });
 }
 
