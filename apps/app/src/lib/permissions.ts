@@ -8,6 +8,7 @@ import type { BillStatus } from './bills'
 // view renders.
 export { can, MATRIX } from '@stubramp/contracts/permissions'
 export type { Action } from '@stubramp/contracts/permissions'
+export { canDelete } from '@stubramp/contracts/bill-state-machine'
 
 export interface BillActionDef {
   key: string

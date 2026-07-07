@@ -5,6 +5,8 @@
 export { BILL_STATUSES } from "@stubramp/contracts/enums";
 export {
   TRANSITIONS,
+  DELETABLE_STATUSES,
   canTransition,
+  canDelete,
   isTerminal,
 } from "@stubramp/contracts/bill-state-machine";

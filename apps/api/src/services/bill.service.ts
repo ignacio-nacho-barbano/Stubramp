@@ -2,7 +2,7 @@ import type { BillStatus, PrismaClient } from "../generated/prisma/client.js";
 import type { AuthContext } from "../auth/context.js";
 import { TX_OPTIONS, withDbRetry } from "../db-retry.js";
 import { requireCompanyForWrite, resolveCompanyId } from "../auth/scope.js";
-import { canTransition } from "../domain/bill-state-machine.js";
+import { canDelete, canTransition } from "../domain/bill-state-machine.js";
 import {
   GuardFailedError,
   IllegalTransitionError,
@@ -101,6 +101,35 @@ export class BillService {
     const bill = await this.bills.findByIdScoped(id, resolveCompanyId(auth));
     if (!bill) throw new NotFoundError("Bill", id); // 404 for cross-tenant — no leak
     return bill;
+  }
+
+  // Hard-delete an unapproved bill. Only DRAFTs qualify (canDelete): once a bill
+  // is submitted/approved/scheduled it carries an approval or payment commitment
+  // whose history must survive. The scoped conditional delete is the atomic gate
+  // — if a concurrent transition moved the bill out of DRAFT it removes 0 rows
+  // and we 409. DB-level cascade drops the line items, splits, and events.
+  async delete(auth: AuthContext, id: string): Promise<void> {
+    const companyId = requireCompanyForWrite(auth);
+    const bill = await this.bills.findByIdScoped(id, companyId);
+    if (!bill) throw new NotFoundError("Bill", id); // 404 for cross-tenant — no leak
+
+    if (!canDelete(bill.status)) {
+      throw new GuardFailedError(
+        `Cannot delete a bill in status ${bill.status}; only unapproved drafts can be deleted`,
+      );
+    }
+
+    const deleted = await withDbRetry(
+      () => this.bills.deleteScopedIfStatus(id, companyId, "DRAFT"),
+      { label: "bill.delete" },
+    );
+    // Lost the race: another request moved the bill out of DRAFT between the read
+    // and the delete. Surface it as a conflict rather than a silent no-op.
+    if (deleted === 0) {
+      throw new GuardFailedError(
+        "Bill is no longer a draft and can't be deleted",
+      );
+    }
   }
 
   async transition(auth: AuthContext, id: string, input: TransitionInput) {

@@ -232,6 +232,19 @@ export async function transitionBillFn({
   return { ok: true, data: json as BillWithRelations }
 }
 
+export async function deleteBillFn({
+  data,
+}: {
+  data: { id: string }
+}): Promise<MutationResult<null>> {
+  const id = z.string().uuid().parse(data.id)
+  const { status, json } = await apiFetch(`/bills/${id}`, {
+    method: 'DELETE',
+  })
+  if (status >= 400) return { ok: false, error: mapApiError(status, json) }
+  return { ok: true, data: null }
+}
+
 export async function listVendorsFn({
   data,
 }: {

@@ -86,6 +86,22 @@ export class BillRepository extends BaseRepository<BillTypes> {
     return count;
   }
 
+  // Race-safe, company-scoped delete: removes the bill only if it's *still* in
+  // `status`, mirroring the casStatus gate. Returns rows deleted — 0 means a
+  // concurrent transition already moved it out of `status` (or the id/company
+  // didn't match). DB-level ON DELETE CASCADE removes the line items, splits,
+  // payments, and events along with it.
+  async deleteScopedIfStatus(
+    id: string,
+    companyId: string,
+    status: BillStatus,
+  ): Promise<number> {
+    const { count } = await this.bills.deleteMany({
+      where: { id, companyId, status },
+    });
+    return count;
+  }
+
   withTx(tx: Prisma.TransactionClient): BillRepository {
     return new BillRepository(tx.bill);
   }

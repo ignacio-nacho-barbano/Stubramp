@@ -14,6 +14,7 @@ export type Action =
   | "bill:approve"
   | "bill:schedule"
   | "bill:pay"
+  | "bill:delete"
   | "card:manage"
   | "card:read";
 
@@ -32,6 +33,7 @@ export const MATRIX: Record<Role, readonly Action[]> = {
     "bill:approve",
     "bill:schedule",
     "bill:pay",
+    "bill:delete",
     "card:manage",
     "card:read",
   ],
@@ -43,10 +45,17 @@ export const MATRIX: Record<Role, readonly Action[]> = {
     "bill:submit",
     "bill:schedule",
     "bill:pay",
+    "bill:delete",
     "card:read",
   ],
   APPROVER: ["vendor:read", "bill:read", "bill:approve", "card:read"],
-  EMPLOYEE: ["vendor:read", "bill:create", "bill:read", "card:read"],
+  EMPLOYEE: [
+    "vendor:read",
+    "bill:create",
+    "bill:read",
+    "bill:delete",
+    "card:read",
+  ],
 };
 
 export function can(role: Role, action: Action): boolean {

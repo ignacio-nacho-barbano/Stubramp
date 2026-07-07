@@ -20,3 +20,13 @@ export function canTransition(from: BillStatus, to: BillStatus): boolean {
 export function isTerminal(status: BillStatus): boolean {
   return TRANSITIONS[status].length === 0;
 }
+
+// Which bill statuses may be hard-deleted. Only unapproved drafts qualify: once a
+// bill is submitted, approved, scheduled, or paid it carries an approval/payment
+// commitment whose history must survive. Shared by the API (enforces it, 409s
+// otherwise) and the web client (gates the delete affordance).
+export const DELETABLE_STATUSES: readonly BillStatus[] = ["DRAFT"];
+
+export function canDelete(status: BillStatus): boolean {
+  return DELETABLE_STATUSES.includes(status);
+}

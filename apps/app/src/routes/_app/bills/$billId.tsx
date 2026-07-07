@@ -1,19 +1,27 @@
+import { useState } from 'react'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   useMutation,
   useQueryClient,
   useSuspenseQuery,
 } from '@tanstack/react-query'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Trash2 } from 'lucide-react'
 import {
+  Button,
   Card,
   formatDate,
+  Modal,
   Money,
   STATUS_LABEL,
   useToast,
   VendorAvatar,
 } from '@stubramp/ui'
-import { settlePaymentFn, transitionBillFn } from '../../../lib/bills'
+import {
+  deleteBillFn,
+  settlePaymentFn,
+  transitionBillFn,
+} from '../../../lib/bills'
+import { can, canDelete } from '../../../lib/permissions'
 import type {
   BillStatus,
   MutationResult,
@@ -45,6 +53,8 @@ function BillDetailPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { toast } = useToast()
+
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const { data: bill } = useSuspenseQuery(billDetailQueryOptions(billId))
 
@@ -94,7 +104,24 @@ function BillDetailPage() {
       ),
   })
 
-  const busy = transition.isPending || settle.isPending
+  // Delete an unapproved draft. On success there's no aggregate to seed — drop
+  // the detail cache, refresh the lists, and return to the bills index.
+  const remove = useMutation({
+    mutationFn: () => deleteBillFn({ data: { id: billId } }),
+    onSuccess: (res) => {
+      if (res.ok) {
+        setConfirmDelete(false)
+        queryClient.removeQueries({ queryKey: billKeys.detail(billId) })
+        void queryClient.invalidateQueries({ queryKey: billKeys.lists() })
+        toast({ message: 'Bill deleted', tone: 'positive' })
+        void navigate({ to: '/bills' })
+      } else {
+        toast({ message: res.error, tone: 'negative' })
+      }
+    },
+  })
+
+  const busy = transition.isPending || settle.isPending || remove.isPending
 
   if (!bill) {
     return (
@@ -120,6 +147,8 @@ function BillDetailPage() {
     }
     settle.mutate({ paymentId: pending.id, outcome })
   }
+
+  const canDeleteBill = can(user.role, 'bill:delete') && canDelete(bill.status)
 
   const doc = buildInvoiceDoc({
     vendorName: bill.vendor.name,
@@ -184,8 +213,53 @@ function BillDetailPage() {
             onSchedule={onSchedule}
             onSettle={onSettle}
           />
+          {canDeleteBill && (
+            <Card>
+              <div className="mb-1 text-xs font-medium uppercase tracking-wide text-gray-500">
+                Danger zone
+              </div>
+              <p className="mb-3 text-[13px] leading-relaxed text-gray-500">
+                Delete this draft and its line items. This can't be undone.
+              </p>
+              <Button
+                variant="danger"
+                disabled={busy}
+                onClick={() => setConfirmDelete(true)}
+              >
+                <Trash2 size={15} className="mr-1.5" />
+                Delete draft
+              </Button>
+            </Card>
+          )}
         </div>
       </div>
+
+      <Modal
+        open={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        size="sm"
+        title={<span className="text-md font-semibold">Delete draft?</span>}
+        footer={
+          <>
+            <Button
+              variant="danger"
+              disabled={busy}
+              onClick={() => remove.mutate()}
+            >
+              Delete
+            </Button>
+            <Button variant="secondary" onClick={() => setConfirmDelete(false)}>
+              Cancel
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm leading-relaxed text-gray-600">
+          This permanently deletes bill{' '}
+          <span className="font-mono">{bill.billNumber}</span> from{' '}
+          {bill.vendor.name}, along with its line items. This can't be undone.
+        </p>
+      </Modal>
     </div>
   )
 }

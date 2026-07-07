@@ -71,6 +71,20 @@ export async function billRoutes(app: FastifyInstance) {
     },
   );
 
+  // Delete an unapproved (DRAFT) bill. The service enforces the status guard and
+  // company scoping; cascades remove the line items, splits, and events.
+  r.delete(
+    "/bills/:id",
+    {
+      schema: { params: billIdParams },
+      preHandler: requirePermission("bill:delete"),
+    },
+    async (req, reply) => {
+      await app.services.bills.delete(req.auth, req.params.id);
+      return reply.code(204).send();
+    },
+  );
+
   // Drive the state machine. The required permission depends on the target
   // status (see requireTransitionPermission), e.g. APPROVER for "APPROVED".
   r.post(

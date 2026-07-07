@@ -13,6 +13,7 @@ const ALL_ACTIONS: Action[] = [
   "bill:approve",
   "bill:schedule",
   "bill:pay",
+  "bill:delete",
   "card:manage",
   "card:read",
 ];
@@ -48,5 +49,12 @@ describe("permission matrix", () => {
     expect(can("EMPLOYEE", "bill:read")).toBe(true);
     expect(can("EMPLOYEE", "bill:approve")).toBe(false);
     expect(can("EMPLOYEE", "user:manage")).toBe(false);
+  });
+
+  it("ADMIN, ACCOUNTANT, and EMPLOYEE can delete drafts; APPROVER cannot", () => {
+    expect(can("ADMIN", "bill:delete")).toBe(true);
+    expect(can("ACCOUNTANT", "bill:delete")).toBe(true);
+    expect(can("EMPLOYEE", "bill:delete")).toBe(true);
+    expect(can("APPROVER", "bill:delete")).toBe(false);
   });
 });

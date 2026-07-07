@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AuthContext } from "../auth/context.js";
-import { GuardFailedError, IllegalTransitionError } from "../domain/errors.js";
+import {
+  GuardFailedError,
+  IllegalTransitionError,
+  NotFoundError,
+} from "../domain/errors.js";
 import type { BillEventRepository } from "../repositories/BillEventRepository.js";
 import type { BillRepository } from "../repositories/BillRepository.js";
 import type { PaymentRepository } from "../repositories/PaymentRepository.js";
@@ -94,6 +98,7 @@ describe("BillService", () => {
     create: ReturnType<typeof vi.fn>;
     findByStatus: ReturnType<typeof vi.fn>;
     findByIdScoped: ReturnType<typeof vi.fn>;
+    deleteScopedIfStatus: ReturnType<typeof vi.fn>;
     withTx: ReturnType<typeof vi.fn>;
   };
   let payments: {
@@ -115,6 +120,7 @@ describe("BillService", () => {
       create: vi.fn(async (_data: any, _args?: any) => makeBill()),
       findByStatus: vi.fn(async () => [makeBill()]),
       findByIdScoped: vi.fn(async () => makeBill()),
+      deleteScopedIfStatus: vi.fn(async () => 1),
       withTx: vi.fn(() => ({ casStatus: billCas })),
     };
     payments = {
@@ -244,6 +250,44 @@ describe("BillService", () => {
         method: "ACH",
         status: "PENDING",
       });
+    });
+  });
+
+  describe("delete", () => {
+    it("deletes a DRAFT bill", async () => {
+      bills.findByIdScoped.mockResolvedValueOnce(makeBill({ status: "DRAFT" }));
+      await service.delete(auth, "bill-1");
+      expect(bills.deleteScopedIfStatus).toHaveBeenCalledWith(
+        "bill-1",
+        "company-1",
+        "DRAFT",
+      );
+    });
+
+    it("404s when the bill doesn't exist (or is cross-tenant)", async () => {
+      bills.findByIdScoped.mockResolvedValueOnce(null);
+      await expect(service.delete(auth, "bill-1")).rejects.toBeInstanceOf(
+        NotFoundError,
+      );
+      expect(bills.deleteScopedIfStatus).not.toHaveBeenCalled();
+    });
+
+    it("refuses to delete a non-draft bill", async () => {
+      bills.findByIdScoped.mockResolvedValueOnce(
+        makeBill({ status: "SUBMITTED" }),
+      );
+      await expect(service.delete(auth, "bill-1")).rejects.toBeInstanceOf(
+        GuardFailedError,
+      );
+      expect(bills.deleteScopedIfStatus).not.toHaveBeenCalled();
+    });
+
+    it("409s when a concurrent transition won the race (0 rows deleted)", async () => {
+      bills.findByIdScoped.mockResolvedValueOnce(makeBill({ status: "DRAFT" }));
+      bills.deleteScopedIfStatus.mockResolvedValueOnce(0);
+      await expect(service.delete(auth, "bill-1")).rejects.toBeInstanceOf(
+        GuardFailedError,
+      );
     });
   });
 
