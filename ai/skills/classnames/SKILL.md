@@ -1,6 +1,6 @@
 ---
 name: classnames
-description: How to compose Tailwind class names in this repo — use cn() for conditional/additive classes and cva() for multi-variant component styling. Load when writing or reviewing any JSX className that isn't a single static string literal.
+description: How to compose css and tailwind class names use cn() for conditional/additive classes and cva() for multi-variant component styling. Load when writing or reviewing any JSX/HTML className that isn't a single static string literal.
 ---
 
 # Class name composition
